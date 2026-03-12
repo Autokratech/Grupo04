@@ -1,0 +1,68 @@
+# ---- Autokratech gitignore ----
+## -- Common files --
+*.env
+.env
+*.log
+*.exe
+*.[Cc]ache
+
+## -- Common folders --
+build/
+coverage/
+dist/ 
+x64/
+x86/
+!*.[Cc]ache/
+
+## -- OS files --
+.DS_Store
+Thumbs.db
+.fuse_hidden*
+
+## -- VSCode --
+.vscode/*
+*.code-workspace
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## -- FastAPI/Python -- 
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+### Virtual environment folder
+venv/
+.venv/
+
+## -- Flutter/Dart --
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+pubspec.lock
+.flutter-plugins-dependencies
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+### Built application files
+*.apk
+*.ap_
+*.aab
+
+### Symbolication related
+app.*.symbols
+
+### Obfuscation related
+app.*.map.json 
+
+### Android Studio
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+### MacOS
+**/Flutter/ephemeral/
+**/Pods/
