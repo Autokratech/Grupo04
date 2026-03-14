@@ -1,15 +1,84 @@
+import os
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Autokratech", version="0.1.0")
 
-# Endpoint raíz
-@app.get("/", summary="Home")
+# --- CONFIGURACIÓN DE ESTÁTICOS ---
+# Usamos os.path para que funcione tanto en local como en el servidor/Docker
+base_path = os.path.dirname(os.path.abspath(__file__))
+static_path = os.path.join(base_path, "statics")
+
+# Montamos la carpeta. El navegador accederá vía "/static"
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    #TODO: Implementar lógica para solicitar autenticación, si el user ya está autenticado redirige a dashboard
-    return {"message": "Bienvenido a la API de Autokratech!"}
+    return """
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Autokratech</title>
+        <style>
+            body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                display: flex; 
+                flex-direction: column; 
+                justify-content: center; 
+                align-items: center; 
+                height: 100vh; 
+                margin: 0; 
+                background: #f0f2f5; 
+            }
+            .logo-container {
+                margin-bottom: 20px;
+            }
+           
+            .card { 
+                background: white; 
+                padding: 2.5rem; 
+                border-radius: 16px; 
+                box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+                text-align: center; 
+                width: 380px;
+                border: 1px solid #e1e4e8;
+            }
+            h1 { color: #1a73e8; margin-top: 0; font-size: 1.8rem; }
+            p { color: #5f6368; line-height: 1.5; }
+            .btn {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 24px;
+                background-color: #1a73e8;
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: 600;
+                transition: background 0.3s ease;
+            }
+            .btn:hover {
+                background-color: #1557b0;
+            }
+        </style>
+    </head>
+    <body>
+       
+
+        <div class="card">
+         <div class="logo-container">
+            <!-- Asegúrate de que el archivo se llame logo.png dentro de /statics -->
+            <img src="/static/logo.png" alt="Logo Autokratech" class="logo">
+        </div>
+            <p>La API de <strong>Autokratech</strong> está lista y funcionando correctamente.</p>
+            <a href="/docs" class="btn">Ir a la Documentación</a>
+        </div>
+    </body>
+    </html>
+    """
 
 @app.get("/dashboard", summary="Dashboard")
-async def root():
-    #TODO: Obtiene la config del usuario, qué widgets tiene activos, y en función de ello hace las llamadas pertienntes para cada uno
+async def dashboard(): # He cambiado el nombre de la función a 'dashboard' para evitar duplicados
     return {"message": "Bienvenido al Dashboard de Autokratech!"}
-
