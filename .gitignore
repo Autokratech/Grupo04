@@ -38,6 +38,8 @@ venv/
 .venv/
 
 ## -- Flutter/Dart --
+.idea/
+*.iml
 .dart_tool/
 .packages
 .pub/
