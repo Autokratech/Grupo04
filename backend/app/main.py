@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from api.routes.oauth import router as oauth_router
 
 app = FastAPI(title="Autokratech", version="0.1.0")
 
@@ -6,10 +7,10 @@ app = FastAPI(title="Autokratech", version="0.1.0")
 @app.get("/", summary="Home")
 async def root():
     #TODO: Implementar lógica para solicitar autenticación, si el user ya está autenticado redirige a dashboard
-    return {"message": "Bienvenido a la API de Autokratech!"}
+    return {"message": "Bienvenido a la API de Autokratech! ~ Grupo 04 LaSalle FP Online"}
 
-@app.get("/dashboard", summary="Dashboard")
-async def root():
-    #TODO: Obtiene la config del usuario, qué widgets tiene activos, y en función de ello hace las llamadas pertienntes para cada uno
-    return {"message": "Bienvenido al Dashboard de Autokratech!"}
+
+#Rutas para integración con servicios de terceros
+app.include_router(oauth_router)
+
 
