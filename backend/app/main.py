@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.routes.oauth import router as oauth_router
+from api.routers import *
 
 app = FastAPI(title="Autokratech", version="0.1.0")
 
@@ -10,7 +10,10 @@ async def root():
     return {"message": "Bienvenido a la API de Autokratech! ~ Grupo 04 LaSalle FP Online"}
 
 
-#Rutas para integración con servicios de terceros
+#Rutas para la administracion del dashboard
+app.include_router(dashboard_router)
+
+#Rutas para la integración con servicios de terceros
 app.include_router(oauth_router)
 
 
