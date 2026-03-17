@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'app/app.dart';
+import 'app/di/sevice_locator.dart';
 
 Future<void> main() async {
   // Initialize the Flutter binding
@@ -8,5 +10,5 @@ Future<void> main() async {
   await setupDependencies();
 
   // Runs the app
-  runApp(App());
+  runApp(const App());
 }

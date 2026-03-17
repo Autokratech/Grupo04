@@ -1,4 +1,3 @@
-// Declares the routes
 class AppRoutes {
   AppRoutes._();
 
