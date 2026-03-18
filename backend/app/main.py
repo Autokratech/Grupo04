@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from api.routers import *
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -13,8 +14,13 @@ static_path = os.path.join(base_path, "statics")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 app.include_router(users_router.router, prefix="/api")
 
+#Rutas para la administración del dashboard
+app.include_router(dashboard_router)
 
-@app.get("/", response_class=HTMLResponse)
+#Rutas para la integración con servicios de terceros
+app.include_router(oauth_router)
+
+@app.get("/", summary="Home", response_class=HTMLResponse)
 async def root():
     return """
     <!DOCTYPE html>
