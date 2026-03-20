@@ -1,1 +1,0 @@
-#TODO: Desarrollar clase AzureProvider que implementa la interfaz ICloudProvider
