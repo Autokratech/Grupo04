@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../states/login_state.dart';
+import 'package:frontend/features/auth/presentation/states/login_state.dart';
 
 class LoginViewModel extends ChangeNotifier {
   LoginState _state = LoginState.initial;
@@ -24,7 +24,7 @@ class LoginViewModel extends ChangeNotifier {
         _state = LoginState.error;
         _errorMessage = 'Invalid email or password';
       }
-    } catch (e) {
+    } catch (_) {
       _state = LoginState.error;
       _errorMessage = 'An error occurred during login';
     }
