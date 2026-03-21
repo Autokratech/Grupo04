@@ -1,5 +1,6 @@
 enum WidgetType {
   status,
   metric,
-  alert
+  list,
+  chart
 }
