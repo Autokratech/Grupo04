@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final LoginViewModel _vm = LoginViewModel();
+  final LoginViewModel _viewModel = LoginViewModel();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -20,13 +20,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _vm.addListener(_handleViewModelChanges);
+    _viewModel.addListener(_handleViewModelChanges);
   }
 
   void _handleViewModelChanges() {
     if (!mounted) return;
 
-    if (_vm.state == LoginState.authenticated) {
+    if (_viewModel.state == LoginState.authenticated) {
       context.go(AppRoutes.dashboard);
     }
   }
@@ -34,12 +34,12 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submitLogin() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    _vm.login(email, password);
+    _viewModel.login(email, password);
   }
 
   @override
   void dispose() {
-    _vm.removeListener(_handleViewModelChanges);
+    _viewModel.removeListener(_handleViewModelChanges);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -55,38 +55,48 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: ListenableBuilder(
-                listenable: _vm,
+                listenable: _viewModel,
                 builder: (context, child) {
-                  final isLoading = _vm.state == LoginState.loading;
-                  final errorMessage = _vm.errorMessage;
+                  final isLoading = _viewModel.state == LoginState.loading;
+                  final errorMessage = _viewModel.errorMessage;
+
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Login',
+                        'Autokratech',
                         style: Theme.of(context).textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
                       TextField(
                         controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(labelText: 'Email'),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
                       TextField(
                         controller: _passwordController,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) {
+                          if (!isLoading) {
+                            _submitLogin();
+                          }
+                        },
                         decoration: const InputDecoration(
                           labelText: 'Contraseña',
                         ),
                         obscureText: true,
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
                       ElevatedButton(
                         onPressed: isLoading ? null : _submitLogin,
-                        child: Text('Iniciar sesión'),
+                        child: const Text('Iniciar sesión'),
                       ),
 
                       if (isLoading) ...[
