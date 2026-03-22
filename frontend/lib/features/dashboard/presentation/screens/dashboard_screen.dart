@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dashboard_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/router/app_routes.dart';
 
@@ -31,7 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text('Dashboard'),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 18),
+            padding: const EdgeInsets.only(right: 16),
             child: TextButton(
               onPressed: _handleLogout,
               child: const Text('Cerrar sesión'),
@@ -88,23 +89,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 itemBuilder: (context, index) {
                   final item = items[index];
 
-                  return Card(
-                    child: ListTile(
-                      title: Text(
-                        item.title,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      subtitle: Text('${item.type.name} · ${item.status.name}'),
-                      trailing: Text(
-                        item.primaryValue,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
-                    ),
-                  );
+                  return DashboardCard(item: item);
                 },
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 12),
