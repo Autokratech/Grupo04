@@ -3,11 +3,6 @@ from fastapi import FastAPI
 from app.api.routers import *
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from app.repositories.dashboard_repository import DashboardRepository
-from app.repositories.tabs_repository import TabsRepository
-from app.core.database import create_supabase_client
-from fastapi import Depends
-from supabase import AsyncClient
 
 from app.routers import users_router
 
@@ -91,6 +86,4 @@ async def root():
 @app.get("/dashboard", summary="Dashboard")
 async def dashboard():
     return {"message": "Bienvenido al Dashboard de Autokratech!"}
-
-
 
