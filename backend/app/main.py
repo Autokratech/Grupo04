@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI
-from api.routers import *
+from app.api.routers import *
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -86,3 +86,4 @@ async def root():
 @app.get("/dashboard", summary="Dashboard")
 async def dashboard():
     return {"message": "Bienvenido al Dashboard de Autokratech!"}
+
