@@ -11,10 +11,11 @@ supabase
 python-dotenv
 
 # -- Librería para la gestión de las conexiones OAuth
-oauthlib
+requests_oauthlib
 
 # -- Librería para la validación de datos
 pydantic
+pydantic[email]
 
 # -- Librería para la gestión de las peticiones HTTP
 httpx
