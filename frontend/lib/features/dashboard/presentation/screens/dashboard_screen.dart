@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/dashboard_card.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/widget_grid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/router/app_routes.dart';
 
@@ -64,15 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     if (state == DashboardState.loaded) {
-      return ListView.separated(
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-
-          return DashboardCard(item: item);
-        },
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
-      );
+      return WidgetGrid(items: items);
     }
 
     return const Center(child: Text('Estado de dashboard no soportado'));
