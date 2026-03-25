@@ -1,6 +1,6 @@
 from fastapi import Request, Response
 from fastapi.responses import RedirectResponse
-from services.oauth_manager import OAuthManager
+from app.services.oauth_manager import OAuthManager
 
 
 # -- Controladores para gestionar las conexiones OAuth
