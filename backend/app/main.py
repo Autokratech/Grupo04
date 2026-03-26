@@ -26,6 +26,9 @@ app.include_router(widgets_router)
 #Rutas para la integración con servicios de terceros
 app.include_router(oauth_router)
 
+#Rutas para la integración del orquestador
+app.include_router(orchestrator_router)
+
 
 @app.get("/", summary="Home", response_class=HTMLResponse)
 async def root():
