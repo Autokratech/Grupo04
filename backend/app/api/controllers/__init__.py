@@ -12,3 +12,5 @@ from .tabs_controller import (
 from .widgets_controller import (
     get_widget, get_all_widgets, create_widget, update_widget, delete_widget
 )
+
+from .orchestrator_controller import get_active_tab_widgets
