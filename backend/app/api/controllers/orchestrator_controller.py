@@ -7,7 +7,7 @@ from app.repositories.providers_repository import ProvidersRepository
 from app.repositories.endpoints_repository import EndpointsRepository
 from app.providers.provider_factory import *
 from app.core.database import create_supabase_client
-
+from uuid import UUID
 
 # -- Preparación del servicio del orquestador e inyección de dependencias
 async def get_orchestrator_service(supabase : AsyncClient = Depends(create_supabase_client)):
@@ -24,5 +24,5 @@ orchestrator_service = Annotated[OrchestratorService, Depends(get_orchestrator_s
 
 
 # -- Controladores para gestionar el orquestador
-async def get_active_tab_widgets(tab_id: int, service: orchestrator_service):  
+async def get_active_tab_widgets(tab_id: UUID, service: orchestrator_service):  
     return await service.orchestate_user_tab(tab_id)

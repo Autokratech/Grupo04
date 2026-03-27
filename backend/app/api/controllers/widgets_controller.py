@@ -1,30 +1,45 @@
-from fastapi import Request, Depends
-from services.widget_service import WidgetService
-from core.database import create_supabase_client
+from fastapi import Depends
+from typing import Annotated
+from supabase import AsyncClient
+from app.services.widgets_service import WidgetsService
+from app.repositories.widgets_repository import WidgetsRepository
+from app.schemas.widget_schema import *
+from app.core.database import create_supabase_client
+from uuid import UUID
 
 
-# -- Controladores para gestionar los widgets en general
-async def get_widget(widget_id : int, supabase = Depends(create_supabase_client)):
-    widget_data = WidgetService.get_widget(widget_id, supabase)
-    return widget_data
+# -- Preparación del servicio de Widgets e inyección de dependencias
+async def get_widgets_service(supabase : AsyncClient = Depends(create_supabase_client)):
+    repository = WidgetsRepository(supabase)
+    return WidgetsService(repository)
 
-async def get_all_widgets(request: Request, supabase = Depends(create_supabase_client)):
-    widget_filters = dict(request.query_params)
-    widgets_list = WidgetService.get_all_widgets(widget_filters, supabase)
-    return widgets_list
 
-async def create_widget(request: Request, supabase = Depends(create_supabase_client)):
-    widget_data = await request.json()
-    response = WidgetService.create_widget(widget_data, supabase)
-    return response
+# -- Referencia anotada para simplificar llamadas
+widgets_service = Annotated[WidgetsService, Depends(get_widgets_service)]
 
-async def update_widget(widget_id : int, request: Request, supabase = Depends(create_supabase_client)):
-    request_body = await request.json()
-    widget_column = request_body.get("widget_column")
-    widget_value = request_body.get('widget_value')
-    response = WidgetService.update_widget(widget_id, widget_column, widget_value, supabase)
-    return response
 
-async def delete_widget(widget_id : int, supabase = Depends(create_supabase_client)):
-    response = WidgetService.delete_widget(widget_id, supabase)
-    return response
+# -- Controladores para gestionar los widgets 
+async def get_widget(widget_id : UUID, service: widgets_service):
+    return await service.get_widget(widget_id)
+
+
+async def get_all_available_widgets(service: widgets_service):
+    return await service.get_all_available_widgets()
+
+
+async def search_widgets(body : WidgetSearch, service: widgets_service):
+    return await service.search_widgets(body.dict())
+
+
+async def create_widget(body : WidgetCreate, service: widgets_service):
+    return await service.create_widget(body.dict())
+
+
+async def update_widget(widget_id : UUID, body : WidgetUpdate, service: widgets_service):
+    print(body.model_dump())
+    return await service.update_widget(widget_id, body.dict())
+
+
+async def delete_widget(widget_id : UUID, service: widgets_service):
+    return await service.delete_widget(widget_id)
+

@@ -16,13 +16,13 @@ class DashboardService:
 
 
     #Método para crear un nuevo dashboard para el usuario recién añadido: r
-    async def create_dashboard(self, user_id : int):
+    async def create_dashboard(self, dashboard_data : dict):
         #Se verifica que el usuario especificado NO dispone de un dashboard antes de intentar crearlo
-        has_dashboard = await self.repository.get_user_dashboard(user_id)
+        has_dashboard = await self.repository.get_user_dashboard(dashboard_data["user_id"])
         if has_dashboard.data:
             raise DatabaseError("El usuario ya dispone de un dashboard asignado.")
         
-        return await self.repository.create_dashboard(user_id)
+        return await self.repository.create_dashboard(dashboard_data)
 
 
     #Método para actualizar el tema del dashboard
