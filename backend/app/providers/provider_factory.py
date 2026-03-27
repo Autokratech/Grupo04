@@ -2,6 +2,7 @@ from .git_provider import *
 from .cloud_provider import *
 from .agent_provider import *
 from app.repositories.interfaces.providers_interface import IProvidersRepository
+from app.repositories.interfaces.endpoints_interface import IEndpointsRepository
 from app.models.provider_model import *
 
 '''
@@ -22,8 +23,9 @@ class ProviderFactory:
     }
 
 
-    def __init__(self, repository: IProvidersRepository):
-        self.repository = repository
+    def __init__(self, providers_repository: IProvidersRepository, endpoints_repository: IEndpointsRepository):
+        self.providers_repository = providers_repository
+        self.endpoints_repository  = endpoints_repository
 
 
     async def create_provider_instance(self, provider_name: str):
@@ -33,7 +35,7 @@ class ProviderFactory:
 
 
     async def get_provider_factory_type(self, provider_name : str):
-        response = await self.repository.get_provider_type(provider_name)
+        response = await self.providers_repository.get_provider_type(provider_name)
         provider = ProviderType(**response.data)
 
         provider_factory_type = self._provider_factories_types[provider.provider_type]
@@ -49,5 +51,5 @@ class ProviderFactory:
         '''
 
     async def get_provider_instance(self, provider_factory_type : object, provider_name : str):
-        return await provider_factory_type.get_provider_instance(provider_name)
+        return await provider_factory_type.get_provider_instance(provider_name, self.endpoints_repository)
 

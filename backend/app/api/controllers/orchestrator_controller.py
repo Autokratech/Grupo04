@@ -4,6 +4,7 @@ from supabase import AsyncClient
 from app.services.orchestrator_service import OrchestratorService
 from app.repositories.orchestrator_repository import OrchestratorRepository
 from app.repositories.providers_repository import ProvidersRepository
+from app.repositories.endpoints_repository import EndpointsRepository
 from app.providers.provider_factory import *
 from app.core.database import create_supabase_client
 
@@ -12,7 +13,8 @@ from app.core.database import create_supabase_client
 async def get_orchestrator_service(supabase : AsyncClient = Depends(create_supabase_client)):
     orchestrator_repository = OrchestratorRepository(supabase)
     providers_repository = ProvidersRepository(supabase)
-    factory = ProviderFactory(providers_repository)
+    endpoints_repository = EndpointsRepository(supabase)
+    factory = ProviderFactory(providers_repository, endpoints_repository)
 
     return OrchestratorService(orchestrator_repository, factory)
 
