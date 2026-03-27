@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/domain/models/dashboard_preset.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/preset_selector.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/widget_grid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/router/app_routes.dart';
@@ -16,10 +18,25 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final DashboardViewModel _viewModel = DashboardViewModel();
 
+  final List<DashboardPreset> _presets = const [
+    DashboardPreset(id: 'default', name: 'Por defecto'),
+    DashboardPreset(id: 'operations', name: 'Operaciones'),
+    DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
+  ];
+
+  late DashboardPreset _selectedPreset;
+
   @override
   void initState() {
     super.initState();
+    _selectedPreset = _presets.first;
     _viewModel.loadDashboard();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
   }
 
   void _handleLogout() {
@@ -73,24 +90,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: ListenableBuilder(
-          listenable: _viewModel,
-          builder: (context, child) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DashboardHeader(
-                  title: 'Dashboard',
-                  subtitle: 'Vista general de monitorización',
-                  onLogoutPressed: _handleLogout,
-                ),
-                const SizedBox(height: 24),
-                Expanded(child: _buildDashboardContent()),
-              ],
-            );
-          },
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ListenableBuilder(
+            listenable: _viewModel,
+            builder: (context, child) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DashboardHeader(
+                    title: 'Dashboard',
+                    subtitle: 'Vista general de monitorización',
+                    onLogoutPressed: _handleLogout,
+                  ),
+                  const SizedBox(height: 16),
+                  PresetSelector(
+                    presets: _presets,
+                    selectedPreset: _selectedPreset,
+                    onPresetChanged: (preset) {
+                      setState(() {
+                        _selectedPreset = preset;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(child: _buildDashboardContent()),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
