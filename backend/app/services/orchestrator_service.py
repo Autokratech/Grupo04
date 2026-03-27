@@ -1,5 +1,4 @@
-from fastapi import HTTPException
-from fastapi.responses import JSONResponse
+import asyncio
 from app.providers.provider_factory import ProviderFactory
 from app.repositories.interfaces.orchestrator_interface import IOrchestratorRepository
 from app.models.orchestrator_model import *
@@ -36,21 +35,27 @@ class OrchestratorService:
 
         # Step 4 -- Se envía un primer compendio de datos para que el front vaya renderizando los widgets
         #TODO: Implementar SSE
+        #esto podria ser widgets_without_data
+        #y lo que se devuelve más abajo widgets_with_data o data_for_widgets
         print(f"Datos renderización: {widgets_render_data}")
 
         # Step 5 -- Se envían los datos a la factory of factories para que devuelva la instancia concreta a utilizar
-        for key in data_source_params.keys():
-            provider_name = data_source_params[key]["source_provider"]
-            if provider_name is not None:
+        # y posteriormente se delega el trabajo en la clase del provider
+        # Añadir timeout y derivar la consulta al caché, y en caso de que tampoco haya datos, enviar "None" / "No data available", o {} al front
+        # Revisar gestión de excepciones. Ahora mismo si una tarea falla, caen todas ~ investigar si nos conviene más usar gather
+        aggregated_response = {} 
+        async with asyncio.TaskGroup() as tg:
+            for key in data_source_params.keys():
+                provider_name = data_source_params[key]["source_provider"]
                 provider_instance = await self.factory.create_provider_instance(provider_name)
-                print(provider_instance.__class__)
-        
-        # Step 6 -- Se pasan los parámetros concretos a la instancia creada en el paso anterior
-        # Nota --> Aquí habrá que ver cuánto se puede generalizar la abstracción de dichos datos
-        # En este punto la obtención de la métrica y la normalización del resultado del provider pasará a ser tarea interna del provider
-        # TODO: Investigar cómo implementar todo este flujo de manera asíncrona, para que las llamadas se realicen en paralelo a todos los providers: asyncio?
-        # widgets_data = self.fetch_tab_widgets_data(data_source_params)
-        return ({"data_source_params" : data_source_params})
+                # Step 6 -- Se pasan los parámetros concretos a la instancia creada en el paso anterior
+                # Nota --> Aquí habrá que ver cuánto se puede generalizar la abstracción de dichos datos
+                # En este punto la obtención de la métrica y la normalización del resultado del provider pasará a ser tarea interna del provider
+                tg.create_task(self.fetch_tab_widget_data(provider_instance,
+                                                          data_source_params[key]["data_type"],
+                                                          data_source_params[key]["custom_config"],
+                                                          key, aggregated_response ))
+        print(aggregated_response)
 
 
 
@@ -79,11 +84,11 @@ class OrchestratorService:
         
 
     # -- Método para obtener las métricas del provider deseado
-    async def fetch_tab_widgets_data(self, provider_instance, data_source_params):
-        pass
+    async def fetch_tab_widget_data(self, provider_instance, data_type : str, data_config, key, aggregated_response : dict):
+        provider_response = await provider_instance.fetch_provider_data(data_type, data_config)
+        aggregated_response.update({ key : provider_response })
     
     # -- Método para ejecutar la acción de un widget de tipo action (o híbrido, si al final disponemos de híbridos también)
     # TODO: Enlazarlo con la parte de auditoría para que 1 acción = 1 registro (salvo que más adelante estimemos auditar sólo algunas)
     async def execute_tab_widget_action(self, widget_data):
         pass
-
