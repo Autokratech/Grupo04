@@ -1,8 +1,9 @@
 from pydantic import BaseModel
+from uuid import UUID
 
 class Tab(BaseModel):
-    tab_id: int
-    dashboard_id: int
+    tab_id: UUID
+    dashboard_id: UUID
     tab_name: str
     tab_index: int
 

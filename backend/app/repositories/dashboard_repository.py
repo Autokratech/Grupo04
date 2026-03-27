@@ -1,6 +1,6 @@
 from supabase import AsyncClient
 from app.core.exceptions import DatabaseError
-
+from uuid import UUID
 
 class DashboardRepository:
     
@@ -23,17 +23,17 @@ class DashboardRepository:
 
 
     #-- Método para crear un dashboard nuevo
-    async def create_dashboard(self, user_id : int):
+    async def create_dashboard(self, dashboard_data : dict):
         try:
             return await self.supabase.table(self.DASHBOARD_TABLE) \
-                .insert({'user_id' : user_id}) \
+                .insert(dashboard_data) \
                 .execute() 
         except DatabaseError as e:
             raise DatabaseError(e)
 
 
     #-- Método para actualizar el theme del dashboard
-    async def update_dashboard_theme(self, dashboard_id : int, dashboard_theme : str):
+    async def update_dashboard_theme(self, dashboard_id : UUID, dashboard_theme : str):
         try:
             return await self.supabase.table(self.DASHBOARD_TABLE) \
                 .update({"dashboard_theme" : dashboard_theme}) \
@@ -44,7 +44,7 @@ class DashboardRepository:
 
 
     #-- Método para eliminar un dashboard
-    async def delete_dashboard(self, dashboard_id : int):
+    async def delete_dashboard(self, dashboard_id : UUID):
         try:
             return await self.supabase.table(self.DASHBOARD_TABLE) \
                 .delete() \

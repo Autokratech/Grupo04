@@ -1,9 +1,11 @@
 from supabase import AsyncClient
 from app.core.exceptions import DatabaseError
+from app.repositories.interfaces.widgets_interface import IWidgetsRepository
+from uuid import UUID
 
 
-class WidgetsRepository:
-    
+class WidgetsRepository(IWidgetsRepository):
+
     #-- Tablas SQL de Supabase
     WIDGETS_TABLE = "widgets"
 
@@ -12,7 +14,7 @@ class WidgetsRepository:
 
 
     #-- Método para obtener los datos de un widget concreto en base a su id
-    async def get_widget(self, widget_id : int):
+    async def get_widget(self, widget_id : UUID):
         try:
             return await self.supabase.table(self.WIDGETS_TABLE) \
                 .select('*') \
@@ -66,7 +68,7 @@ class WidgetsRepository:
 
 
     #-- Método para eliminar un widget
-    async def delete_widget(self, widget_id : int):
+    async def delete_widget(self, widget_id : UUID):
         try:
             return await self.supabase.table(self.WIDGETS_TABLE) \
                 .delete() \
@@ -74,4 +76,3 @@ class WidgetsRepository:
                 .execute()
         except DatabaseError as e:
             raise DatabaseError(e)
-

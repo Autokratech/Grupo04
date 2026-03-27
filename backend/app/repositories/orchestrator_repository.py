@@ -1,7 +1,7 @@
 from supabase import AsyncClient
 from app.core.exceptions import DatabaseError
 from app.repositories.interfaces.orchestrator_interface import IOrchestratorRepository
-
+from uuid import UUID
 
 class OrchestratorRepository(IOrchestratorRepository):
 
@@ -12,7 +12,7 @@ class OrchestratorRepository(IOrchestratorRepository):
     def __init__(self, supabase: AsyncClient):
         self.supabase = supabase
 
-    async def get_active_tab_widgets(self, tab_id: int):
+    async def get_active_tab_widgets(self, tab_id: UUID):
         try:
             return await self.supabase.table(self.TAB_WIDGETS_TABLE) \
                 .select("*, widgets(widget_type, widget_name)") \
