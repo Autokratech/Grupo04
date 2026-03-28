@@ -4,13 +4,13 @@ NOMBRE_TABLA_ROLES = "t_roles"
 
 # devuelvo la lista de los roles
 def listar_roles():
-    respuesta = base_datos.table(NOMBRE_TABLA_ROLES).select("*").order("id").execute()
+    respuesta = supabase.table(NOMBRE_TABLA_ROLES).select("*").order("id").execute()
     return respuesta.data or []
 
 # busco un rol por id
 def buscar_rol_por_id(id_rol: int):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_ROLES)
+        supabase.table(NOMBRE_TABLA_ROLES)
         .select("*")
         .eq("id", id_rol)
         .limit(1)
@@ -25,7 +25,7 @@ def buscar_rol_por_id(id_rol: int):
 # busco rol por nombre
 def buscar_rol_por_nombre(nombre_rol: str):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_ROLES)
+        supabase.table(NOMBRE_TABLA_ROLES)
         .select("*")
         .eq("name", nombre_rol)
         .limit(1)
@@ -40,7 +40,7 @@ def buscar_rol_por_nombre(nombre_rol: str):
 # inserta un nuevo rol
 def crear_rol_en_bd(nombre: str, descripcion: str | None = None):
     datos = {"name": nombre, "description": descripcion}
-    respuesta = base_datos.table(NOMBRE_TABLA_ROLES).insert(datos).execute()
+    respuesta = supabase.table(NOMBRE_TABLA_ROLES).insert(datos).execute()
 
     if not respuesta.data:
         return None
@@ -50,7 +50,7 @@ def crear_rol_en_bd(nombre: str, descripcion: str | None = None):
 # actualizar un rol por id
 def actualizar_rol_en_bd(id_rol: int, campos_a_actualizar: dict):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_ROLES)
+        supabase.table(NOMBRE_TABLA_ROLES)
         .update(campos_a_actualizar)
         .eq("id", id_rol)
         .execute()
@@ -64,7 +64,7 @@ def actualizar_rol_en_bd(id_rol: int, campos_a_actualizar: dict):
 # elimino un rol por id
 def borrar_rol_en_bd(id_rol: int):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_ROLES)
+        supabase.table(NOMBRE_TABLA_ROLES)
         .delete()
         .eq("id", id_rol)
         .execute()

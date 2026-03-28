@@ -40,7 +40,7 @@ def pedir_permiso(codigo_permiso_necesario: str):
         rol_actual = getattr(request.state, "rol_actual", None)
         permisos_actuales = getattr(request.state, "permisos_actuales", [])
 
-        if rol_actual and rol_actual["name"] == "superadmin":
+        if rol_actual and rol_actual["name"] == "SUPERADMIN":
             return usuario_actual
 
         if codigo_permiso_necesario not in permisos_actuales:

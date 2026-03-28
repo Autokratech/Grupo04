@@ -4,7 +4,7 @@ NOMBRE_TABLA_USUARIOS = "t_users"
 
 # devuelve la lista de usuario, si se le especifica un filtro lo aplica.
 def listar_usuarios(filtro_activo: bool | None = None):
-    consulta = base_datos.table(NOMBRE_TABLA_USUARIOS).select("*").order("created_at", desc=True)
+    consulta = supabase.table(NOMBRE_TABLA_USUARIOS).select("*").order("created_at", desc=True)
 
     if filtro_activo is not None:
         consulta = consulta.eq("active", filtro_activo)
@@ -15,7 +15,7 @@ def listar_usuarios(filtro_activo: bool | None = None):
 # busca un usuario por id
 def buscar_usuario_por_id(id_usuario: str):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        supabase.table(NOMBRE_TABLA_USUARIOS)
         .select("*")
         .eq("id", id_usuario)
         .limit(1)
@@ -30,7 +30,7 @@ def buscar_usuario_por_id(id_usuario: str):
 # busca un usuario por el email
 def buscar_usuario_por_email(email: str):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        supabase.table(NOMBRE_TABLA_USUARIOS)
         .select("*")
         .eq("email", email)
         .limit(1)
@@ -51,7 +51,7 @@ def crear_usuario_en_bd(email: str, password_hash: str, role_id: int, active: bo
         "active": active,
     }
 
-    respuesta = base_datos.table(NOMBRE_TABLA_USUARIOS).insert(datos).execute()
+    respuesta = supabase.table(NOMBRE_TABLA_USUARIOS).insert(datos).execute()
 
     if not respuesta.data:
         return None
@@ -61,7 +61,7 @@ def crear_usuario_en_bd(email: str, password_hash: str, role_id: int, active: bo
 # actualizar usuario por el id
 def actualizar_usuario_en_bd(id_usuario: str, campos_a_actualizar: dict):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        supabase.table(NOMBRE_TABLA_USUARIOS)
         .update(campos_a_actualizar)
         .eq("id", id_usuario)
         .execute()
@@ -75,7 +75,7 @@ def actualizar_usuario_en_bd(id_usuario: str, campos_a_actualizar: dict):
 # borra el usuario por el id
 def borrar_usuario_en_bd(id_usuario: str):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        supabase.table(NOMBRE_TABLA_USUARIOS)
         .delete()
         .eq("id", id_usuario)
         .execute()

@@ -36,7 +36,7 @@ def comprobar_password(password_plano: str, hash_guardado: str) -> bool:
 
 # Crea el token para que el usuario pueda entrar en rutas privadas
 def crear_token_jwt(usuario: dict, nombre_rol: str, lista_permisos: list[str]) -> str:
-    fecha_caduca = datetime.now(timezone.utc) + timedelta(minutes=MINUTOS_CADUCA_JWT)
+    fecha_caduca = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
 
     datos_token = {
         "sub": usuario["id"],
@@ -47,8 +47,8 @@ def crear_token_jwt(usuario: dict, nombre_rol: str, lista_permisos: list[str]) -
         "exp": fecha_caduca,
     }
 
-    return jwt.encode(datos_token, CLAVE_JWT, algorithm=ALGORITMO_JWT)
+    return jwt.encode(datos_token, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
 # leo y valido el token.
 def leer_token_jwt(token_jwt: str) -> dict:
-    return jwt.decode(token_jwt, CLAVE_JWT, algorithms=[ALGORITMO_JWT])
+    return jwt.decode(token_jwt, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])

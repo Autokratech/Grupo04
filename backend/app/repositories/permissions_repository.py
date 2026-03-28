@@ -6,14 +6,14 @@ NOMBRE_TABLA_ROL_PERMISO = "t_role_permissions"
 # Retorno la lista de permisos
 def listar_permisos():
 
-    respuesta = base_datos.table(NOMBRE_TABLA_PERMISOS).select("*").order("id").execute()
+    respuesta = supabase.table(NOMBRE_TABLA_PERMISOS).select("*").order("id").execute()
     return respuesta.data or []
 
 # busco los persmisos por el id
 def buscar_permiso_por_id(id_permiso: int):
 
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_PERMISOS)
+        supabase.table(NOMBRE_TABLA_PERMISOS)
         .select("*")
         .eq("id", id_permiso)
         .limit(1)
@@ -27,9 +27,8 @@ def buscar_permiso_por_id(id_permiso: int):
 
 # busco los permisos por el codigo
 def buscar_permiso_por_codigo(codigo_permiso: str):
-    """Busca un permiso por su codigo."""
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_PERMISOS)
+        supabase.table(NOMBRE_TABLA_PERMISOS)
         .select("*")
         .eq("code", codigo_permiso)
         .limit(1)
@@ -44,7 +43,7 @@ def buscar_permiso_por_codigo(codigo_permiso: str):
 # inserta los permisos nuevos
 def crear_permiso_en_bd(codigo: str, nombre: str, descripcion: str | None = None):
     datos = {"code": codigo, "name": nombre, "description": descripcion}
-    respuesta = base_datos.table(NOMBRE_TABLA_PERMISOS).insert(datos).execute()
+    respuesta = supabase.table(NOMBRE_TABLA_PERMISOS).insert(datos).execute()
 
     if not respuesta.data:
         return None
@@ -55,7 +54,7 @@ def crear_permiso_en_bd(codigo: str, nombre: str, descripcion: str | None = None
 def actualizar_permiso_en_bd(id_permiso: int, campos_a_actualizar: dict):
 
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_PERMISOS)
+        supabase.table(NOMBRE_TABLA_PERMISOS)
         .update(campos_a_actualizar)
         .eq("id", id_permiso)
         .execute()
@@ -70,7 +69,7 @@ def actualizar_permiso_en_bd(id_permiso: int, campos_a_actualizar: dict):
 def borrar_permiso_en_bd(id_permiso: int):
 
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_PERMISOS)
+       supabase.table(NOMBRE_TABLA_PERMISOS)
         .delete()
         .eq("id", id_permiso)
         .execute()
@@ -84,7 +83,7 @@ def borrar_permiso_en_bd(id_permiso: int):
 # listo los permisos por rol
 def listar_permisos_de_rol(id_rol: int):
     respuesta_rol_permiso = (
-        base_datos.table(NOMBRE_TABLA_ROL_PERMISO)
+        supabase.table(NOMBRE_TABLA_ROL_PERMISO)
         .select("permission_id")
         .eq("role_id", id_rol)
         .execute()
@@ -92,12 +91,12 @@ def listar_permisos_de_rol(id_rol: int):
 
     filas = respuesta_rol_permiso.data or []
     ids_permisos = [fila["permission_id"] for fila in filas]
-
+  
     if not ids_permisos:
         return []
 
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_PERMISOS)
+        supabase.table(NOMBRE_TABLA_PERMISOS)
         .select("*")
         .in_("id", ids_permisos)
         .order("id")
@@ -109,7 +108,7 @@ def listar_permisos_de_rol(id_rol: int):
 # retorno si un permiso tiene un rol en concreto
 def rol_tiene_permiso(id_rol: int, id_permiso: int):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_ROL_PERMISO)
+        supabase.table(NOMBRE_TABLA_ROL_PERMISO)
         .select("*")
         .eq("role_id", id_rol)
         .eq("permission_id", id_permiso)
@@ -122,13 +121,13 @@ def rol_tiene_permiso(id_rol: int, id_permiso: int):
 # se asigna un permiso a un rol
 def asignar_permiso_a_rol_en_bd(id_rol: int, id_permiso: int):
     datos = {"role_id": id_rol, "permission_id": id_permiso}
-    respuesta = base_datos.table(NOMBRE_TABLA_ROL_PERMISO).insert(datos).execute()
+    respuesta = supabase.table(NOMBRE_TABLA_ROL_PERMISO).insert(datos).execute()
     return respuesta.data or []
 
 # quito la asignasignación de permiso a un rol
 def quitar_permiso_de_rol_en_bd(id_rol: int, id_permiso: int):
     respuesta = (
-        base_datos.table(NOMBRE_TABLA_ROL_PERMISO)
+        supabase.table(NOMBRE_TABLA_ROL_PERMISO)
         .delete()
         .eq("role_id", id_rol)
         .eq("permission_id", id_permiso)

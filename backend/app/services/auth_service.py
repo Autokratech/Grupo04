@@ -12,7 +12,7 @@ def servicio_registrar_usuario(datos_registro: DatosRegistro):
     if usuario_existente:
         raise HTTPException(status_code = 400, detail="El email ya esta registrado")
 
-    rol_defecto = roles_repository.buscar_rol_por_nombre(ROL_POR_DEFECTO_REGISTRO)
+    rol_defecto = roles_repository.buscar_rol_por_nombre(DEFAULT_ROLE_NAME_FOR_REGISTER)
     if not rol_defecto:
         raise HTTPException(status_code=500, detail="no existe el rol por defecto para el registro")
 
