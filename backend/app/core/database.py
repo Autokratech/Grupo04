@@ -4,7 +4,7 @@ import os
 
 load_dotenv()
 
-
+# Conexion a la base de datos.
 def create_supabase_client():
     supabase_url = os.getenv("SUPABASE_URL")
     supabase_key = os.getenv("SUPABASE_KEY")

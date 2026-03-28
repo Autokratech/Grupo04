@@ -1,69 +1,87 @@
 from app.core.database import supabase
-from app.models.user_model import UserModel
 
-TABLE_NAME = "users"
+NOMBRE_TABLA_USUARIOS = "t_users"
 
+# devuelve la lista de usuario, si se le especifica un filtro lo aplica.
+def listar_usuarios(filtro_activo: bool | None = None):
+    consulta = base_datos.table(NOMBRE_TABLA_USUARIOS).select("*").order("created_at", desc=True)
 
-def map_row_to_user(row: dict) -> UserModel:
-    return UserModel(
-        id=row["id"],
-        nombre=row["nombre"],
-        email=row["email"],
-        password_hash=row["password_hash"]
-    )
+    if filtro_activo is not None:
+        consulta = consulta.eq("active", filtro_activo)
 
+    respuesta = consulta.execute()
+    return respuesta.data or []
 
-def get_all_users():
-    response = supabase.table(TABLE_NAME).select("id,nombre,email,password_hash").execute()
-
-    if not response.data:
-        return []
-
-    return [map_row_to_user(row) for row in response.data]
-
-
-def get_user_by_id(user_id: int):
-    response = (
-        supabase
-        .table(TABLE_NAME)
-        .select("id,nombre,email,password_hash")
-        .eq("id", user_id)
+# busca un usuario por id
+def buscar_usuario_por_id(id_usuario: str):
+    respuesta = (
+        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        .select("*")
+        .eq("id", id_usuario)
         .limit(1)
         .execute()
     )
 
-    if not response.data:
+    if not respuesta.data:
         return None
 
-    return map_row_to_user(response.data[0])
+    return respuesta.data[0]
 
-
-def get_user_by_email(email: str):
-    response = (
-        supabase
-        .table(TABLE_NAME)
-        .select("id,nombre,email,password_hash")
+# busca un usuario por el email
+def buscar_usuario_por_email(email: str):
+    respuesta = (
+        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        .select("*")
         .eq("email", email)
         .limit(1)
         .execute()
     )
 
-    if not response.data:
+    if not respuesta.data:
         return None
 
-    return map_row_to_user(response.data[0])
+    return respuesta.data[0]
 
-
-def create_user(nombre: str, email: str, password_hash: str):
-    payload = {
-        "nombre": nombre,
+# nuevo usuario
+def crear_usuario_en_bd(email: str, password_hash: str, role_id: int, active: bool = True):
+    datos = {
         "email": email,
-        "password_hash": password_hash
+        "password_hash": password_hash,
+        "role_id": role_id,
+        "active": active,
     }
 
-    response = supabase.table(TABLE_NAME).insert(payload).execute()
+    respuesta = base_datos.table(NOMBRE_TABLA_USUARIOS).insert(datos).execute()
 
-    if not response.data:
+    if not respuesta.data:
         return None
 
-    return map_row_to_user(response.data[0])
+    return respuesta.data[0]
+
+# actualizar usuario por el id
+def actualizar_usuario_en_bd(id_usuario: str, campos_a_actualizar: dict):
+    respuesta = (
+        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        .update(campos_a_actualizar)
+        .eq("id", id_usuario)
+        .execute()
+    )
+
+    if not respuesta.data:
+        return None
+
+    return respuesta.data[0]
+
+# borra el usuario por el id
+def borrar_usuario_en_bd(id_usuario: str):
+    respuesta = (
+        base_datos.table(NOMBRE_TABLA_USUARIOS)
+        .delete()
+        .eq("id", id_usuario)
+        .execute()
+    )
+
+    if not respuesta.data:
+        return None
+
+    return respuesta.data[0]
