@@ -28,22 +28,45 @@ class DashboardViewModel extends ChangeNotifier {
   DashboardPreset? get selectedPreset => _selectedPreset;
 
   Future<void> initializeDashboard() async {
+    if (_presets.isEmpty) {
+      _selectedPreset = null;
+      _clearItems();
+      _clearErrorMessage();
+      _state = DashboardState.empty;
+      notifyListeners();
+      return;
+    }
+
     _selectedPreset ??= _presets.first;
     await _loadDashboardForSelectedPreset();
   }
 
   Future<void> changePreset(DashboardPreset preset) async {
+    if (_selectedPreset?.id == preset.id) return;
+
     _selectedPreset = preset;
     await _loadDashboardForSelectedPreset();
   }
 
   Future<void> _loadDashboardForSelectedPreset() async {
+    final selectedPreset = _selectedPreset;
+
+    if (selectedPreset == null) {
+      _clearItems();
+      _clearErrorMessage();
+      _state = DashboardState.empty;
+      notifyListeners();
+      return;
+    }
+
     _clearErrorMessage();
     _state = DashboardState.loading;
     notifyListeners();
 
     try {
-      final List<DashboardWidgetItem> items = _fetchDashboardItemsForPreset(_selectedPreset!);
+      final List<DashboardWidgetItem> items = _fetchDashboardItemsForPreset(
+        selectedPreset,
+      );
 
       if (items.isEmpty) {
         _clearItems();
@@ -61,7 +84,9 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<DashboardWidgetItem> _fetchDashboardItemsForPreset(DashboardPreset preset) {
+  List<DashboardWidgetItem> _fetchDashboardItemsForPreset(
+    DashboardPreset preset,
+  ) {
     switch (preset.id) {
       case 'default':
         return [
