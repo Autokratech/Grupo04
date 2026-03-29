@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/models/dashboard_preset.dart';
+import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
@@ -18,19 +18,10 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final DashboardViewModel _viewModel = DashboardViewModel();
 
-  final List<DashboardPreset> _presets = const [
-    DashboardPreset(id: 'default', name: 'Por defecto'),
-    DashboardPreset(id: 'operations', name: 'Operaciones'),
-    DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
-  ];
-
-  late DashboardPreset _selectedPreset;
-
   @override
   void initState() {
     super.initState();
-    _selectedPreset = _presets.first;
-    _viewModel.loadDashboard();
+    _viewModel.initializeDashboard();
   }
 
   @override
@@ -43,11 +34,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     context.go(AppRoutes.login);
   }
 
-  Widget _buildDashboardContent() {
-    final state = _viewModel.state;
-    final items = _viewModel.items;
-    final errorMessage = _viewModel.errorMessage;
-
+  Widget _buildDashboardContent(
+    DashboardState state,
+    List<DashboardWidgetItem> items,
+    String? errorMessage,
+  ) {
     if (state == DashboardState.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -68,7 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _viewModel.loadDashboard,
+              onPressed: _viewModel.initializeDashboard,
               child: const Text('Reintentar'),
             ),
           ],
@@ -95,7 +86,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(24),
           child: ListenableBuilder(
             listenable: _viewModel,
-            builder: (context, child) {
+            builder: (context, _) {
+              final state = _viewModel.state;
+              final items = _viewModel.items;
+              final errorMessage = _viewModel.errorMessage;
+              final presets = _viewModel.presets;
+              final selectedPreset = _viewModel.selectedPreset;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -105,17 +102,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onLogoutPressed: _handleLogout,
                   ),
                   const SizedBox(height: 16),
-                  PresetSelector(
-                    presets: _presets,
-                    selectedPreset: _selectedPreset,
-                    onPresetChanged: (preset) {
-                      setState(() {
-                        _selectedPreset = preset;
-                      });
-                    },
+                  if (selectedPreset != null) ...[
+                    PresetSelector(
+                      presets: presets,
+                      selectedPreset: selectedPreset,
+                      onPresetChanged: _viewModel.changePreset,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  Expanded(
+                    child: _buildDashboardContent(state, items, errorMessage),
                   ),
-                  const SizedBox(height: 24),
-                  Expanded(child: _buildDashboardContent()),
                 ],
               );
             },
