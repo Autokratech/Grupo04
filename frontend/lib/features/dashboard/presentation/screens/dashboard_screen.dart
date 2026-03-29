@@ -101,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     subtitle: 'Vista general de monitorización',
                     onLogoutPressed: _handleLogout,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   if (selectedPreset != null) ...[
                     PresetSelector(
                       presets: presets,

@@ -17,7 +17,11 @@ class DashboardCard extends StatelessWidget {
       case WidgetType.list:
         return 'Alerta';
       case WidgetType.chart:
+        return 'Gráfico';
+      case WidgetType.service:
         return 'Servicio';
+      case WidgetType.alert:
+        return 'Alerta';
     }
   }
 

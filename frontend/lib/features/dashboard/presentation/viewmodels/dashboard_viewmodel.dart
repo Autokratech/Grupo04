@@ -85,60 +85,88 @@ class DashboardViewModel extends ChangeNotifier {
   }
 
   List<DashboardWidgetItem> _fetchDashboardItemsForPreset(
-    DashboardPreset preset,
-  ) {
+      DashboardPreset preset,
+      ) {
     switch (preset.id) {
       case 'default':
         return [
           DashboardWidgetItem(
-            id: '1',
-            title: 'Temperature',
-            type: WidgetType.metric,
+            id: 'active-services',
+            title: 'Servicios activos',
+            type: WidgetType.service,
             status: WidgetStatus.ok,
-            primaryValue: '25°C',
+            primaryValue: '12',
+          ),
+          DashboardWidgetItem(
+            id: 'open-incidents',
+            title: 'Incidencias abiertas',
+            type: WidgetType.alert,
+            status: WidgetStatus.error,
+            primaryValue: '3',
+          ),
+          DashboardWidgetItem(
+            id: 'sync-status',
+            title: 'Sincronización',
+            type: WidgetType.status,
+            status: WidgetStatus.ok,
+            primaryValue: 'Operativa',
           ),
         ];
 
       case 'operations':
         return [
           DashboardWidgetItem(
-            id: '1',
-            title: 'Temperature',
-            type: WidgetType.metric,
-            status: WidgetStatus.ok,
-            primaryValue: '25°C',
+            id: 'pending-forms',
+            title: 'Formularios pendientes',
+            type: WidgetType.alert,
+            status: WidgetStatus.error,
+            primaryValue: '8',
           ),
           DashboardWidgetItem(
-            id: '2',
-            title: 'Humidity',
+            id: 'failed-services',
+            title: 'Servicios con error',
+            type: WidgetType.service,
+            status: WidgetStatus.error,
+            primaryValue: '2',
+          ),
+          DashboardWidgetItem(
+            id: 'avg-response-time',
+            title: 'Tiempo medio de respuesta',
             type: WidgetType.metric,
             status: WidgetStatus.ok,
-            primaryValue: '60%',
+            primaryValue: '240 ms',
           ),
         ];
 
       case 'pc_resources':
         return [
           DashboardWidgetItem(
-            id: '1',
-            title: 'Temperature',
+            id: 'cpu-usage',
+            title: 'Uso de CPU',
             type: WidgetType.metric,
             status: WidgetStatus.ok,
-            primaryValue: '25°C',
+            primaryValue: '34%',
           ),
           DashboardWidgetItem(
-            id: '2',
-            title: 'Humidity',
+            id: 'ram-usage',
+            title: 'Uso de RAM',
             type: WidgetType.metric,
             status: WidgetStatus.ok,
-            primaryValue: '60%',
+            primaryValue: '68%',
           ),
           DashboardWidgetItem(
-            id: '3',
-            title: 'Battery',
+            id: 'disk-space',
+            title: 'Espacio en disco',
+            type: WidgetType.metric,
+            status: WidgetStatus.ok,
+            primaryValue: '120 GB',
+          ),
+          DashboardWidgetItem(
+            id: 'network-status',
+            title: 'Red',
             type: WidgetType.status,
             status: WidgetStatus.ok,
-            primaryValue: '100%',
+            primaryValue: 'Conectada',
           ),
         ];
 

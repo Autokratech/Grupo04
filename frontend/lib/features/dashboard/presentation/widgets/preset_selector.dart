@@ -17,6 +17,11 @@ class PresetSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<DashboardPreset>(
       initialValue: selectedPreset,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Perfiles',
+        border: OutlineInputBorder(),
+      ),
       items: presets
           .map(
             (preset) => DropdownMenuItem<DashboardPreset>(
