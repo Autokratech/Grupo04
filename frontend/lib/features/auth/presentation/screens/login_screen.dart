@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/features/auth/presentation/viewmodels/login_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/auth/presentation/states/login_state.dart';
@@ -53,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: ListenableBuilder(
                 listenable: _viewModel,
                 builder: (context, child) {
@@ -69,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: Theme.of(context).textTheme.headlineSmall,
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
 
                       TextField(
                         controller: _emailController,
@@ -77,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(labelText: 'Email'),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
 
                       TextField(
                         controller: _passwordController,
@@ -92,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         obscureText: true,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xxl),
 
                       ElevatedButton(
                         onPressed: isLoading ? null : _submitLogin,
@@ -100,12 +101,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
 
                       if (isLoading) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.md),
                         const Center(child: CircularProgressIndicator()),
                       ],
 
                       if (errorMessage != null) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Text(
                           errorMessage,
                           style: TextStyle(

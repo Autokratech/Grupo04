@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_card.dart';
 
@@ -16,7 +17,7 @@ class WidgetGrid extends StatelessWidget {
 
         return DashboardCard(item: item);
       },
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
     );
   }
 }

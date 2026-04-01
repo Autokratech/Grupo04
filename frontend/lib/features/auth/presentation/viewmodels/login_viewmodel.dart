@@ -3,10 +3,13 @@ import 'package:frontend/features/auth/presentation/states/login_state.dart';
 
 class LoginViewModel extends ChangeNotifier {
   LoginState _state = LoginState.initial;
+
   LoginState get state => _state;
 
   String? _errorMessage;
+
   String? get errorMessage => _errorMessage;
+
   void _clearErrorMessage() => _errorMessage = null;
 
   Future<void> login(String email, String password) async {

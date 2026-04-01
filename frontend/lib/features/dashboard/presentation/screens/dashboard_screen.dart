@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
@@ -54,7 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 errorMessage,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: TextStyle(color: AppColors.error),
               ),
             ],
             const SizedBox(height: 16),
@@ -81,41 +83,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: ListenableBuilder(
-            listenable: _viewModel,
-            builder: (context, _) {
-              final state = _viewModel.state;
-              final items = _viewModel.items;
-              final errorMessage = _viewModel.errorMessage;
-              final presets = _viewModel.presets;
-              final selectedPreset = _viewModel.selectedPreset;
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: ListenableBuilder(
+              listenable: _viewModel,
+              builder: (context, _) {
+                final state = _viewModel.state;
+                final items = _viewModel.items;
+                final errorMessage = _viewModel.errorMessage;
+                final presets = _viewModel.presets;
+                final selectedPreset = _viewModel.selectedPreset;
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DashboardHeader(
-                    title: 'Dashboard',
-                    subtitle: 'Vista general de monitorización',
-                    onLogoutPressed: _handleLogout,
-                  ),
-                  const SizedBox(height: 24),
-                  if (selectedPreset != null) ...[
-                    PresetSelector(
-                      presets: presets,
-                      selectedPreset: selectedPreset,
-                      onPresetChanged: _viewModel.changePreset,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DashboardHeader(
+                      title: 'Dashboard',
+                      subtitle: 'Vista general de monitorización',
+                      onLogoutPressed: _handleLogout,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (selectedPreset != null) ...[
+                      PresetSelector(
+                        presets: presets,
+                        selectedPreset: selectedPreset,
+                        onPresetChanged: _viewModel.changePreset,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                    Expanded(
+                      child: _buildDashboardContent(state, items, errorMessage),
+                    ),
                   ],
-                  Expanded(
-                    child: _buildDashboardContent(state, items, errorMessage),
-                  ),
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),

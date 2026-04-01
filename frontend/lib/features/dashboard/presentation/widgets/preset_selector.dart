@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/domain/models/dashboard_preset.dart';
 
 class PresetSelector extends StatelessWidget {
@@ -21,6 +22,9 @@ class PresetSelector extends StatelessWidget {
       decoration: const InputDecoration(
         labelText: 'Perfiles',
         border: OutlineInputBorder(),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.border),
+        ),
       ),
       items: presets
           .map(
