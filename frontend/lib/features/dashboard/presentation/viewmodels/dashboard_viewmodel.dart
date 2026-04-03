@@ -17,13 +17,6 @@ class DashboardViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   void _clearErrorMessage() => _errorMessage = null;
 
-  final List<DashboardPreset> _presets = const [
-    DashboardPreset(id: 'default', name: 'Por defecto'),
-    DashboardPreset(id: 'operations', name: 'Operaciones'),
-    DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
-  ];
-  List<DashboardPreset> get presets => List.unmodifiable(_presets);
-
   DashboardPreset? _selectedPreset;
   DashboardPreset? get selectedPreset => _selectedPreset;
 
@@ -31,71 +24,12 @@ class DashboardViewModel extends ChangeNotifier {
   DashboardWidgetItem? get selectedItem => _selectedItem;
   void _clearSelectedItem() => _selectedItem = null;
 
-  Future<void> initializeDashboard() async {
-    if (_presets.isEmpty) {
-      _selectedPreset = null;
-      _clearSelectedItem();
-      _clearItems();
-      _clearErrorMessage();
-      _state = DashboardState.empty;
-      notifyListeners();
-      return;
-    }
-
-    _selectedPreset ??= _presets.first;
-    await _loadDashboardForSelectedPreset();
-  }
-
-  Future<void> changePreset(DashboardPreset preset) async {
-    if (_selectedPreset?.id == preset.id) return;
-
-    _selectedPreset = preset;
-    await _loadDashboardForSelectedPreset();
-  }
-
-  Future<void> _loadDashboardForSelectedPreset() async {
-    final selectedPreset = _selectedPreset;
-    _clearSelectedItem();
-
-    if (selectedPreset == null) {
-      _clearItems();
-      _clearErrorMessage();
-      _state = DashboardState.empty;
-      notifyListeners();
-      return;
-    }
-
-    _clearErrorMessage();
-    _state = DashboardState.loading;
-    notifyListeners();
-
-    try {
-      final List<DashboardWidgetItem> items = _fetchDashboardItemsForPreset(
-        selectedPreset,
-      );
-
-      if (items.isEmpty) {
-        _clearItems();
-        _state = DashboardState.empty;
-      } else {
-        _items = items;
-        _state = DashboardState.loaded;
-      }
-    } catch (_) {
-      _clearItems();
-      _state = DashboardState.error;
-      _errorMessage = 'Ha ocurrido un error al cargar el dashboard';
-    }
-
-    notifyListeners();
-  }
-
-  void selectItem(DashboardWidgetItem item) {
-    if (_selectedItem?.id == item.id) return;
-
-    _selectedItem = item;
-    notifyListeners();
-  }
+  final List<DashboardPreset> _presets = const [
+    DashboardPreset(id: 'default', name: 'Por defecto'),
+    DashboardPreset(id: 'operations', name: 'Operaciones'),
+    DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
+  ];
+  List<DashboardPreset> get presets => List.unmodifiable(_presets);
 
   List<DashboardWidgetItem> _fetchDashboardItemsForPreset(
       DashboardPreset preset,
@@ -186,5 +120,78 @@ class DashboardViewModel extends ChangeNotifier {
       default:
         return [];
     }
+  }
+
+  Future<void> initializeDashboard() async {
+    if (_presets.isEmpty) {
+      _selectedPreset = null;
+      _clearSelectedItem();
+      _clearItems();
+      _clearErrorMessage();
+      _state = DashboardState.empty;
+      notifyListeners();
+      return;
+    }
+
+    _selectedPreset ??= _presets.first;
+    await _loadDashboardForSelectedPreset();
+  }
+
+  Future<void> changePreset(DashboardPreset preset) async {
+    if (_selectedPreset?.id == preset.id) return;
+
+    _selectedPreset = preset;
+    await _loadDashboardForSelectedPreset();
+  }
+
+  void selectItem(DashboardWidgetItem item) {
+    if (_selectedItem?.id == item.id) return;
+
+    _selectedItem = item;
+    notifyListeners();
+  }
+
+  void clearSelectedItem() {
+    if (_selectedItem == null) return;
+
+    _clearSelectedItem();
+    notifyListeners();
+  }
+
+  Future<void> _loadDashboardForSelectedPreset() async {
+    final selectedPreset = _selectedPreset;
+    _clearSelectedItem();
+
+    if (selectedPreset == null) {
+      _clearItems();
+      _clearErrorMessage();
+      _state = DashboardState.empty;
+      notifyListeners();
+      return;
+    }
+
+    _clearErrorMessage();
+    _state = DashboardState.loading;
+    notifyListeners();
+
+    try {
+      final List<DashboardWidgetItem> items = _fetchDashboardItemsForPreset(
+        selectedPreset,
+      );
+
+      if (items.isEmpty) {
+        _clearItems();
+        _state = DashboardState.empty;
+      } else {
+        _items = items;
+        _state = DashboardState.loaded;
+      }
+    } catch (_) {
+      _clearItems();
+      _state = DashboardState.error;
+      _errorMessage = 'Ha ocurrido un error al cargar el dashboard';
+    }
+
+    notifyListeners();
   }
 }

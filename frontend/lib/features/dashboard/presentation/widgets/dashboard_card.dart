@@ -7,8 +7,15 @@ import 'package:frontend/domain/models/widget_type.dart';
 
 class DashboardCard extends StatelessWidget {
   final DashboardWidgetItem item;
+  final bool isSelected;
+  final VoidCallback? onTap;
 
-  const DashboardCard({super.key, required this.item});
+  const DashboardCard({
+    super.key,
+    required this.item,
+    this.isSelected = false,
+    this.onTap,
+  });
 
   String _buildTypeLabel(WidgetType type) {
     switch (type) {
@@ -51,40 +58,58 @@ class DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(10);
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(item.title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              item.primaryValue,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Text(_buildTypeLabel(item.type)),
-                const SizedBox(width: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _buildStatusColor(item.status).withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    _buildStatusLabel(item.status),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: _buildStatusColor(item.status),
-                      fontWeight: FontWeight.bold,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          width: isSelected ? 2 : 0,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: borderRadius,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item.title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                item.primaryValue,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Text(_buildTypeLabel(item.type)),
+                  const SizedBox(width: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _buildStatusColor(
+                        item.status,
+                      ).withValues(alpha: 0.10),
+                      borderRadius: borderRadius,
+                    ),
+                    child: Text(
+                      _buildStatusLabel(item.status),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: _buildStatusColor(item.status),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

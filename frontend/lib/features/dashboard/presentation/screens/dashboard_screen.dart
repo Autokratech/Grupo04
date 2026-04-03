@@ -39,6 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildDashboardContent(
     DashboardState state,
     List<DashboardWidgetItem> items,
+    DashboardWidgetItem? selectedItem,
     String? errorMessage,
   ) {
     if (state == DashboardState.loading) {
@@ -74,7 +75,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     if (state == DashboardState.loaded) {
-      return WidgetGrid(items: items);
+      return WidgetGrid(
+        items: items,
+        selectedItem: selectedItem,
+        onItemSelected: _viewModel.selectItem,
+      );
     }
 
     return const Center(child: Text('Estado de dashboard no soportado'));
@@ -87,6 +92,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           FocusScope.of(context).unfocus();
+          _viewModel.clearSelectedItem();
         },
         child: SafeArea(
           child: Padding(
@@ -99,6 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final errorMessage = _viewModel.errorMessage;
                 final presets = _viewModel.presets;
                 final selectedPreset = _viewModel.selectedPreset;
+                final selectedItem = _viewModel.selectedItem;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +125,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: AppSpacing.lg),
                     ],
                     Expanded(
-                      child: _buildDashboardContent(state, items, errorMessage),
+                      child: _buildDashboardContent(
+                        state,
+                        items,
+                        selectedItem,
+                        errorMessage,
+                      ),
                     ),
                   ],
                 );
