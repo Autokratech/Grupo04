@@ -5,6 +5,7 @@ import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/details_side_panel.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/preset_selector.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/widget_grid.dart';
 import 'package:go_router/go_router.dart';
@@ -125,11 +126,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: AppSpacing.lg),
                     ],
                     Expanded(
-                      child: _buildDashboardContent(
-                        state,
-                        items,
-                        selectedItem,
-                        errorMessage,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _buildDashboardContent(
+                              state,
+                              items,
+                              selectedItem,
+                              errorMessage,
+                            ),
+                          ),
+                          if (selectedItem != null) ...[
+                            const SizedBox(height: AppSpacing.lg),
+                            DetailsSidePanel(item: selectedItem),
+                          ],
+                        ],
                       ),
                     ),
                   ],
