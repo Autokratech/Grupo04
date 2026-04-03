@@ -27,9 +27,14 @@ class DashboardViewModel extends ChangeNotifier {
   DashboardPreset? _selectedPreset;
   DashboardPreset? get selectedPreset => _selectedPreset;
 
+  DashboardWidgetItem? _selectedItem;
+  DashboardWidgetItem? get selectedItem => _selectedItem;
+  void _clearSelectedItem() => _selectedItem = null;
+
   Future<void> initializeDashboard() async {
     if (_presets.isEmpty) {
       _selectedPreset = null;
+      _clearSelectedItem();
       _clearItems();
       _clearErrorMessage();
       _state = DashboardState.empty;
@@ -50,6 +55,7 @@ class DashboardViewModel extends ChangeNotifier {
 
   Future<void> _loadDashboardForSelectedPreset() async {
     final selectedPreset = _selectedPreset;
+    _clearSelectedItem();
 
     if (selectedPreset == null) {
       _clearItems();
@@ -81,6 +87,13 @@ class DashboardViewModel extends ChangeNotifier {
       _errorMessage = 'Ha ocurrido un error al cargar el dashboard';
     }
 
+    notifyListeners();
+  }
+
+  void selectItem(DashboardWidgetItem item) {
+    if (_selectedItem?.id == item.id) return;
+
+    _selectedItem = item;
     notifyListeners();
   }
 
