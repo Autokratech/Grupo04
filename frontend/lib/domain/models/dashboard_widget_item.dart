@@ -7,12 +7,14 @@ class DashboardWidgetItem {
   final WidgetType type;
   final WidgetStatus status;
   final String primaryValue;
+  final String? description;
 
-  DashboardWidgetItem({
+  const DashboardWidgetItem({
     required this.id,
     required this.title,
     required this.type,
     required this.status,
     required this.primaryValue,
+    this.description,
   });
 }

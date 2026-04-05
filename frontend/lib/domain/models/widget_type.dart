@@ -2,5 +2,7 @@ enum WidgetType {
   status,
   metric,
   list,
-  chart
+  chart,
+  service,
+  alert
 }
