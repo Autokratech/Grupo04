@@ -43,6 +43,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.service,
             status: WidgetStatus.ok,
             primaryValue: '12',
+            description: 'Número total de servicios operativos en este momento.',
           ),
           DashboardWidgetItem(
             id: 'open-incidents',
@@ -50,6 +51,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.alert,
             status: WidgetStatus.error,
             primaryValue: '3',
+            description: 'Incidencias actualmente pendientes de revisión o cierre.',
           ),
           DashboardWidgetItem(
             id: 'sync-status',
@@ -57,6 +59,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.status,
             status: WidgetStatus.ok,
             primaryValue: 'Operativa',
+            description: 'Estado actual del proceso de sincronización entre sistemas.',
           ),
         ];
 
@@ -68,6 +71,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.alert,
             status: WidgetStatus.error,
             primaryValue: '8',
+            description: 'Formularios aún no procesados por el equipo de operaciones.',
           ),
           DashboardWidgetItem(
             id: 'failed-services',
@@ -75,6 +79,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.service,
             status: WidgetStatus.error,
             primaryValue: '2',
+            description: 'Servicios que han registrado fallos y requieren intervención.',
           ),
           DashboardWidgetItem(
             id: 'avg-response-time',
@@ -93,6 +98,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.metric,
             status: WidgetStatus.ok,
             primaryValue: '34%',
+            description: 'Porcentaje actual de uso del procesador del equipo monitorizado.',
           ),
           DashboardWidgetItem(
             id: 'ram-usage',
@@ -100,6 +106,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.metric,
             status: WidgetStatus.ok,
             primaryValue: '68%',
+            description: 'Memoria RAM utilizada actualmente por el sistema.',
           ),
           DashboardWidgetItem(
             id: 'disk-space',
@@ -107,6 +114,7 @@ class DashboardViewModel extends ChangeNotifier {
             type: WidgetType.metric,
             status: WidgetStatus.ok,
             primaryValue: '120 GB',
+            description: 'Espacio disponible actualmente en el almacenamiento principal.',
           ),
           DashboardWidgetItem(
             id: 'network-status',

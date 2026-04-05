@@ -11,10 +11,11 @@ class DetailsSidePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String? description = item.description?.trim();
+    final hasDescription = description != null && description.isNotEmpty;
+
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -35,12 +36,17 @@ class DetailsSidePanel extends StatelessWidget {
               'Tipo: ${_buildTypeLabel(item.type)}',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+            if (hasDescription) ...[
+              Text(
+                'Descripción: ${item.description}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
-
 
   String _buildStatusLabel(WidgetStatus status) {
     switch (status) {
