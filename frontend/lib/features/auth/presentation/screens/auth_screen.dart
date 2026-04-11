@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
-import 'package:frontend/features/auth/presentation/viewmodels/login_viewmodel.dart';
+import 'package:frontend/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:go_router/go_router.dart';
-import 'package:frontend/features/auth/presentation/states/login_state.dart';
+import 'package:frontend/features/auth/presentation/states/auth_state.dart';
 import 'package:frontend/app/router/app_routes.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class AuthScreen extends StatefulWidget {
+  const AuthScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final LoginViewModel _viewModel = LoginViewModel();
+class _AuthScreenState extends State<AuthScreen> {
+  final AuthViewModel _viewModel = AuthViewModel();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleViewModelChanges() {
     if (!mounted) return;
 
-    if (_viewModel.state == LoginState.authenticated) {
+    if (_viewModel.state == AuthState.authenticated) {
       context.go(AppRoutes.dashboard);
     }
   }
@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submitLogin() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    _viewModel.login(email, password);
+    _viewModel.register(email, password);
   }
 
   @override
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: ListenableBuilder(
                 listenable: _viewModel,
                 builder: (context, child) {
-                  final isLoading = _viewModel.state == LoginState.loading;
+                  final isLoading = _viewModel.state == AuthState.loading;
                   final errorMessage = _viewModel.errorMessage;
 
                   return Column(

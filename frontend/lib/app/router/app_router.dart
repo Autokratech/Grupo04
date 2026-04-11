@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/splash/presentation/screens/splash_screen.dart';
 import 'app_routes.dart';
-import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
+import 'package:frontend/features/auth/presentation/screens/auth_screen.dart';
 import 'package:frontend/features/dashboard/presentation/screens/dashboard_screen.dart';
 
 class AppRouter {
@@ -19,7 +19,7 @@ class AppRouter {
         path: AppRoutes.login,
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const LoginScreen(),
+          child: const AuthScreen(),
           transitionDuration: const Duration(milliseconds: 180),
           reverseTransitionDuration: const Duration(milliseconds: 180),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
