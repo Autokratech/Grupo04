@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
 import 'package:frontend/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/auth/presentation/states/auth_state.dart';
@@ -13,7 +15,9 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final AuthViewModel _viewModel = AuthViewModel();
+  final AuthViewModel _viewModel = AuthViewModel(
+    authRepository: sl<AuthRepository>(),
+  );
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -32,17 +36,18 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  void _submitLogin() {
+  void _submitAuth() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    _viewModel.register(email, password);
+    _viewModel.register(email: email, password: password);
   }
 
   @override
   void dispose() {
     _viewModel.removeListener(_handleViewModelChanges);
-    _emailController.dispose();
     _passwordController.dispose();
+    _emailController.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
@@ -85,7 +90,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) {
                           if (!isLoading) {
-                            _submitLogin();
+                            _submitAuth();
                           }
                         },
                         decoration: const InputDecoration(
@@ -96,8 +101,8 @@ class _AuthScreenState extends State<AuthScreen> {
                       const SizedBox(height: AppSpacing.xxl),
 
                       ElevatedButton(
-                        onPressed: isLoading ? null : _submitLogin,
-                        child: const Text('Iniciar sesión'),
+                        onPressed: isLoading ? null : _submitAuth,
+                        child: const Text('Registrarse'),
                       ),
 
                       if (isLoading) ...[

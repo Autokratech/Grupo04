@@ -34,7 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _handleLogout() {
-    context.go(AppRoutes.login);
+    context.go(AppRoutes.auth);
   }
 
   Widget _buildDashboardContent(

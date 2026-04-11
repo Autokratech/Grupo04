@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/splash/presentation/screens/splash_screen.dart';
 import 'app_routes.dart';
@@ -16,7 +16,7 @@ class AppRouter {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
-        path: AppRoutes.login,
+        path: AppRoutes.auth,
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const AuthScreen(),

@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _runStartupFlow() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go(AppRoutes.login);
+      context.go(AppRoutes.auth);
     });
   }
 
