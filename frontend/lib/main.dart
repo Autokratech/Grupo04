@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'app/app.dart';
 import 'app/di/service_locator.dart';
 

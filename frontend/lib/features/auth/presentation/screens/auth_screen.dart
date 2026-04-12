@@ -3,6 +3,7 @@ import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
 import 'package:frontend/features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import 'package:frontend/features/auth/presentation/widgets/auth_form.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/auth/presentation/states/auth_state.dart';
 import 'package:frontend/app/router/app_routes.dart';
@@ -45,8 +46,8 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void dispose() {
     _viewModel.removeListener(_handleViewModelChanges);
-    _passwordController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -77,49 +78,13 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       const SizedBox(height: AppSpacing.lg),
 
-                      TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(labelText: 'Email'),
+                      AuthForm(
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        isLoading: isLoading,
+                        errorMessage: errorMessage,
+                        onSubmit: _submitAuth,
                       ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      TextField(
-                        controller: _passwordController,
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) {
-                          if (!isLoading) {
-                            _submitAuth();
-                          }
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Contraseña',
-                        ),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: AppSpacing.xxl),
-
-                      ElevatedButton(
-                        onPressed: isLoading ? null : _submitAuth,
-                        child: const Text('Registrarse'),
-                      ),
-
-                      if (isLoading) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        const Center(child: CircularProgressIndicator()),
-                      ],
-
-                      if (errorMessage != null) ...[
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          errorMessage,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
                     ],
                   );
                 },
