@@ -29,15 +29,9 @@ class AuthViewModel extends ChangeNotifier {
       _state = AuthState.authenticated;
     } catch (_) {
       _state = AuthState.error;
-      _errorMessage = 'Registration failed. Please try again.';
+      _errorMessage = 'Error al registrar. Por favor inténtelo de nuevo.';
     }
 
-    notifyListeners();
-  }
-
-  void logout() {
-    _clearErrorMessage();
-    _state = AuthState.initial;
     notifyListeners();
   }
 }

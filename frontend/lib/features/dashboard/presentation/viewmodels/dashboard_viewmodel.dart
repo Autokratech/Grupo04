@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
 import 'package:frontend/domain/models/dashboard_preset.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';

@@ -28,4 +28,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
     return AppUserMapper.toDomain(response.user);
   }
+
+  @override
+  Future<void> logout() async {
+    await _sessionStorageService.clearSession();
+  }
 }

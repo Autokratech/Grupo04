@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/app/router/app_routes.dart';
+import 'package:frontend/data/services/local/session_storage_service.dart';
 import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -19,7 +21,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _runStartupFlow() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go(AppRoutes.auth);
+      if (!mounted) return;
+
+      final sessionStorageService = sl<SessionStorageService>();
+
+      if (sessionStorageService.hasSession) {
+        context.go(AppRoutes.dashboard);
+      } else {
+        context.go(AppRoutes.auth);
+      }
     });
   }
 
