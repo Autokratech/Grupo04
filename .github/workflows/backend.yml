@@ -16,7 +16,7 @@ env:
   NAMESPACE: development
   IMAGE_NAME: backend
 
-obs:
+jobs:
  
   build-backend:
     name: Build Backend (FastAPI)
