@@ -30,6 +30,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AppUser> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _authApiService.login(email, password);
+
+    await _sessionStorageService.saveSession(
+      accessToken: response.accessToken,
+      tokenType: response.tokenType,
+    );
+
+    return AppUserMapper.toDomain(response.user);
+  }
+
+  @override
   Future<void> logout() async {
     await _sessionStorageService.clearSession();
   }

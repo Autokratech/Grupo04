@@ -10,28 +10,57 @@ class AuthViewModel extends ChangeNotifier {
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
-  void _clearErrorMessage() => _errorMessage = null;
 
   AuthViewModel({required AuthRepository authRepository})
     : _authRepository = authRepository;
 
-  Future<void> register({
-    required String email,
-    required String password,
+  Future<void> _runAuthAction(
+    Future<Object?> Function() action, {
+    required String errorMessage,
   }) async {
-    _clearErrorMessage();
+    if (_state == AuthState.loading) return;
 
+    _resetErrorState();
     _state = AuthState.loading;
     notifyListeners();
 
     try {
-      await _authRepository.register(email: email, password: password);
+      await action();
       _state = AuthState.authenticated;
     } catch (_) {
       _state = AuthState.error;
-      _errorMessage = 'Error al registrar. Por favor inténtelo de nuevo.';
+      _errorMessage = errorMessage;
     }
 
+    notifyListeners();
+  }
+
+  Future<void> register({required String email, required String password}) {
+    return _runAuthAction(
+      () => _authRepository.register(email: email, password: password),
+      errorMessage: 'Error al registrar. Por favor inténtelo de nuevo.',
+    );
+  }
+
+  Future<void> login({required String email, required String password}) {
+    return _runAuthAction(
+      () => _authRepository.login(email: email, password: password),
+      errorMessage: 'Error al iniciar sesión. Por favor inténtelo de nuevo.',
+    );
+  }
+
+  void _resetErrorState() {
+    _errorMessage = null;
+
+    if (_state == AuthState.error) {
+      _state = AuthState.initial;
+    }
+  }
+
+  void clearError() {
+    if (_errorMessage == null && _state != AuthState.error) return;
+
+    _resetErrorState();
     notifyListeners();
   }
 }
