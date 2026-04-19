@@ -1,4 +1,6 @@
 enum UserRole {
+  superadmin,
+  admin,
   user,
-  admin;
+  guest;
 }

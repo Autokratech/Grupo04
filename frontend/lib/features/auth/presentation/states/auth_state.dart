@@ -1,4 +1,4 @@
-enum LoginState {
+enum AuthState {
   initial,
   loading,
   authenticated,
