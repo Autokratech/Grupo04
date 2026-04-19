@@ -1,5 +1,7 @@
 import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
 import 'package:frontend/data/repositories/auth_repository/auth_repository_impl.dart';
+import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
+import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository_impl.dart';
 import 'package:frontend/data/services/local/session_storage_service.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 import 'package:frontend/data/services/remote/auth_api_service.dart';
@@ -35,5 +37,9 @@ Future<void> setupDependencies() async {
       authApiService: sl<AuthApiService>(),
       sessionStorageService: sl<SessionStorageService>(),
     ),
+  );
+
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(),
   );
 }

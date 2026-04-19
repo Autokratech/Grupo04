@@ -51,10 +51,70 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   List<DashboardWidgetItem> _buildOperationsItems() {
-    return [];
+    return [
+      DashboardWidgetItem(
+        id: 'pending-forms',
+        title: 'Formularios pendientes',
+        type: WidgetType.alert,
+        status: WidgetStatus.error,
+        primaryValue: '8',
+        description:
+        'Formularios aún no procesados por el equipo de operaciones.',
+      ),
+      DashboardWidgetItem(
+        id: 'failed-services',
+        title: 'Servicios con error',
+        type: WidgetType.service,
+        status: WidgetStatus.error,
+        primaryValue: '2',
+        description:
+        'Servicios que han registrado fallos y requieren intervención.',
+      ),
+      DashboardWidgetItem(
+        id: 'avg-response-time',
+        title: 'Tiempo medio de respuesta',
+        type: WidgetType.metric,
+        status: WidgetStatus.ok,
+        primaryValue: '240 ms',
+      ),
+    ];
   }
 
   List<DashboardWidgetItem> _buildPcResourcesItems() {
-    return [];
+    return [
+      DashboardWidgetItem(
+        id: 'cpu-usage',
+        title: 'Uso de CPU',
+        type: WidgetType.metric,
+        status: WidgetStatus.ok,
+        primaryValue: '34%',
+        description:
+        'Porcentaje actual de uso del procesador del equipo monitorizado.',
+      ),
+      DashboardWidgetItem(
+        id: 'ram-usage',
+        title: 'Uso de RAM',
+        type: WidgetType.metric,
+        status: WidgetStatus.ok,
+        primaryValue: '68%',
+        description: 'Memoria RAM utilizada actualmente por el sistema.',
+      ),
+      DashboardWidgetItem(
+        id: 'disk-space',
+        title: 'Espacio en disco',
+        type: WidgetType.metric,
+        status: WidgetStatus.ok,
+        primaryValue: '120 GB',
+        description:
+        'Espacio disponible actualmente en el almacenamiento principal.',
+      ),
+      DashboardWidgetItem(
+        id: 'network-status',
+        title: 'Red',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Conectada',
+      ),
+    ];
   }
 }
