@@ -1,9 +1,19 @@
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
+import 'package:frontend/domain/models/dashboard_preset.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
+  @override
+  Future<List<DashboardPreset>> getAvailablePresets() async {
+    return const [
+      DashboardPreset(id: 'default', name: 'Por defecto'),
+      DashboardPreset(id: 'operations', name: 'Operaciones'),
+      DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
+    ];
+  }
+
   @override
   Future<List<DashboardWidgetItem>> getDashboardItems({
     required String presetId,
