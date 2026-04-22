@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from app.core.security import generar_hash_password
 from app.repositories import roles_repository, users_repository
 from app.schemas.user_schema import DatosActualizarUsuario, DatosCrearUsuario
+from app.services.audit_service import registrar_evento_auditoria
 
 # listado de usuarios, filtra si se ha feninido el filtro.
 def servicio_listar_usuarios(filtro_activo: bool | None = None):
@@ -23,6 +24,16 @@ def servicio_crear_usuario(datos_usuario: DatosCrearUsuario):
 
     usuario_existente = users_repository.buscar_usuario_por_email(datos_usuario.email)
     if usuario_existente:
+        registrar_evento_auditoria(
+            user_id=usuario_existente["id"],
+            action="users.create.error",
+            description="Intento de crear un usuario con un email ya existente",
+            meta={
+                "status": "error",
+                "reason": "email_duplicado",
+                "email_intentado": datos_usuario.email,
+            },
+        )
         raise HTTPException(status_code=400, detail="El email ya esta registrado")
 
     rol = roles_repository.buscar_rol_por_id(datos_usuario.role_id)
@@ -40,6 +51,18 @@ def servicio_crear_usuario(datos_usuario: DatosCrearUsuario):
 
     if not usuario_creado:
         raise HTTPException(status_code=500, detail="No se pudo crear el usuario")
+
+    registrar_evento_auditoria(
+        user_id=usuario_creado["id"],
+        action="users.create",
+        description="Usuario creado correctamente",
+        meta={
+            "status": "success",
+            "email": usuario_creado["email"],
+            "role_id": usuario_creado["role_id"],
+            "active": usuario_creado["active"],
+        },
+    )
 
     return usuario_creado
 
@@ -72,6 +95,16 @@ def servicio_actualizar_usuario(id_usuario: str, datos_usuario: DatosActualizarU
     if not usuario_actualizado:
         raise HTTPException(status_code=500, detail="No se pudo actualizar el usuario")
 
+    registrar_evento_auditoria(
+        user_id=usuario_actualizado["id"],
+        action="users.update",
+        description="Usuario actualizado correctamente",
+        meta={
+            "status": "success",
+            "updated_fields": list(campos_a_actualizar.keys()),
+        },
+    )
+
     return usuario_actualizado
 
 # Borra un usuario por id
@@ -80,5 +113,9 @@ def servicio_borrar_usuario(id_usuario: str):
     usuario_borrado = users_repository.borrar_usuario_en_bd(id_usuario)
     if not usuario_borrado:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Con la tabla actual t_audit_log no se audita el borrado fisico de usuarios,
+    # porque el FK user_id -> t_users.id puede bloquear el delete o hacer inutil el log.
+    # Para auditar deletes de forma robusta, lo ideal es soft delete o quitar ese FK.
 
     return {"mensaje": "Usuario eliminado correctamente"}

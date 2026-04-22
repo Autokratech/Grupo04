@@ -8,7 +8,7 @@ NOMBRE_TABLA_AUDITORIA = "t_audit_log"
 
 # Inserta un registro de auditoria adaptado a la tabla real del proyecto.
 def crear_registro_auditoria_en_bd(
-    user_id: str,
+    user_id: str | None,
     action: str,
     description: str | None = None,
     meta: dict | None = None,
