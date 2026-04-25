@@ -3,6 +3,8 @@ import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
+import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
+import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
@@ -22,7 +24,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final AuthRepository _authRepository = sl<AuthRepository>();
-  final DashboardViewModel _viewModel = DashboardViewModel();
+  final DashboardViewModel _viewModel = DashboardViewModel(
+    dashboardRepository: sl<DashboardRepository>(),
+    dashboardPreferencesService: sl<DashboardPreferencesService>(),
+  );
 
   @override
   void initState() {
