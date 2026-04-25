@@ -69,7 +69,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         status: WidgetStatus.error,
         primaryValue: '8',
         description:
-        'Formularios aún no procesados por el equipo de operaciones.',
+            'Formularios aún no procesados por el equipo de operaciones.',
       ),
       DashboardWidgetItem(
         id: 'failed-services',
@@ -78,7 +78,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         status: WidgetStatus.error,
         primaryValue: '2',
         description:
-        'Servicios que han registrado fallos y requieren intervención.',
+            'Servicios que han registrado fallos y requieren intervención.',
       ),
       DashboardWidgetItem(
         id: 'avg-response-time',
@@ -99,7 +99,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         status: WidgetStatus.ok,
         primaryValue: '34%',
         description:
-        'Porcentaje actual de uso del procesador del equipo monitorizado.',
+            'Porcentaje actual de uso del procesador del equipo monitorizado.',
       ),
       DashboardWidgetItem(
         id: 'ram-usage',
@@ -116,7 +116,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         status: WidgetStatus.ok,
         primaryValue: '120 GB',
         description:
-        'Espacio disponible actualmente en el almacenamiento principal.',
+            'Espacio disponible actualmente en el almacenamiento principal.',
       ),
       DashboardWidgetItem(
         id: 'network-status',
