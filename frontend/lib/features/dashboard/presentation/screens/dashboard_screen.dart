@@ -28,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     dashboardRepository: sl<DashboardRepository>(),
     dashboardPreferencesService: sl<DashboardPreferencesService>(),
   );
+  final Object _dashboardDetailTapGroup = Object();
 
   @override
   void initState() {
@@ -108,68 +109,99 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return const Center(child: Text('Estado de dashboard no soportado'));
   }
 
+  Widget _buildTapProtectedArea({required Widget child}) {
+    return TapRegion(
+      groupId: _dashboardDetailTapGroup,
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+        _viewModel.clearSelectedItem();
+      },
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          _viewModel.clearSelectedItem();
-        },
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: ListenableBuilder(
-              listenable: _viewModel,
-              builder: (context, _) {
-                final state = _viewModel.state;
-                final items = _viewModel.items;
-                final errorMessage = _viewModel.errorMessage;
-                final presets = _viewModel.presets;
-                final selectedPreset = _viewModel.selectedPreset;
-                final selectedItem = _viewModel.selectedItem;
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ListenableBuilder(
+            listenable: _viewModel,
+            builder: (context, _) {
+              final state = _viewModel.state;
+              final items = _viewModel.items;
+              final errorMessage = _viewModel.errorMessage;
+              final presets = _viewModel.presets;
+              final selectedPreset = _viewModel.selectedPreset;
+              final selectedItem = _viewModel.selectedItem;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DashboardHeader(
-                      title: 'Dashboard',
-                      subtitle: 'Vista general de monitorización',
-                      onLogoutPressed: _handleLogout,
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DashboardHeader(
+                    title: 'Dashboard',
+                    subtitle: 'Vista general de monitorización',
+                    onLogoutPressed: _handleLogout,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  if (selectedPreset != null) ...[
+                    PresetSelector(
+                      presets: presets,
+                      selectedPreset: selectedPreset,
+                      onPresetChanged: _viewModel.changePreset,
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    if (selectedPreset != null) ...[
-                      PresetSelector(
-                        presets: presets,
-                        selectedPreset: selectedPreset,
-                        onPresetChanged: _viewModel.changePreset,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: _buildDashboardContent(
-                              state,
-                              items,
-                              selectedItem,
-                              errorMessage,
-                            ),
-                          ),
-                          if (selectedItem != null) ...[
-                            const SizedBox(height: AppSpacing.lg),
-                            DetailsSidePanel(item: selectedItem),
-                          ],
-                        ],
-                      ),
-                    ),
                   ],
-                );
-              },
-            ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWideLayout = constraints.maxWidth >= 900;
+                        final mainContent = _buildTapProtectedArea(
+                          child: _buildDashboardContent(
+                            state,
+                            items,
+                            selectedItem,
+                            errorMessage,
+                          ),
+                        );
+
+                        if (!isWideLayout) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(child: mainContent),
+                              if (selectedItem != null) ...[
+                                const SizedBox(height: AppSpacing.lg),
+                                _buildTapProtectedArea(
+                                  child: DetailsSidePanel(item: selectedItem),
+                                ),
+                              ],
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: mainContent),
+                            if (selectedItem != null) ...[
+                              const SizedBox(width: AppSpacing.lg),
+                              SizedBox(
+                                width: 320,
+                                child: _buildTapProtectedArea(
+                                  child: DetailsSidePanel(item: selectedItem),
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
