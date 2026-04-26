@@ -149,7 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     PresetSelector(
                       presets: presets,
                       selectedPreset: selectedPreset,
-                      onPresetChanged: _viewModel.changePreset,
+                      onPresetChanged: _viewModel.changeTab,
                     ),
                     const SizedBox(height: AppSpacing.lg),
                   ],

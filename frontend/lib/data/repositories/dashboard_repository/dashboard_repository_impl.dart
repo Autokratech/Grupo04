@@ -1,26 +1,71 @@
+import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
+import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_preset.dart';
+import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
+  final Dashboard _dashboard = const Dashboard(
+    id: 'local-dashboard',
+    theme: null,
+    language: null,
+  );
+
+  final List<DashboardTab> _tabs = [
+    DashboardTab(id: 'catalog', position: 1, name: 'Catálogo'),
+    DashboardTab(id: 'operations', position: 2, name: 'Operaciones'),
+    DashboardTab(id: 'pc_resources', position: 3, name: 'Recursos PC'),
+  ];
+
   @override
-  Future<List<DashboardPreset>> getAvailablePresets() async {
-    return const [
-      DashboardPreset(id: 'default', name: 'Por defecto'),
-      DashboardPreset(id: 'operations', name: 'Operaciones'),
-      DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
-    ];
+  Future<Dashboard> getDashboard() async {
+    return _dashboard;
   }
 
   @override
-  Future<List<DashboardWidgetItem>> getDashboardItems({
-    required String presetId,
+  Future<List<DashboardTab>> getDashboardTabs({
+    required String dashboardId,
   }) async {
-    switch (presetId) {
-      case 'default':
-        return _buildDefaultItems();
+    final tabs = [..._tabs]..sort((a, b) => a.position.compareTo(b.position));
+    return tabs;
+  }
+
+  @override
+  Future<DashboardTab> createDashboardTab({
+    required String dashboardId,
+    required String name,
+  }) async {
+    if (_tabs.length >= AppConstants.maxTabs) {
+      throw Exception('No se pueden crear más de ${AppConstants.maxTabs} pestañas');
+    }
+
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      throw Exception('El nombre de la pestaña no puede estar vacío');
+    }
+
+    final newTab = DashboardTab(
+      id: 'local-tab-${DateTime.now().microsecondsSinceEpoch}',
+      position: _tabs.length,
+      name: normalizedName,
+    );
+
+    _tabs.add(newTab);
+
+    return newTab;
+  }
+
+  @override
+  Future<List<DashboardWidgetItem>> getTabItems({
+    required String tabId,
+  }) async {
+    switch (tabId) {
+      case 'catalog':
+        return _buildCatalogItems();
       case 'operations':
         return _buildOperationsItems();
       case 'pc_resources':
@@ -30,7 +75,35 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
   }
 
-  List<DashboardWidgetItem> _buildDefaultItems() {
+  // TODO: acabará eliminado
+  @override
+  Future<List<DashboardPreset>> getAvailablePresets() async {
+    return const [
+      DashboardPreset(id: 'default', name: 'Por defecto'),
+      DashboardPreset(id: 'operations', name: 'Operaciones'),
+      DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
+    ];
+  }
+
+  // TODO: acabará eliminado
+  @override
+  Future<List<DashboardWidgetItem>> getDashboardItems({
+    required String presetId,
+  }) async {
+    switch (presetId) {
+      case 'default':
+        return _buildCatalogItems();
+      case 'operations':
+        return _buildOperationsItems();
+      case 'pc_resources':
+        return _buildPcResourcesItems();
+      default:
+        return [];
+    }
+  }
+
+  // TODO: acabará eliminado
+  List<DashboardWidgetItem> _buildCatalogItems() {
     return [
       DashboardWidgetItem(
         id: 'active-services',
@@ -60,6 +133,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     ];
   }
 
+  // TODO: acabará eliminado
   List<DashboardWidgetItem> _buildOperationsItems() {
     return [
       DashboardWidgetItem(
@@ -90,6 +164,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     ];
   }
 
+  // TODO: acabará eliminado
   List<DashboardWidgetItem> _buildPcResourcesItems() {
     return [
       DashboardWidgetItem(
