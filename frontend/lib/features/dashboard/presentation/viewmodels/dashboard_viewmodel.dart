@@ -3,7 +3,6 @@ import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
-import 'package:frontend/domain/models/dashboard_preset.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
@@ -39,14 +38,6 @@ class DashboardViewModel extends ChangeNotifier {
   DashboardTab? get selectedTab => _selectedTab;
 
   bool get canCreateTab => _tabs.length < AppConstants.maxTabs;
-
-  // TODO: acabará eliminado
-  List<DashboardPreset> _presets = [];
-  List<DashboardPreset> get presets => List.unmodifiable(_presets);
-
-  // TODO: acabará eliminado
-  DashboardPreset? _selectedPreset;
-  DashboardPreset? get selectedPreset => _selectedPreset;
 
   DashboardWidgetItem? _selectedItem;
   DashboardWidgetItem? get selectedItem => _selectedItem;
@@ -88,13 +79,12 @@ class DashboardViewModel extends ChangeNotifier {
         _selectedTab = savedTab;
       } else {
         _selectedTab = _tabs.first;
-        await _dashboardPreferencesService.saveSelectedTabId(
-          _selectedTab!.id,
-        );
+        await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
       }
 
-      await loadDashboard();
+      await loadTabItems();
     } catch (_) {
+      _dashboard = null;
       _tabs = [];
       _selectedTab = null;
       _clearSelectedItem();
@@ -108,16 +98,14 @@ class DashboardViewModel extends ChangeNotifier {
   Future<void> changeTab(DashboardTab tab) async {
     if (_selectedTab?.id == tab.id) return;
 
-    final tabExists = _tabs.any(
-      (currentTab) => currentTab.id == tab.id,
-    );
+    final tabExists = _tabs.any((currentTab) => currentTab.id == tab.id);
 
     if (!tabExists) return;
 
     _selectedTab = tab;
     await _dashboardPreferencesService.saveSelectedTabId(tab.id);
     _clearSelectedItem();
-    await loadDashboard();
+    await loadTabItems();
   }
 
   Future<void> createTab(String name) async {
@@ -134,7 +122,8 @@ class DashboardViewModel extends ChangeNotifier {
     }
 
     if (!canCreateTab) {
-      _errorMessage = 'No se pueden crear más de ${AppConstants.maxTabs} pestañas';
+      _errorMessage =
+          'No se pueden crear más de ${AppConstants.maxTabs} pestañas';
       notifyListeners();
       return;
     }
@@ -164,9 +153,9 @@ class DashboardViewModel extends ChangeNotifier {
       await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
 
       _clearSelectedItem();
-      await loadDashboard();
+      await loadTabItems();
     } catch (_) {
-      _errorMessage = 'Ha ocurrido un error al crear la tab';
+      _errorMessage = 'Ha ocurrido un error al crear la pestaña';
       notifyListeners();
     }
   }
@@ -185,10 +174,10 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadDashboard() async {
-    final selectedPreset = _selectedPreset;
+  Future<void> loadTabItems() async {
+    final selectedTab = _selectedTab;
 
-    if (selectedPreset == null) {
+    if (selectedTab == null) {
       _clearSelectedItem();
       _clearItems();
       _clearErrorMessage();
@@ -203,7 +192,7 @@ class DashboardViewModel extends ChangeNotifier {
 
     try {
       final List<DashboardWidgetItem> items = await _dashboardRepository
-          .getDashboardItems(presetId: selectedPreset.id);
+          .getTabItems(tabId: selectedTab.id);
 
       if (items.isEmpty) {
         _clearSelectedItem();

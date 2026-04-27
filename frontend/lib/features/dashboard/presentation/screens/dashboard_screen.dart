@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/app/di/service_locator.dart';
+import 'package:go_router/go_router.dart';
+import 'package:frontend/app/router/app_routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
@@ -10,10 +12,8 @@ import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_vi
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/details_side_panel.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/preset_selector.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dashboard_tab_selector.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/widget_grid.dart';
-import 'package:go_router/go_router.dart';
-import 'package:frontend/app/router/app_routes.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -132,8 +132,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final state = _viewModel.state;
               final items = _viewModel.items;
               final errorMessage = _viewModel.errorMessage;
-              final presets = _viewModel.presets;
-              final selectedPreset = _viewModel.selectedPreset;
+              final tabs = _viewModel.tabs;
+              final selectedTab = _viewModel.selectedTab;
               final selectedItem = _viewModel.selectedItem;
 
               return Column(
@@ -145,11 +145,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onLogoutPressed: _handleLogout,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  if (selectedPreset != null) ...[
-                    PresetSelector(
-                      presets: presets,
-                      selectedPreset: selectedPreset,
-                      onPresetChanged: _viewModel.changeTab,
+                  if (selectedTab != null) ...[
+                    DashboardTabSelector(
+                      tabs: tabs,
+                      selectedTab: selectedTab,
+                      canCreateTab: _viewModel.canCreateTab,
+                      onTabChanged: _viewModel.changeTab,
+                      onCreateTabPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Aquí abriremos el diálogo para crear un pestaña',
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.lg),
                   ],

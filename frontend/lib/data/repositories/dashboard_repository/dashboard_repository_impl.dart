@@ -1,7 +1,6 @@
 import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/domain/models/dashboard.dart';
-import 'package:frontend/domain/models/dashboard_preset.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
@@ -65,33 +64,6 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }) async {
     switch (tabId) {
       case 'catalog':
-        return _buildCatalogItems();
-      case 'operations':
-        return _buildOperationsItems();
-      case 'pc_resources':
-        return _buildPcResourcesItems();
-      default:
-        return [];
-    }
-  }
-
-  // TODO: acabará eliminado
-  @override
-  Future<List<DashboardPreset>> getAvailablePresets() async {
-    return const [
-      DashboardPreset(id: 'default', name: 'Por defecto'),
-      DashboardPreset(id: 'operations', name: 'Operaciones'),
-      DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
-    ];
-  }
-
-  // TODO: acabará eliminado
-  @override
-  Future<List<DashboardWidgetItem>> getDashboardItems({
-    required String presetId,
-  }) async {
-    switch (presetId) {
-      case 'default':
         return _buildCatalogItems();
       case 'operations':
         return _buildOperationsItems();
