@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/router/app_routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -109,6 +110,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return const Center(child: Text('Estado de dashboard no soportado'));
   }
 
+  Future<void> _handleCreateTabPressed() async {
+    final tabName = await showDialog<String>(
+      context: context,
+      builder: (_) => const CreateDashboardTabDialog(),
+    );
+
+    if (tabName == null || !mounted) return;
+
+    await _viewModel.createTab(tabName);
+
+    if (!mounted) return;
+
+    final errorMessage = _viewModel.errorMessage;
+
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+    }
+  }
+
   Widget _buildTapProtectedArea({required Widget child}) {
     return TapRegion(
       groupId: _dashboardDetailTapGroup,
@@ -151,15 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       selectedTab: selectedTab,
                       canCreateTab: _viewModel.canCreateTab,
                       onTabChanged: _viewModel.changeTab,
-                      onCreateTabPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Aquí abriremos el diálogo para crear un pestaña',
-                            ),
-                          ),
-                        );
-                      },
+                      onCreateTabPressed: _handleCreateTabPressed,
                     ),
                     const SizedBox(height: AppSpacing.lg),
                   ],
