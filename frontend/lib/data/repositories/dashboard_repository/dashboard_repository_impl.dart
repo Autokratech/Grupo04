@@ -1,5 +1,6 @@
 import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
+import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
@@ -7,6 +8,10 @@ import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
+  final DashboardLocalDataSource localDataSource;
+
+  DashboardRepositoryImpl({required this.localDataSource});
+
   final Dashboard _dashboard = const Dashboard(
     id: 'local-dashboard',
     theme: null,
@@ -14,11 +19,19 @@ class DashboardRepositoryImpl implements DashboardRepository {
   );
 
   final List<DashboardTab> _tabs = [
-    DashboardTab(id: 'widgets', position: 1, name: 'Widgets'),
+    DashboardTab(id: 'widgets', position: 0, name: 'Widgets'),
   ];
 
   @override
   Future<Dashboard> getDashboard() async {
+    final cachedDashboard = await localDataSource.getCachedDashboard();
+
+    if (cachedDashboard != null) {
+      return cachedDashboard;
+    }
+
+    await localDataSource.cacheDashboard(_dashboard);
+
     return _dashboard;
   }
 
@@ -26,8 +39,23 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<List<DashboardTab>> getDashboardTabs({
     required String dashboardId,
   }) async {
-    final tabs = [..._tabs]..sort((a, b) => a.position.compareTo(b.position));
-    return tabs;
+    final cachedTabs = await localDataSource.getCachedTabs(
+      dashboardId: dashboardId,
+    );
+
+    if (cachedTabs.isNotEmpty) {
+      return cachedTabs;
+    }
+
+    final initialTabs = [..._tabs]
+      ..sort((a, b) => a.position.compareTo(b.position));
+
+    await localDataSource.cacheTabs(
+      dashboardId: dashboardId,
+      tabs: initialTabs,
+    );
+
+    return initialTabs;
   }
 
   @override
@@ -35,31 +63,20 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String dashboardId,
     required String name,
   }) async {
-    if (_tabs.length >= AppConstants.maxTabs) {
-      throw Exception('No se pueden crear más de ${AppConstants.maxTabs} pestañas');
-    }
-
     final normalizedName = name.trim();
 
     if (normalizedName.isEmpty) {
-      throw Exception('El nombre de la pestaña no puede estar vacío');
+      throw Exception('Introduce un nombre');
     }
 
-    final newTab = DashboardTab(
-      id: 'local-tab-${DateTime.now().microsecondsSinceEpoch}',
-      position: _tabs.length,
+    return localDataSource.createLocalTab(
+      dashboardId: dashboardId,
       name: normalizedName,
     );
-
-    _tabs.add(newTab);
-
-    return newTab;
   }
 
   @override
-  Future<List<DashboardWidgetItem>> getTabItems({
-    required String tabId,
-  }) async {
+  Future<List<DashboardWidgetItem>> getTabItems({required String tabId}) async {
     switch (tabId) {
       case 'widgets':
         return _buildWidgetsItems();
