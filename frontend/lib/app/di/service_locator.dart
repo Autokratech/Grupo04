@@ -2,6 +2,8 @@ import 'package:frontend/data/repositories/auth_repository/auth_repository.dart'
 import 'package:frontend/data/repositories/auth_repository/auth_repository_impl.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository_impl.dart';
+import 'package:frontend/data/services/local/dashboard_database_service.dart';
+import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
 import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
 import 'package:frontend/data/services/local/session_storage_service.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
@@ -21,7 +23,8 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<DashboardPreferencesService>(
-    () => DashboardPreferencesService(sharedPreferences: sl<SharedPreferences>()),
+    () =>
+        DashboardPreferencesService(sharedPreferences: sl<SharedPreferences>()),
   );
 
   sl.registerLazySingleton<http.Client>(() => http.Client());
@@ -44,7 +47,19 @@ Future<void> setupDependencies() async {
     ),
   );
 
+  sl.registerLazySingleton<DashboardDatabaseService>(
+    () => DashboardDatabaseService(),
+  );
+
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+    () => DashboardLocalDataSource(
+      databaseService: sl<DashboardDatabaseService>(),
+    ),
+  );
+
   sl.registerLazySingleton<DashboardRepository>(
-    () => DashboardRepositoryImpl(),
+        () => DashboardRepositoryImpl(
+      localDataSource: sl<DashboardLocalDataSource>(),
+    ),
   );
 }
