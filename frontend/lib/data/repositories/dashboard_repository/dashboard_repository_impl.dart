@@ -58,29 +58,6 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<List<DashboardWidgetItem>> getTabItems({required String tabId}) async {
-    final cachedWidgets = await localDataSource.getCachedTabWidgets(
-      tabId: tabId,
-    );
-
-    if (cachedWidgets.isNotEmpty) {
-      return cachedWidgets;
-    }
-
-    if (tabId != 'widgets') return [];
-
-    final initialWidgets = _buildWidgetsItems()
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    await localDataSource.cacheTabWidgets(
-      tabId: tabId,
-      widgets: initialWidgets,
-    );
-
-    return initialWidgets;
-  }
-
-  @override
   Future<DashboardTab> createDashboardTab({
     required String dashboardId,
     required String name,
@@ -106,6 +83,45 @@ class DashboardRepositoryImpl implements DashboardRepository {
       dashboardId: dashboardId,
       tabId: tabId,
     );
+  }
+
+  @override
+  Future<List<DashboardWidgetItem>> getTabItems({required String tabId}) async {
+    final cachedWidgets = await localDataSource.getCachedTabWidgets(
+      tabId: tabId,
+    );
+
+    if (cachedWidgets.isNotEmpty) {
+      return cachedWidgets;
+    }
+
+    if (tabId != 'widgets') return [];
+
+    final initialWidgets = _buildWidgetsItems()
+      ..sort((a, b) => a.position.compareTo(b.position));
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: initialWidgets,
+    );
+
+    return initialWidgets;
+  }
+
+  @override
+  Future<List<DashboardWidgetItem>> updateTabWidgetOrder({
+    required String tabId,
+    required List<DashboardWidgetItem> widgets,
+  }) async {
+    final normalizedWidgets = <DashboardWidgetItem>[];
+
+    for (int i = 0; i < widgets.length; i++) {
+      normalizedWidgets.add(widgets[i].copyWith(position: i));
+    }
+
+    await localDataSource.cacheTabWidgets(tabId: tabId, widgets: widgets);
+
+    return normalizedWidgets;
   }
 
   // TODO: sustituir por widgets recibidos desde backend.

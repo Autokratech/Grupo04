@@ -7,8 +7,6 @@ abstract class DashboardRepository {
 
   Future<List<DashboardTab>> getDashboardTabs({required String dashboardId});
 
-  Future<List<DashboardWidgetItem>> getTabItems({required String tabId});
-
   Future<DashboardTab> createDashboardTab({
     required String dashboardId,
     required String name,
@@ -17,5 +15,12 @@ abstract class DashboardRepository {
   Future<void> deleteDashboardTab({
     required String dashboardId,
     required String tabId,
+  });
+
+  Future<List<DashboardWidgetItem>> getTabItems({required String tabId});
+
+  Future<List<DashboardWidgetItem>> updateTabWidgetOrder({
+    required String tabId,
+    required List<DashboardWidgetItem> widgets,
   });
 }
