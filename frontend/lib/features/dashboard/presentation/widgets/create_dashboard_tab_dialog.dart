@@ -36,6 +36,7 @@ class _CreateDashboardTabDialogState extends State<CreateDashboardTabDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       actionsAlignment: MainAxisAlignment.center,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: const Text("Nuevo dashboard", textAlign: TextAlign.center),
       content: TextField(
         controller: _nameController,

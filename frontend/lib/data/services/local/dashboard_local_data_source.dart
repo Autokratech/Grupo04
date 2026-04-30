@@ -9,17 +9,12 @@ class DashboardLocalDataSource {
 
   final DashboardDatabaseService databaseService;
 
-  DashboardLocalDataSource({
-    required this.databaseService,
-  });
+  DashboardLocalDataSource({required this.databaseService});
 
   Future<Dashboard?> getCachedDashboard() async {
     final db = await databaseService.database;
 
-    final rows = await db.query(
-      'dashboards',
-      limit: 1,
-    );
+    final rows = await db.query('dashboards', limit: 1);
 
     if (rows.isEmpty) {
       return null;
@@ -94,27 +89,11 @@ class DashboardLocalDataSource {
       for (final tab in tabs) {
         await transaction.insert(
           'dashboard_tabs',
-          _dashboardTabToRow(
-            dashboardId: dashboardId,
-            tab: tab,
-          ),
+          _dashboardTabToRow(dashboardId: dashboardId, tab: tab),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
     });
-  }
-
-  Map<String, Object?> _dashboardTabToRow({
-    required String dashboardId,
-    required DashboardTab tab,
-  }) {
-    return {
-      'id': tab.id,
-      'dashboard_id': dashboardId,
-      'tab_index': tab.position,
-      'tab_name': tab.name,
-      'cached_at': DateTime.now().toIso8601String(),
-    };
   }
 
   Future<DashboardTab> createLocalTab({
@@ -151,22 +130,93 @@ class DashboardLocalDataSource {
       final maxPosition = positionRows.first['max_position'] as int?;
       final nextPosition = (maxPosition ?? -1) + 1;
 
+      final normalizedName = name.trim();
+
+      if (normalizedName.isEmpty) {
+        throw StateError('Introduce un nombre');
+      }
+
       final tab = DashboardTab(
         id: 'local_${DateTime.now().microsecondsSinceEpoch}',
-        name: name.trim(),
+        name: normalizedName,
         position: nextPosition,
       );
 
       await transaction.insert(
         'dashboard_tabs',
-        _dashboardTabToRow(
-          dashboardId: dashboardId,
-          tab: tab,
-        ),
+        _dashboardTabToRow(dashboardId: dashboardId, tab: tab),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
       return tab;
+    });
+  }
+
+  Map<String, Object?> _dashboardTabToRow({
+    required String dashboardId,
+    required DashboardTab tab,
+  }) {
+    return {
+      'id': tab.id,
+      'dashboard_id': dashboardId,
+      'tab_index': tab.position,
+      'tab_name': tab.name,
+      'cached_at': DateTime.now().toIso8601String(),
+    };
+  }
+
+  Future<void> deleteLocalTab({
+    required String dashboardId,
+    required String tabId,
+  }) async {
+    final db = await databaseService.database;
+
+    return db.transaction((transaction) async {
+      final countRows = await transaction.rawQuery(
+        '''
+      SELECT COUNT(*) AS total
+      FROM dashboard_tabs
+      WHERE dashboard_id = ?
+      ''',
+        [dashboardId],
+      );
+
+      final totalTabs = countRows.first['total'] as int;
+
+      if (totalTabs <= 1) {
+        throw StateError('Debe existir al menos un dashboard');
+      }
+
+      final deletedRows = await transaction.delete(
+        'dashboard_tabs',
+        where: 'dashboard_id = ? AND id = ?',
+        whereArgs: [dashboardId, tabId],
+      );
+
+      if (deletedRows == 0) {
+        throw StateError('El dashboard no existe');
+      }
+
+      final remainingRows = await transaction.query(
+        'dashboard_tabs',
+        where: 'dashboard_id = ?',
+        whereArgs: [dashboardId],
+        orderBy: 'tab_index ASC',
+      );
+
+      for (var index = 0; index < remainingRows.length; index++) {
+        final row = remainingRows[index];
+
+        await transaction.update(
+          'dashboard_tabs',
+          {
+            'tab_index': index,
+            'cached_at': DateTime.now().toIso8601String(),
+          },
+          where: 'dashboard_id = ? AND id = ?',
+          whereArgs: [dashboardId, row['id']],
+        );
+      }
     });
   }
 }

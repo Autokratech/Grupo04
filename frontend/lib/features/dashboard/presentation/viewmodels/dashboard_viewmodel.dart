@@ -116,14 +116,14 @@ class DashboardViewModel extends ChangeNotifier {
     final normalizedName = name.trim();
 
     if (normalizedName.isEmpty) {
-      _errorMessage = 'El nombre de la pestaña no puede estar vacío';
+      _errorMessage = 'Introduce un nombre';
       notifyListeners();
       return;
     }
 
     if (!canCreateTab) {
       _errorMessage =
-          'No se pueden crear más de ${AppConstants.maxTabs} pestañas';
+          'No se pueden crear más de ${AppConstants.maxTabs} dashboards';
       notifyListeners();
       return;
     }
@@ -155,7 +155,68 @@ class DashboardViewModel extends ChangeNotifier {
       _clearSelectedItem();
       await loadTabItems();
     } catch (_) {
-      _errorMessage = 'Ha ocurrido un error al crear la pestaña';
+      _errorMessage = 'Ha ocurrido un error al crear el dashboard';
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteTab(DashboardTab tab) async {
+    final dashboard = _dashboard;
+
+    if (dashboard == null) return;
+
+    if (_tabs.length <= 1) {
+      _errorMessage = 'Debe existir al menos un dashboard';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _clearErrorMessage();
+
+      final wasSelectedTab = _selectedTab?.id == tab.id;
+
+      await _dashboardRepository.deleteDashboardTab(
+        dashboardId: dashboard.id,
+        tabId: tab.id,
+      );
+
+      _tabs = await _dashboardRepository.getDashboardTabs(
+        dashboardId: dashboard.id,
+      );
+
+      if (_tabs.isEmpty) {
+        _selectedTab = null;
+        _clearSelectedItem();
+        _clearItems();
+        await _dashboardPreferencesService.clearSelectedTabId();
+        _state = DashboardState.empty;
+        notifyListeners();
+        return;
+      }
+
+      if (wasSelectedTab) {
+        _selectedTab = _tabs.first;
+        await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
+      } else {
+        final currentSelectedTabId = _selectedTab?.id;
+
+        DashboardTab? stillExistingSelectedTab;
+        for (final currentTab in _tabs) {
+          if (currentTab.id == currentSelectedTabId) {
+            stillExistingSelectedTab = currentTab;
+            break;
+          }
+        }
+
+        _selectedTab = stillExistingSelectedTab ?? _tabs.first;
+        await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
+      }
+
+      _clearSelectedItem();
+      await loadTabItems();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al eliminar el dashboard';
       notifyListeners();
     }
   }

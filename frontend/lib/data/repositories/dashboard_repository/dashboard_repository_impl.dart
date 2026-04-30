@@ -1,4 +1,3 @@
-import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
 import 'package:frontend/domain/models/dashboard.dart';
@@ -59,6 +58,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<List<DashboardWidgetItem>> getTabItems({required String tabId}) async {
+    switch (tabId) {
+      case 'widgets':
+        return _buildWidgetsItems();
+      default:
+        return [];
+    }
+  }
+
+  @override
   Future<DashboardTab> createDashboardTab({
     required String dashboardId,
     required String name,
@@ -76,13 +85,14 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<List<DashboardWidgetItem>> getTabItems({required String tabId}) async {
-    switch (tabId) {
-      case 'widgets':
-        return _buildWidgetsItems();
-      default:
-        return [];
-    }
+  Future<void> deleteDashboardTab({
+    required String dashboardId,
+    required String tabId,
+  }) async {
+    await localDataSource.deleteLocalTab(
+      dashboardId: dashboardId,
+      tabId: tabId,
+    );
   }
 
   // TODO: acabará eliminado
