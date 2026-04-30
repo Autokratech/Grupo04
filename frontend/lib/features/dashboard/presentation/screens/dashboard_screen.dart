@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/delete_dashboard_tab_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/router/app_routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -131,6 +133,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _handleDeleteTabPressed(DashboardTab tab) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (_) => DeleteDashboardTabDialog(
+        dashboardName: tab.name,
+      ),
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    await _viewModel.deleteTab(tab);
+
+    if (!mounted) return;
+
+    final errorMessage = _viewModel.errorMessage;
+
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+    }
+  }
+
   Widget _buildTapProtectedArea({required Widget child}) {
     return TapRegion(
       groupId: _dashboardDetailTapGroup,
@@ -172,8 +197,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       tabs: tabs,
                       selectedTab: selectedTab,
                       canCreateTab: _viewModel.canCreateTab,
+                      canDeleteTab: tabs.length > 1,
                       onTabChanged: _viewModel.changeTab,
                       onCreateTabPressed: _handleCreateTabPressed,
+                      onDeleteTabPressed: _handleDeleteTabPressed,
                     ),
                     const SizedBox(height: AppSpacing.lg),
                   ],

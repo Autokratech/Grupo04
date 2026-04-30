@@ -17,22 +17,29 @@ class WidgetGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final isSelected = selectedItem?.id == item.id;
+    const cardWidth = 200.0;
+    const cardAspectRatio = 1.2;
+    const cardHeight = cardWidth / cardAspectRatio;
 
-        return DashboardCard(
-          item: item,
-          isSelected: isSelected,
-          onTap: () {
-            onItemSelected(item);
-          },
-        );
-      },
-      separatorBuilder: (context, index) =>
-          const SizedBox(height: AppSpacing.sm),
+    return SingleChildScrollView(
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          for (final item in items)
+            SizedBox(
+              width: cardWidth,
+              height: cardHeight,
+              child: DashboardCard(
+                item: item,
+                isSelected: selectedItem?.id == item.id,
+                onTap: () {
+                  onItemSelected(item);
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
