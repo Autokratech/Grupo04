@@ -8,6 +8,7 @@ class DashboardWidgetItem {
   final WidgetStatus status;
   final String primaryValue;
   final String? description;
+  final int position;
 
   const DashboardWidgetItem({
     required this.id,
@@ -16,5 +17,6 @@ class DashboardWidgetItem {
     required this.status,
     required this.primaryValue,
     this.description,
+    required this.position,
   });
 }

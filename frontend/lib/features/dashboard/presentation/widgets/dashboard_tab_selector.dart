@@ -21,6 +21,26 @@ class DashboardTabSelector extends StatelessWidget {
     required this.onDeleteTabPressed,
   });
 
+  Widget _buildTabChip(DashboardTab tab) {
+    final isSelected = selectedTab.id == tab.id;
+
+    return InputChip(
+      showCheckmark: false,
+      label: Text(tab.name),
+      selected: isSelected,
+      onSelected: (_) {
+        if (!isSelected) {
+          onTabChanged(tab);
+        }
+      },
+      onDeleted: canDeleteTab && isSelected
+          ? () => onDeleteTabPressed(tab)
+          : null,
+      deleteIcon: const Icon(Icons.close, size: 14),
+      deleteButtonTooltipMessage: 'Eliminar dashboard',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -28,19 +48,7 @@ class DashboardTabSelector extends StatelessWidget {
       child: Row(
         children: [
           for (final tab in tabs) ...[
-            InputChip(
-              showCheckmark: false,
-              label: Text(tab.name),
-              selected: selectedTab.id == tab.id,
-              onSelected: selectedTab.id == tab.id
-                  ? null
-                  : (_) => onTabChanged(tab),
-              onDeleted: canDeleteTab && tab.id == selectedTab.id
-                  ? () => onDeleteTabPressed(tab)
-                  : null,
-              deleteIcon: const Icon(Icons.close, size: 14),
-              deleteButtonTooltipMessage: 'Eliminar dashboard',
-            ),
+            _buildTabChip(tab),
             const SizedBox(width: 8),
           ],
           Tooltip(
