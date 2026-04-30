@@ -2,6 +2,9 @@ import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/services/local/dashboard_database_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
+import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_status.dart';
+import 'package:frontend/domain/models/widget_type.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DashboardLocalDataSource {
@@ -23,14 +26,6 @@ class DashboardLocalDataSource {
     return _dashboardFromRow(rows.first);
   }
 
-  Dashboard _dashboardFromRow(Map<String, Object?> row) {
-    return Dashboard(
-      id: row['id'] as String,
-      theme: row['theme'] as String?,
-      language: row['language'] as String?,
-    );
-  }
-
   Future<void> cacheDashboard(Dashboard dashboard) async {
     final db = await databaseService.database;
 
@@ -39,15 +34,6 @@ class DashboardLocalDataSource {
       _dashboardToRow(dashboard),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-  }
-
-  Map<String, Object?> _dashboardToRow(Dashboard dashboard) {
-    return {
-      'id': dashboard.id,
-      'theme': dashboard.theme,
-      'language': dashboard.language,
-      'cached_at': DateTime.now().toIso8601String(),
-    };
   }
 
   Future<List<DashboardTab>> getCachedTabs({
@@ -63,14 +49,6 @@ class DashboardLocalDataSource {
     );
 
     return rows.map(_dashboardTabFromRow).toList();
-  }
-
-  DashboardTab _dashboardTabFromRow(Map<String, Object?> row) {
-    return DashboardTab(
-      id: row['id'] as String,
-      name: row['tab_name'] as String,
-      position: row['tab_index'] as int,
-    );
   }
 
   Future<void> cacheTabs({
@@ -152,19 +130,6 @@ class DashboardLocalDataSource {
     });
   }
 
-  Map<String, Object?> _dashboardTabToRow({
-    required String dashboardId,
-    required DashboardTab tab,
-  }) {
-    return {
-      'id': tab.id,
-      'dashboard_id': dashboardId,
-      'tab_index': tab.position,
-      'tab_name': tab.name,
-      'cached_at': DateTime.now().toIso8601String(),
-    };
-  }
-
   Future<void> deleteLocalTab({
     required String dashboardId,
     required String tabId,
@@ -197,6 +162,12 @@ class DashboardLocalDataSource {
         throw StateError('El dashboard no existe');
       }
 
+      await transaction.delete(
+        'dashboard_tab_widgets',
+        where: 'tab_id = ?',
+        whereArgs: [tabId],
+      );
+
       final remainingRows = await transaction.query(
         'dashboard_tabs',
         where: 'dashboard_id = ?',
@@ -218,5 +189,116 @@ class DashboardLocalDataSource {
         );
       }
     });
+  }
+
+  Future<List<DashboardWidgetItem>> getCachedTabWidgets({
+    required String tabId,
+  }) async {
+    final db = await databaseService.database;
+
+    final rows = await db.query(
+      'dashboard_tab_widgets',
+      where: 'tab_id = ?',
+      whereArgs: [tabId],
+      orderBy: 'widget_index ASC',
+    );
+
+    return rows.map(_dashboardWidgetFromRow).toList();
+  }
+
+  Future<void> cacheTabWidgets({
+    required String tabId,
+    required List<DashboardWidgetItem> widgets,
+  }) async {
+    final db = await databaseService.database;
+
+    await db.transaction((transaction) async {
+      await transaction.delete(
+        'dashboard_tab_widgets',
+        where: 'tab_id = ?',
+        whereArgs: [tabId],
+      );
+
+      final sortedWidgets = [...widgets]
+        ..sort((a, b) => a.position.compareTo(b.position));
+
+      for (final widget in sortedWidgets) {
+        await transaction.insert(
+          'dashboard_tab_widgets',
+          _dashboardWidgetToRow(
+            tabId: tabId,
+            widget: widget,
+          ),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+  }
+
+  Dashboard _dashboardFromRow(Map<String, Object?> row) {
+    return Dashboard(
+      id: row['id'] as String,
+      theme: row['theme'] as String?,
+      language: row['language'] as String?,
+    );
+  }
+
+  Map<String, Object?> _dashboardToRow(Dashboard dashboard) {
+    return {
+      'id': dashboard.id,
+      'theme': dashboard.theme,
+      'language': dashboard.language,
+      'cached_at': DateTime.now().toIso8601String(),
+    };
+  }
+
+  DashboardTab _dashboardTabFromRow(Map<String, Object?> row) {
+    return DashboardTab(
+      id: row['id'] as String,
+      name: row['tab_name'] as String,
+      position: row['tab_index'] as int,
+    );
+  }
+
+  Map<String, Object?> _dashboardTabToRow({
+    required String dashboardId,
+    required DashboardTab tab,
+  }) {
+    return {
+      'id': tab.id,
+      'dashboard_id': dashboardId,
+      'tab_index': tab.position,
+      'tab_name': tab.name,
+      'cached_at': DateTime.now().toIso8601String(),
+    };
+  }
+
+  DashboardWidgetItem _dashboardWidgetFromRow(Map<String, Object?> row) {
+    return DashboardWidgetItem(
+      id: row['id'] as String,
+      title: row['title'] as String,
+      type: WidgetType.values.byName(row['widget_type'] as String),
+      status: WidgetStatus.values.byName(row['status'] as String),
+      primaryValue: row['primary_value'] as String,
+      description: row['description'] as String?,
+      position: row['widget_index'] as int,
+    );
+  }
+
+  Map<String, Object?> _dashboardWidgetToRow({
+    required String tabId,
+    required DashboardWidgetItem widget,
+  }) {
+    return {
+      'id': widget.id,
+      'tab_id': tabId,
+      'widget_type': widget.type.name,
+      'widget_index': widget.position,
+      'title': widget.title,
+      'status': widget.status.name,
+      'primary_value': widget.primaryValue,
+      'description': widget.description,
+      'cached_at': DateTime.now().toIso8601String(),
+    };
   }
 }

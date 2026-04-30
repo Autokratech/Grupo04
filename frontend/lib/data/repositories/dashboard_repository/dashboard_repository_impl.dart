@@ -59,12 +59,25 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
   @override
   Future<List<DashboardWidgetItem>> getTabItems({required String tabId}) async {
-    switch (tabId) {
-      case 'widgets':
-        return _buildWidgetsItems();
-      default:
-        return [];
+    final cachedWidgets = await localDataSource.getCachedTabWidgets(
+      tabId: tabId,
+    );
+
+    if (cachedWidgets.isNotEmpty) {
+      return cachedWidgets;
     }
+
+    if (tabId != 'widgets') return [];
+
+    final initialWidgets = _buildWidgetsItems()
+      ..sort((a, b) => a.position.compareTo(b.position));
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: initialWidgets,
+    );
+
+    return initialWidgets;
   }
 
   @override
@@ -95,7 +108,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     );
   }
 
-  // TODO: acabará eliminado
+  // TODO: sustituir por widgets recibidos desde backend.
   List<DashboardWidgetItem> _buildWidgetsItems() {
     return [
       DashboardWidgetItem(
@@ -105,6 +118,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         status: WidgetStatus.ok,
         primaryValue: '12',
         description: 'Número total de servicios operativos en este momento.',
+        position: 0,
       ),
       DashboardWidgetItem(
         id: 'open-incidents',
@@ -113,6 +127,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         status: WidgetStatus.error,
         primaryValue: '3',
         description: 'Incidencias actualmente pendientes de revisión o cierre.',
+        position: 1,
       ),
       DashboardWidgetItem(
         id: 'sync-status',
@@ -122,6 +137,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         primaryValue: 'Operativa',
         description:
             'Estado actual del proceso de sincronización entre sistemas.',
+        position: 2,
       ),
     ];
   }
