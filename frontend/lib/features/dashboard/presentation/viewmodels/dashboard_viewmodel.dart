@@ -272,4 +272,24 @@ class DashboardViewModel extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  Future<void> reorderWidgets(List<DashboardWidgetItem> reorderedItems) async {
+    final selectedTab = _selectedTab;
+
+    if (selectedTab == null) return;
+
+    try {
+      _clearErrorMessage();
+
+      _items = await _dashboardRepository.updateTabWidgetOrder(
+        tabId: selectedTab.id,
+        widgets: reorderedItems,
+      );
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al reordenar los widgets';
+      notifyListeners();
+    }
+  }
 }

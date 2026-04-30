@@ -19,4 +19,24 @@ class DashboardWidgetItem {
     this.description,
     required this.position,
   });
+
+  DashboardWidgetItem copyWith({
+    String? id,
+    String? title,
+    WidgetType? type,
+    WidgetStatus? status,
+    String? primaryValue,
+    String? description,
+    int? position,
+  }) {
+    return DashboardWidgetItem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      primaryValue: primaryValue ?? this.primaryValue,
+      description: description ?? this.description,
+      position: position ?? this.position,
+    );
+  }
 }
