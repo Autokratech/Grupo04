@@ -119,7 +119,10 @@ class DashboardRepositoryImpl implements DashboardRepository {
       normalizedWidgets.add(widgets[i].copyWith(position: i));
     }
 
-    await localDataSource.cacheTabWidgets(tabId: tabId, widgets: widgets);
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: normalizedWidgets,
+    );
 
     return normalizedWidgets;
   }

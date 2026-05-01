@@ -106,6 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         items: items,
         selectedItem: selectedItem,
         onItemSelected: _viewModel.selectItem,
+        onItemsReordered: _viewModel.reorderWidgets,
       );
     }
 
