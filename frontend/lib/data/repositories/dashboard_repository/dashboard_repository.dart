@@ -17,7 +17,10 @@ abstract class DashboardRepository {
     required String tabId,
   });
 
-  Future<List<DashboardWidgetItem>> getTabItems({required String tabId});
+  Future<List<DashboardWidgetItem>> getTabItems({
+    required String dashboardId,
+    required String tabId,
+  });
 
   Future<List<DashboardWidgetItem>> updateTabWidgetOrder({
     required String tabId,
