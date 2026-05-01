@@ -7,6 +7,12 @@ class ApiClient {
 
   ApiClient({required this.baseUrl, required this.client});
 
+  Future<http.Response> get(String endpoint) {
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return client.get(url, headers: {'Content-Type': 'application/json'});
+  }
+
   Future<http.Response> post(String endpoint, Map<String, dynamic>? body) {
     final url = Uri.parse('$baseUrl$endpoint');
 

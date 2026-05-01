@@ -8,6 +8,7 @@ import 'package:frontend/data/services/local/dashboard_preferences_service.dart'
 import 'package:frontend/data/services/local/session_storage_service.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 import 'package:frontend/data/services/remote/auth_api_service.dart';
+import 'package:frontend/data/services/remote/dashboard_api_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +41,10 @@ Future<void> setupDependencies() async {
     () => AuthApiService(apiClient: sl<ApiClient>()),
   );
 
+  sl.registerLazySingleton<DashboardApiService>(
+        () => DashboardApiService(apiClient: sl<ApiClient>()),
+  );
+
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       authApiService: sl<AuthApiService>(),
@@ -60,6 +65,7 @@ Future<void> setupDependencies() async {
   sl.registerLazySingleton<DashboardRepository>(
         () => DashboardRepositoryImpl(
       localDataSource: sl<DashboardLocalDataSource>(),
+      apiService: sl<DashboardApiService>(),
     ),
   );
 }

@@ -1,5 +1,7 @@
+import 'package:frontend/data/mappers/dashboard_widget_mapper.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
+import 'package:frontend/data/services/remote/dashboard_api_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
@@ -8,8 +10,12 @@ import 'package:frontend/domain/models/widget_type.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   final DashboardLocalDataSource localDataSource;
+  final DashboardApiService apiService;
 
-  DashboardRepositoryImpl({required this.localDataSource});
+  DashboardRepositoryImpl({
+    required this.localDataSource,
+    required this.apiService,
+  });
 
   final Dashboard _dashboard = const Dashboard(
     id: 'local-dashboard',
@@ -86,26 +92,27 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<List<DashboardWidgetItem>> getTabItems({required String tabId}) async {
-    final cachedWidgets = await localDataSource.getCachedTabWidgets(
-      tabId: tabId,
-    );
+  Future<List<DashboardWidgetItem>> getTabItems({
+    required String dashboardId,
+    required String tabId,
+  }) async {
+    try {
+      final responseDto = await apiService.getTabWidgets(
+        dashboardId: dashboardId,
+        tabId: tabId,
+      );
 
-    if (cachedWidgets.isNotEmpty) {
-      return cachedWidgets;
+      final remoteWidgets = DashboardWidgetMapper.toDomainList(responseDto);
+
+      await localDataSource.cacheTabWidgets(
+        tabId: tabId,
+        widgets: remoteWidgets,
+      );
+
+      return remoteWidgets;
+    } catch (_) {
+      return _getFallbackTabItems(tabId);
     }
-
-    if (tabId != 'widgets') return [];
-
-    final initialWidgets = _buildWidgetsItems()
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    await localDataSource.cacheTabWidgets(
-      tabId: tabId,
-      widgets: initialWidgets,
-    );
-
-    return initialWidgets;
   }
 
   @override
@@ -125,6 +132,30 @@ class DashboardRepositoryImpl implements DashboardRepository {
     );
 
     return normalizedWidgets;
+  }
+
+  Future<List<DashboardWidgetItem>> _getFallbackTabItems(String tabId) async {
+    final cachedWidgets = await localDataSource.getCachedTabWidgets(
+      tabId: tabId,
+    );
+
+    if (cachedWidgets.isNotEmpty) {
+      return cachedWidgets;
+    }
+
+    if (tabId != 'widgets') {
+      return [];
+    }
+
+    final initialWidgets = _buildWidgetsItems()
+      ..sort((a, b) => a.position.compareTo(b.position));
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: initialWidgets,
+    );
+
+    return initialWidgets;
   }
 
   // TODO: sustituir por widgets recibidos desde backend.

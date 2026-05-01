@@ -33,10 +33,8 @@ class DashboardViewModel extends ChangeNotifier {
 
   List<DashboardTab> _tabs = [];
   List<DashboardTab> get tabs => List.unmodifiable(_tabs);
-
   DashboardTab? _selectedTab;
   DashboardTab? get selectedTab => _selectedTab;
-
   bool get canCreateTab => _tabs.length < AppConstants.maxTabs;
 
   DashboardWidgetItem? _selectedItem;
@@ -236,9 +234,10 @@ class DashboardViewModel extends ChangeNotifier {
   }
 
   Future<void> loadTabItems() async {
+    final dashboard = _dashboard;
     final selectedTab = _selectedTab;
 
-    if (selectedTab == null) {
+    if (dashboard == null || selectedTab == null) {
       _clearSelectedItem();
       _clearItems();
       _clearErrorMessage();
@@ -253,7 +252,7 @@ class DashboardViewModel extends ChangeNotifier {
 
     try {
       final List<DashboardWidgetItem> items = await _dashboardRepository
-          .getTabItems(tabId: selectedTab.id);
+          .getTabItems(dashboardId: dashboard.id, tabId: selectedTab.id);
 
       if (items.isEmpty) {
         _clearSelectedItem();

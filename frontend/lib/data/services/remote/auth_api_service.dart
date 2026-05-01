@@ -22,7 +22,9 @@ class AuthApiService {
       return AuthResponseDto.fromMap(responseMap);
     }
 
-    throw Exception('Failed to register user: Status code ${response.statusCode}');
+    throw Exception(
+      'Failed to register user: Status code ${response.statusCode}',
+    );
   }
 
   Future<AuthResponseDto> login(String email, String password) async {
@@ -33,7 +35,7 @@ class AuthApiService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseMap =
-      jsonDecode(response.body) as Map<String, dynamic>;
+          jsonDecode(response.body) as Map<String, dynamic>;
 
       return AuthResponseDto.fromMap(responseMap);
     }
