@@ -13,7 +13,7 @@ class AuthApiService {
     final response = await apiClient.post(_registerEndpoint, {
       'email': email,
       'password': password,
-    });
+    }, authenticated: false);
 
     if (response.statusCode == 201) {
       final Map<String, dynamic> responseMap =
@@ -31,7 +31,7 @@ class AuthApiService {
     final response = await apiClient.post(_loginEndpoint, {
       'email': email,
       'password': password,
-    });
+    }, authenticated: false);
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseMap =

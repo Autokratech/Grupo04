@@ -33,8 +33,11 @@ Future<void> setupDependencies() async {
   // Testing on Android -> http://10.0.2.2:8000
   // Testing on Windows -> http://127.0.0.1:8000
   sl.registerLazySingleton<ApiClient>(
-    () =>
-        ApiClient(baseUrl: 'http://127.0.0.1:8000', client: sl<http.Client>()),
+    () => ApiClient(
+      baseUrl: 'http://127.0.0.1:8000',
+      client: sl<http.Client>(),
+      sessionStorageService: sl<SessionStorageService>(),
+    ),
   );
 
   sl.registerLazySingleton<AuthApiService>(
@@ -42,7 +45,7 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<DashboardApiService>(
-        () => DashboardApiService(apiClient: sl<ApiClient>()),
+    () => DashboardApiService(apiClient: sl<ApiClient>()),
   );
 
   sl.registerLazySingleton<AuthRepository>(
@@ -63,9 +66,10 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<DashboardRepository>(
-        () => DashboardRepositoryImpl(
+    () => DashboardRepositoryImpl(
       localDataSource: sl<DashboardLocalDataSource>(),
       apiService: sl<DashboardApiService>(),
+      sessionStorageService: sl<SessionStorageService>(),
     ),
   );
 }

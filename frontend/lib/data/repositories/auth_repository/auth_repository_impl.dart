@@ -24,6 +24,7 @@ class AuthRepositoryImpl implements AuthRepository {
     await _sessionStorageService.saveSession(
       accessToken: response.accessToken,
       tokenType: response.tokenType,
+      userId: response.user.id
     );
 
     return AppUserMapper.toDomain(response.user);
@@ -39,6 +40,7 @@ class AuthRepositoryImpl implements AuthRepository {
     await _sessionStorageService.saveSession(
       accessToken: response.accessToken,
       tokenType: response.tokenType,
+      userId: response.user.id
     );
 
     return AppUserMapper.toDomain(response.user);
