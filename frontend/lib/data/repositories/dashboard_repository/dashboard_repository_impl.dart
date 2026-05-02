@@ -219,6 +219,116 @@ class DashboardRepositoryImpl implements DashboardRepository {
             'Estado actual del proceso de sincronización entre sistemas.',
         position: 2,
       ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status1',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 3,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status2',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 4,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status3',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 5,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status4',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 6,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status5',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 7,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status6',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 8,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status7',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 9,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status8',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 10,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status9',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 11,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status10',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 12,
+      ),
+      DashboardWidgetItem(
+        id: '${tabId}_sync-status11',
+        title: 'Sincronización',
+        type: WidgetType.status,
+        status: WidgetStatus.ok,
+        primaryValue: 'Operativa',
+        description:
+        'Estado actual del proceso de sincronización entre sistemas.',
+        position: 13,
+      ),
     ];
   }
 }

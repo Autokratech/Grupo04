@@ -1,3 +1,4 @@
+import 'package:frontend/core/utils/app_platform.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
@@ -32,6 +33,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   );
   final Object _dashboardDetailTapGroup = Object();
 
+  bool get _isMobilePlatform => AppPlatform.isMobile;
+
   @override
   void initState() {
     super.initState();
@@ -54,8 +57,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     DashboardState state,
     List<DashboardWidgetItem> items,
     DashboardWidgetItem? selectedItem,
-    String? errorMessage,
-  ) {
+    String? errorMessage, {
+    required ValueChanged<DashboardWidgetItem> onItemSelected,
+  }) {
     if (state == DashboardState.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -94,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return WidgetGrid(
         items: items,
         selectedItem: selectedItem,
-        onItemSelected: _viewModel.selectItem,
+        onItemSelected: onItemSelected,
         onItemsReordered: _viewModel.reorderWidgets,
       );
     }
@@ -126,9 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _handleDeleteTabPressed(DashboardTab tab) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
-      builder: (_) => DeleteDashboardTabDialog(
-        dashboardName: tab.name,
-      ),
+      builder: (_) => DeleteDashboardTabDialog(dashboardName: tab.name),
     );
 
     if (shouldDelete != true || !mounted) return;
@@ -143,6 +145,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(errorMessage)));
+    }
+  }
+
+  Future<void> _showDetailsBottomSheet(DashboardWidgetItem item) async {
+    _viewModel.selectItem(item);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        final mediaQuery = MediaQuery.of(context);
+        final isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+        return FractionallySizedBox(
+          heightFactor: isLandscape ? 0.90 : 0.40,
+          child: SafeArea(
+            top: false,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: DetailsSidePanel(item: item),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+
+    if (_viewModel.selectedItem?.id == item.id) {
+      _viewModel.clearSelectedItem();
     }
   }
 
@@ -173,51 +206,108 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final selectedTab = _viewModel.selectedTab;
               final selectedItem = _viewModel.selectedItem;
 
+              final isMobileLandscape =
+                  AppPlatform.isMobile &&
+                  MediaQuery.of(context).orientation == Orientation.landscape;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DashboardHeader(
-                    title: 'Dashboard',
-                    subtitle: 'Vista general de monitorización',
-                    trailing: ProfileMenuButton(
-                      onLoggedOut: _handleProfileLoggedOut,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  if (selectedTab != null) ...[
-                    DashboardTabSelector(
-                      tabs: tabs,
-                      selectedTab: selectedTab,
-                      canCreateTab: _viewModel.canCreateTab,
-                      canDeleteTab: tabs.length > 1,
-                      onTabChanged: _viewModel.changeTab,
-                      onCreateTabPressed: _handleCreateTabPressed,
-                      onDeleteTabPressed: _handleDeleteTabPressed,
+                  if (isMobileLandscape) ...[
+                    if (selectedTab != null) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DashboardTabSelector(
+                              tabs: tabs,
+                              selectedTab: selectedTab,
+                              canCreateTab: _viewModel.canCreateTab,
+                              canDeleteTab: tabs.length > 1,
+                              onTabChanged: _viewModel.changeTab,
+                              onCreateTabPressed: _handleCreateTabPressed,
+                              onDeleteTabPressed: _handleDeleteTabPressed,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          ProfileMenuButton(
+                            onLoggedOut: _handleProfileLoggedOut,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                  ] else ...[
+                    DashboardHeader(
+                      title: 'Dashboard',
+                      subtitle: 'Vista general de monitorización',
+                      trailing: ProfileMenuButton(
+                        onLoggedOut: _handleProfileLoggedOut,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
+                    if (selectedTab != null) ...[
+                      DashboardTabSelector(
+                        tabs: tabs,
+                        selectedTab: selectedTab,
+                        canCreateTab: _viewModel.canCreateTab,
+                        canDeleteTab: tabs.length > 1,
+                        onTabChanged: _viewModel.changeTab,
+                        onCreateTabPressed: _handleCreateTabPressed,
+                        onDeleteTabPressed: _handleDeleteTabPressed,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
                   ],
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final isWideLayout = constraints.maxWidth >= 900;
+
                         final mainContent = _buildTapProtectedArea(
                           child: _buildDashboardContent(
                             state,
                             items,
                             selectedItem,
                             errorMessage,
+                            onItemSelected: (item) {
+                              if (isWideLayout) {
+                                _viewModel.selectItem(item);
+                                return;
+                              }
+
+                              if (_isMobilePlatform) {
+                                _showDetailsBottomSheet(item);
+                                return;
+                              }
+
+                              _viewModel.selectItem(item);
+                            },
                           ),
                         );
 
                         if (!isWideLayout) {
+                          if (_isMobilePlatform) {
+                            return mainContent;
+                          }
+
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(child: mainContent),
+                              Expanded(
+                                flex: selectedItem == null ? 1 : 2,
+                                child: mainContent,
+                              ),
                               if (selectedItem != null) ...[
                                 const SizedBox(height: AppSpacing.lg),
-                                _buildTapProtectedArea(
-                                  child: DetailsSidePanel(item: selectedItem),
+                                Flexible(
+                                  flex: 1,
+                                  child: _buildTapProtectedArea(
+                                    child: SingleChildScrollView(
+                                      child: DetailsSidePanel(
+                                        item: selectedItem,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ],

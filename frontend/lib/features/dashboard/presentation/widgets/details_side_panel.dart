@@ -73,6 +73,10 @@ class DetailsSidePanel extends StatelessWidget {
         return 'Servicio';
       case WidgetType.alert:
         return 'Alerta';
+      case WidgetType.pipeline:
+        return 'Pipeline';
+      case WidgetType.issue:
+        return 'Issue';
     }
   }
 }

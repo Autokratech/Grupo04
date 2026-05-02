@@ -4,18 +4,21 @@ class DashboardHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final bool showText;
 
   const DashboardHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.trailing,
+    this.showText = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
+        if (showText)
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,7 +30,9 @@ class DashboardHeader extends StatelessWidget {
               ],
             ],
           ),
-        ),
+        )
+        else
+          const Spacer(),
         ?trailing,
       ],
     );

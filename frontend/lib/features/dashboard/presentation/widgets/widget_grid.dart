@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:frontend/core/utils/app_platform.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
@@ -72,57 +75,77 @@ class WidgetGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cardWidth = 200.0;
-    const cardAspectRatio = 1.2;
-    const cardHeight = cardWidth / cardAspectRatio;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = AppSpacing.md;
 
-    return SingleChildScrollView(
-      child: Wrap(
-        spacing: AppSpacing.sm,
-        runSpacing: AppSpacing.sm,
-        children: [
-          for (final item in items)
-            DragTarget<DashboardWidgetItem>(
-              onWillAcceptWithDetails: (details) {
-                return details.data.id != item.id;
-              },
-              onAcceptWithDetails: (details) {
-                final reorderedItems = _moveItem(
-                  draggedItem: details.data,
-                  targetItem: item,
-                );
+        final isMobilePlatform = AppPlatform.isMobile;
 
-                if (_hasSameOrder(reorderedItems)) return;
+        final mobileCardWidth = (constraints.maxWidth - spacing) / 2;
 
-                onItemsReordered(reorderedItems);
-              },
-              builder: (context, candidateData, rejectedData) {
-                return LongPressDraggable<DashboardWidgetItem>(
-                  data: item,
-                  delay: const Duration(milliseconds: 100),
-                  feedback: Material(
-                    color: Colors.transparent,
-                    child: SizedBox(
-                      width: cardWidth,
-                      height: cardHeight,
-                      child: Opacity(opacity: 0.85, child: _buildCard(item)),
-                    ),
-                  ),
-                  childWhenDragging: SizedBox(
-                    width: cardWidth,
-                    height: cardHeight,
-                    child: Opacity(opacity: 0.35, child: _buildCard(item)),
-                  ),
-                  child: SizedBox(
-                    width: cardWidth,
-                    height: cardHeight,
-                    child: _buildCard(item),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
+        final cardWidth = isMobilePlatform
+            ? math.min(mobileCardWidth, 170.0)
+            : 170.0;
+
+        final cardAspectRatio = isMobilePlatform ? 1.05 : 1.2;
+        final cardHeight = cardWidth / cardAspectRatio;
+
+        final dragDelay = isMobilePlatform
+            ? const Duration(milliseconds: 350)
+            : const Duration(milliseconds: 100);
+
+        return SingleChildScrollView(
+          child: Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final item in items)
+                DragTarget<DashboardWidgetItem>(
+                  onWillAcceptWithDetails: (details) {
+                    return details.data.id != item.id;
+                  },
+                  onAcceptWithDetails: (details) {
+                    final reorderedItems = _moveItem(
+                      draggedItem: details.data,
+                      targetItem: item,
+                    );
+
+                    if (_hasSameOrder(reorderedItems)) return;
+
+                    onItemsReordered(reorderedItems);
+                  },
+                  builder: (context, candidateData, rejectedData) {
+                    return LongPressDraggable<DashboardWidgetItem>(
+                      data: item,
+                      delay: dragDelay,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: SizedBox(
+                          width: cardWidth,
+                          height: cardHeight,
+                          child: Opacity(
+                            opacity: 0.85,
+                            child: _buildCard(item),
+                          ),
+                        ),
+                      ),
+                      childWhenDragging: SizedBox(
+                        width: cardWidth,
+                        height: cardHeight,
+                        child: Opacity(opacity: 0.35, child: _buildCard(item)),
+                      ),
+                      child: SizedBox(
+                        width: cardWidth,
+                        height: cardHeight,
+                        child: _buildCard(item),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

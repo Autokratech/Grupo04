@@ -4,5 +4,7 @@ enum WidgetType {
   list,
   chart,
   service,
-  alert
+  alert,
+  pipeline,
+  issue
 }
