@@ -14,10 +14,15 @@ class DashboardLocalDataSource {
 
   DashboardLocalDataSource({required this.databaseService});
 
-  Future<Dashboard?> getCachedDashboard() async {
+  Future<Dashboard?> getCachedDashboard({required String dashboardId}) async {
     final db = await databaseService.database;
 
-    final rows = await db.query('dashboards', limit: 1);
+    final rows = await db.query(
+      'dashboards',
+      where: 'id = ?',
+      whereArgs: [dashboardId],
+      limit: 1,
+    );
 
     if (rows.isEmpty) {
       return null;
@@ -115,7 +120,7 @@ class DashboardLocalDataSource {
       }
 
       final tab = DashboardTab(
-        id: 'local_${DateTime.now().microsecondsSinceEpoch}',
+        id: '${dashboardId}_local_${DateTime.now().microsecondsSinceEpoch}',
         name: normalizedName,
         position: nextPosition,
       );
@@ -180,10 +185,7 @@ class DashboardLocalDataSource {
 
         await transaction.update(
           'dashboard_tabs',
-          {
-            'tab_index': index,
-            'cached_at': DateTime.now().toIso8601String(),
-          },
+          {'tab_index': index, 'cached_at': DateTime.now().toIso8601String()},
           where: 'dashboard_id = ? AND id = ?',
           whereArgs: [dashboardId, row['id']],
         );
@@ -225,10 +227,7 @@ class DashboardLocalDataSource {
       for (final widget in sortedWidgets) {
         await transaction.insert(
           'dashboard_tab_widgets',
-          _dashboardWidgetToRow(
-            tabId: tabId,
-            widget: widget,
-          ),
+          _dashboardWidgetToRow(tabId: tabId, widget: widget),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }

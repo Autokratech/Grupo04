@@ -47,23 +47,30 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _dashboard = await _dashboardRepository.getDashboard();
+      final dashboard = await _dashboardRepository.getDashboard();
+      _dashboard = dashboard;
 
       _tabs = await _dashboardRepository.getDashboardTabs(
-        dashboardId: _dashboard!.id,
+        dashboardId: dashboard.id,
       );
 
       if (_tabs.isEmpty) {
         _selectedTab = null;
         _clearSelectedItem();
         _clearItems();
-        await _dashboardPreferencesService.clearSelectedTabId();
+
+        await _dashboardPreferencesService.clearSelectedTabId(
+          dashboardId: dashboard.id,
+        );
+
         _state = DashboardState.empty;
         notifyListeners();
         return;
       }
 
-      final savedTabId = _dashboardPreferencesService.selectedTabId;
+      final savedTabId = _dashboardPreferencesService.getSelectedTabId(
+        dashboardId: dashboard.id,
+      );
 
       DashboardTab? savedTab;
       for (final tab in _tabs) {
@@ -77,7 +84,11 @@ class DashboardViewModel extends ChangeNotifier {
         _selectedTab = savedTab;
       } else {
         _selectedTab = _tabs.first;
-        await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
+
+        await _dashboardPreferencesService.saveSelectedTabId(
+          dashboardId: dashboard.id,
+          tabId: _selectedTab!.id,
+        );
       }
 
       await loadTabItems();
@@ -94,6 +105,10 @@ class DashboardViewModel extends ChangeNotifier {
   }
 
   Future<void> changeTab(DashboardTab tab) async {
+    final dashboard = _dashboard;
+
+    if (dashboard == null) return;
+
     if (_selectedTab?.id == tab.id) return;
 
     final tabExists = _tabs.any((currentTab) => currentTab.id == tab.id);
@@ -101,7 +116,10 @@ class DashboardViewModel extends ChangeNotifier {
     if (!tabExists) return;
 
     _selectedTab = tab;
-    await _dashboardPreferencesService.saveSelectedTabId(tab.id);
+    await _dashboardPreferencesService.saveSelectedTabId(
+      dashboardId: dashboard.id,
+      tabId: tab.id,
+    );
     _clearSelectedItem();
     await loadTabItems();
   }
@@ -148,7 +166,10 @@ class DashboardViewModel extends ChangeNotifier {
 
       _selectedTab = selectedCreatedTab ?? createdTab;
 
-      await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
+      await _dashboardPreferencesService.saveSelectedTabId(
+        tabId: _selectedTab!.id,
+        dashboardId: dashboard.id,
+      );
 
       _clearSelectedItem();
       await loadTabItems();
@@ -187,7 +208,9 @@ class DashboardViewModel extends ChangeNotifier {
         _selectedTab = null;
         _clearSelectedItem();
         _clearItems();
-        await _dashboardPreferencesService.clearSelectedTabId();
+        await _dashboardPreferencesService.clearSelectedTabId(
+          dashboardId: dashboard.id,
+        );
         _state = DashboardState.empty;
         notifyListeners();
         return;
@@ -195,7 +218,10 @@ class DashboardViewModel extends ChangeNotifier {
 
       if (wasSelectedTab) {
         _selectedTab = _tabs.first;
-        await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
+        await _dashboardPreferencesService.saveSelectedTabId(
+          tabId: _selectedTab!.id,
+          dashboardId: dashboard.id,
+        );
       } else {
         final currentSelectedTabId = _selectedTab?.id;
 
@@ -208,7 +234,10 @@ class DashboardViewModel extends ChangeNotifier {
         }
 
         _selectedTab = stillExistingSelectedTab ?? _tabs.first;
-        await _dashboardPreferencesService.saveSelectedTabId(_selectedTab!.id);
+        await _dashboardPreferencesService.saveSelectedTabId(
+          tabId: _selectedTab!.id,
+          dashboardId: dashboard.id,
+        );
       }
 
       _clearSelectedItem();

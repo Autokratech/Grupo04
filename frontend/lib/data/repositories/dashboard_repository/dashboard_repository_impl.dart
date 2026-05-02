@@ -1,6 +1,7 @@
 import 'package:frontend/data/mappers/dashboard_widget_mapper.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
+import 'package:frontend/data/services/local/session_storage_service.dart';
 import 'package:frontend/data/services/remote/dashboard_api_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
@@ -11,33 +12,32 @@ import 'package:frontend/domain/models/widget_type.dart';
 class DashboardRepositoryImpl implements DashboardRepository {
   final DashboardLocalDataSource localDataSource;
   final DashboardApiService apiService;
+  final SessionStorageService sessionStorageService;
 
   DashboardRepositoryImpl({
     required this.localDataSource,
     required this.apiService,
+    required this.sessionStorageService,
   });
-
-  final Dashboard _dashboard = const Dashboard(
-    id: 'local-dashboard',
-    theme: null,
-    language: null,
-  );
-
-  final List<DashboardTab> _tabs = [
-    DashboardTab(id: 'widgets', position: 0, name: 'Widgets'),
-  ];
 
   @override
   Future<Dashboard> getDashboard() async {
-    final cachedDashboard = await localDataSource.getCachedDashboard();
+    final userId = _currentUserId;
+    final dashboardId = _dashboardIdForUser(userId);
+
+    final cachedDashboard = await localDataSource.getCachedDashboard(
+      dashboardId: dashboardId,
+    );
 
     if (cachedDashboard != null) {
       return cachedDashboard;
     }
 
-    await localDataSource.cacheDashboard(_dashboard);
+    final dashboard = Dashboard(id: dashboardId, theme: null, language: null);
 
-    return _dashboard;
+    await localDataSource.cacheDashboard(dashboard);
+
+    return dashboard;
   }
 
   @override
@@ -52,8 +52,13 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return cachedTabs;
     }
 
-    final initialTabs = [..._tabs]
-      ..sort((a, b) => a.position.compareTo(b.position));
+    final initialTabs = [
+      DashboardTab(
+        id: _defaultTabIdForDashboard(dashboardId),
+        position: 0,
+        name: 'Widgets',
+      ),
+    ];
 
     await localDataSource.cacheTabs(
       dashboardId: dashboardId,
@@ -104,6 +109,10 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
       final remoteWidgets = DashboardWidgetMapper.toDomainList(responseDto);
 
+      if (remoteWidgets.isEmpty) {
+        return _getFallbackTabItems(dashboardId: dashboardId, tabId: tabId);
+      }
+
       await localDataSource.cacheTabWidgets(
         tabId: tabId,
         widgets: remoteWidgets,
@@ -111,7 +120,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
       return remoteWidgets;
     } catch (_) {
-      return _getFallbackTabItems(tabId);
+      return _getFallbackTabItems(tabId: tabId, dashboardId: dashboardId);
     }
   }
 
@@ -134,7 +143,10 @@ class DashboardRepositoryImpl implements DashboardRepository {
     return normalizedWidgets;
   }
 
-  Future<List<DashboardWidgetItem>> _getFallbackTabItems(String tabId) async {
+  Future<List<DashboardWidgetItem>> _getFallbackTabItems({
+    required String dashboardId,
+    required String tabId,
+  }) async {
     final cachedWidgets = await localDataSource.getCachedTabWidgets(
       tabId: tabId,
     );
@@ -143,11 +155,11 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return cachedWidgets;
     }
 
-    if (tabId != 'widgets') {
+    if (tabId != _defaultTabIdForDashboard(dashboardId)) {
       return [];
     }
 
-    final initialWidgets = _buildWidgetsItems()
+    final initialWidgets = _buildWidgetsItems(tabId)
       ..sort((a, b) => a.position.compareTo(b.position));
 
     await localDataSource.cacheTabWidgets(
@@ -158,11 +170,29 @@ class DashboardRepositoryImpl implements DashboardRepository {
     return initialWidgets;
   }
 
+  String get _currentUserId {
+    final userId = sessionStorageService.userId;
+
+    if (userId == null || userId.isEmpty) {
+      throw Exception('No hay usuario autenticado');
+    }
+
+    return userId;
+  }
+
+  String _dashboardIdForUser(String userId) {
+    return 'dashboard_$userId';
+  }
+
+  String _defaultTabIdForDashboard(String dashboardId) {
+    return '${dashboardId}_widgets';
+  }
+
   // TODO: sustituir por widgets recibidos desde backend.
-  List<DashboardWidgetItem> _buildWidgetsItems() {
+  List<DashboardWidgetItem> _buildWidgetsItems(String tabId) {
     return [
       DashboardWidgetItem(
-        id: 'active-services',
+        id: '${tabId}_active-services',
         title: 'Servicios activos',
         type: WidgetType.service,
         status: WidgetStatus.ok,
@@ -171,7 +201,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         position: 0,
       ),
       DashboardWidgetItem(
-        id: 'open-incidents',
+        id: '${tabId}_open-incidents',
         title: 'Incidencias abiertas',
         type: WidgetType.alert,
         status: WidgetStatus.error,
@@ -180,7 +210,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         position: 1,
       ),
       DashboardWidgetItem(
-        id: 'sync-status',
+        id: '${tabId}_sync-status',
         title: 'Sincronización',
         type: WidgetType.status,
         status: WidgetStatus.ok,
