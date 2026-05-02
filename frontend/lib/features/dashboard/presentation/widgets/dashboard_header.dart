@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 class DashboardHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final VoidCallback onLogoutPressed;
+  final Widget? trailing;
 
   const DashboardHeader({
     super.key,
     required this.title,
     this.subtitle,
-    required this.onLogoutPressed,
+    this.trailing,
   });
 
   @override
@@ -28,10 +28,7 @@ class DashboardHeader extends StatelessWidget {
             ],
           ),
         ),
-        TextButton(
-            onPressed: onLogoutPressed,
-            child: const Text('Cerrar sesión')
-        ),
+        ?trailing,
       ],
     );
   }

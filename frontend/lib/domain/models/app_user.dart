@@ -10,6 +10,6 @@ class AppUser {
     required this.id,
     required this.email,
     required this.role,
-    required this.active
+    required this.active,
   });
 }
