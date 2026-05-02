@@ -31,6 +31,10 @@ class DashboardCard extends StatelessWidget {
         return 'Servicio';
       case WidgetType.alert:
         return 'Alerta';
+      case WidgetType.pipeline:
+        return 'Pipeline';
+      case WidgetType.issue:
+        return 'Issue';
     }
   }
 
@@ -56,6 +60,59 @@ class DashboardCard extends StatelessWidget {
     }
   }
 
+  Widget _buildFooter({
+    required bool isCompact,
+    required TextStyle? labelStyle,
+    required BorderRadius borderRadius,
+  }) {
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            _buildTypeLabel(item.type),
+            style: labelStyle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        SizedBox(width: isCompact ? AppSpacing.sm : AppSpacing.md),
+        _buildStatusChip(
+          labelStyle: labelStyle,
+          borderRadius: borderRadius,
+          compact: isCompact,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusChip({
+    required TextStyle? labelStyle,
+    required BorderRadius borderRadius,
+    required bool compact,
+  }) {
+    final statusColor = _buildStatusColor(item.status);
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 6 : 8,
+        vertical: compact ? 2 : 4,
+      ),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.10),
+        borderRadius: borderRadius,
+      ),
+      child: Text(
+        _buildStatusLabel(item.status),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: labelStyle?.copyWith(
+          color: statusColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(10);
@@ -71,45 +128,49 @@ class DashboardCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: borderRadius,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(item.title, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                item.primaryValue,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact =
+                constraints.maxWidth <= 180 || constraints.maxHeight <= 150;
+
+            final textTheme = Theme.of(context).textTheme;
+            final titleStyle = isCompact
+                ? textTheme.titleSmall
+                : textTheme.titleMedium;
+            final valueStyle = isCompact
+                ? textTheme.titleLarge
+                : textTheme.headlineSmall;
+            final labelStyle = isCompact
+                ? textTheme.titleSmall
+                : textTheme.labelMedium;
+
+            return Padding(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_buildTypeLabel(item.type)),
-                  const SizedBox(width: AppSpacing.md),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _buildStatusColor(
-                        item.status,
-                      ).withValues(alpha: 0.10),
-                      borderRadius: borderRadius,
-                    ),
-                    child: Text(
-                      _buildStatusLabel(item.status),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: _buildStatusColor(item.status),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  Text(
+                    item.title,
+                    style: titleStyle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    item.primaryValue,
+                    style: valueStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  _buildFooter(
+                    isCompact: isCompact,
+                    labelStyle: labelStyle,
+                    borderRadius: borderRadius,
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

@@ -58,11 +58,14 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
   Widget build(BuildContext context) {
     return MenuAnchor(
       controller: _menuController,
-      alignmentOffset: const Offset(-40, 8),
-      clipBehavior: Clip.antiAlias,
+      alignmentOffset: const Offset(-200, 8),
+      reservedPadding: const EdgeInsets.all(AppSpacing.lg),
       style: MenuStyle(
+        alignment: AlignmentDirectional.bottomStart,
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
       menuChildren: [
@@ -124,7 +127,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
         _buildProvidersSection(context),
         const SizedBox(height: AppSpacing.md),
         const Divider(height: 1),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
         _buildLogoutButton(),
       ],
     );
