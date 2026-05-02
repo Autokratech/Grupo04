@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/delete_dashboard_tab_dialog.dart';
+import 'package:frontend/features/profile/presentation/widgets/profile_menu_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/router/app_routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/app/di/service_locator.dart';
-import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
@@ -26,7 +26,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final AuthRepository _authRepository = sl<AuthRepository>();
   final DashboardViewModel _viewModel = DashboardViewModel(
     dashboardRepository: sl<DashboardRepository>(),
     dashboardPreferencesService: sl<DashboardPreferencesService>(),
@@ -45,20 +44,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogout() async {
-    try {
-      await _authRepository.logout();
+  void _handleProfileLoggedOut() {
+    if (!mounted) return;
 
-      if (!mounted) return;
-
-      context.go(AppRoutes.auth);
-    } catch (_) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Error al cerrar sesión')));
-    }
+    context.go(AppRoutes.auth);
   }
 
   Widget _buildDashboardContent(
@@ -190,7 +179,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   DashboardHeader(
                     title: 'Dashboard',
                     subtitle: 'Vista general de monitorización',
-                    onLogoutPressed: _handleLogout,
+                    trailing: ProfileMenuButton(
+                      onLoggedOut: _handleProfileLoggedOut,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   if (selectedTab != null) ...[
