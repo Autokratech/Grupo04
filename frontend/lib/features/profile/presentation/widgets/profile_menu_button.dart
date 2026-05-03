@@ -96,10 +96,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     switch (_viewModel.state) {
       case ProfileState.initial:
       case ProfileState.loading:
-        return const SizedBox(
-          height: 120,
-          child: Center(child: CircularProgressIndicator()),
-        );
+        return _buildLoadingContent();
 
       case ProfileState.error:
         return _buildErrorContent(context);
@@ -113,6 +110,21 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
         return _buildLoadedContent(context, user);
     }
+  }
+
+  Widget _buildLoadingContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(
+          height: 120,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        const Divider(height: 1),
+        const SizedBox(height: AppSpacing.md),
+        _buildLogoutButton(),
+      ],
+    );
   }
 
   Widget _buildLoadedContent(BuildContext context, AppUser user) {
@@ -220,18 +232,27 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
   }
 
   Widget _buildErrorContent(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
+          textAlign: TextAlign.center,
           _viewModel.errorMessage ?? 'No se ha podido cargar el perfil.',
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
+          style: TextStyle(color: colorScheme.error),
         ),
         const SizedBox(height: AppSpacing.sm),
-        TextButton(
+        TextButton.icon(
           onPressed: _viewModel.loadCurrentUser,
-          child: const Text('Reintentar'),
+          icon: const Icon(Icons.refresh),
+          label: const Text('Reintentar'),
         ),
+        const SizedBox(height: AppSpacing.md),
+        const Divider(height: 1),
+        const SizedBox(height: AppSpacing.md),
+        _buildLogoutButton(),
       ],
     );
   }

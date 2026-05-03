@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-
 import 'package:frontend/core/utils/app_platform.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
@@ -77,72 +76,89 @@ class WidgetGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const spacing = AppSpacing.md;
+        final availableWidth = constraints.maxWidth;
+        final spacing = AppSpacing.md;
 
-        final isMobilePlatform = AppPlatform.isMobile;
+        final mobileCardWidth = (availableWidth - spacing) / 2;
 
-        final mobileCardWidth = (constraints.maxWidth - spacing) / 2;
-
-        final cardWidth = isMobilePlatform
+        final preferredCardWidth = AppPlatform.isMobile
             ? math.min(mobileCardWidth, 170.0)
             : 170.0;
 
-        final cardAspectRatio = isMobilePlatform ? 1.05 : 1.2;
+        final cardWidth = math.min(preferredCardWidth, availableWidth);
+
+        final cardAspectRatio = AppPlatform.isMobile ? 1.05 : 1.2;
         final cardHeight = cardWidth / cardAspectRatio;
 
-        final dragDelay = isMobilePlatform
+        final dragDelay = AppPlatform.isMobile
             ? const Duration(milliseconds: 350)
             : const Duration(milliseconds: 100);
 
+        final columns = math.max(
+          1,
+          ((availableWidth + spacing) / (cardWidth + spacing)).floor(),
+        );
+
+        final gridWidth = (columns * cardWidth) + ((columns - 1) * spacing);
+
         return SingleChildScrollView(
-          child: Wrap(
-            spacing: spacing,
-            runSpacing: spacing,
-            children: [
-              for (final item in items)
-                DragTarget<DashboardWidgetItem>(
-                  onWillAcceptWithDetails: (details) {
-                    return details.data.id != item.id;
-                  },
-                  onAcceptWithDetails: (details) {
-                    final reorderedItems = _moveItem(
-                      draggedItem: details.data,
-                      targetItem: item,
-                    );
+          child: Center(
+            child: SizedBox(
+              width: gridWidth,
+              child: Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                alignment: WrapAlignment.start,
+                children: [
+                  for (final item in items)
+                    DragTarget<DashboardWidgetItem>(
+                      onWillAcceptWithDetails: (details) {
+                        return details.data.id != item.id;
+                      },
+                      onAcceptWithDetails: (details) {
+                        final reorderedItems = _moveItem(
+                          draggedItem: details.data,
+                          targetItem: item,
+                        );
 
-                    if (_hasSameOrder(reorderedItems)) return;
+                        if (_hasSameOrder(reorderedItems)) return;
 
-                    onItemsReordered(reorderedItems);
-                  },
-                  builder: (context, candidateData, rejectedData) {
-                    return LongPressDraggable<DashboardWidgetItem>(
-                      data: item,
-                      delay: dragDelay,
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: SizedBox(
-                          width: cardWidth,
-                          height: cardHeight,
-                          child: Opacity(
-                            opacity: 0.85,
+                        onItemsReordered(reorderedItems);
+                      },
+                      builder: (context, candidateData, rejectedData) {
+                        return LongPressDraggable<DashboardWidgetItem>(
+                          data: item,
+                          delay: dragDelay,
+                          feedback: Material(
+                            color: Colors.transparent,
+                            child: SizedBox(
+                              width: cardWidth,
+                              height: cardHeight,
+                              child: Opacity(
+                                opacity: 0.85,
+                                child: _buildCard(item),
+                              ),
+                            ),
+                          ),
+                          childWhenDragging: SizedBox(
+                            width: cardWidth,
+                            height: cardHeight,
+                            child: Opacity(
+                              opacity: 0.35,
+                              child: _buildCard(item),
+                            ),
+                          ),
+                          child: SizedBox(
+                            width: cardWidth,
+                            height: cardHeight,
                             child: _buildCard(item),
                           ),
-                        ),
-                      ),
-                      childWhenDragging: SizedBox(
-                        width: cardWidth,
-                        height: cardHeight,
-                        child: Opacity(opacity: 0.35, child: _buildCard(item)),
-                      ),
-                      child: SizedBox(
-                        width: cardWidth,
-                        height: cardHeight,
-                        child: _buildCard(item),
-                      ),
-                    );
-                  },
-                ),
-            ],
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
           ),
         );
       },

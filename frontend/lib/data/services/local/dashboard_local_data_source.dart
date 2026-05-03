@@ -88,10 +88,10 @@ class DashboardLocalDataSource {
     return db.transaction((transaction) async {
       final countRows = await transaction.rawQuery(
         '''
-      SELECT COUNT(*) AS total
-      FROM dashboard_tabs
-      WHERE dashboard_id = ?
-      ''',
+        SELECT COUNT(*) AS total
+        FROM dashboard_tabs
+        WHERE dashboard_id = ?
+        ''',
         [dashboardId],
       );
 
@@ -103,10 +103,10 @@ class DashboardLocalDataSource {
 
       final positionRows = await transaction.rawQuery(
         '''
-      SELECT MAX(tab_index) AS max_position
-      FROM dashboard_tabs
-      WHERE dashboard_id = ?
-      ''',
+        SELECT MAX(tab_index) AS max_position
+        FROM dashboard_tabs
+        WHERE dashboard_id = ?
+        ''',
         [dashboardId],
       );
 
@@ -135,6 +135,45 @@ class DashboardLocalDataSource {
     });
   }
 
+  Future<DashboardTab> renameLocalTab({
+    required String dashboardId,
+    required String tabId,
+    required String name,
+  }) async {
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      throw StateError('Introduce un nombre');
+    }
+
+    final db = await databaseService.database;
+
+    return db.transaction((transaction) async {
+      final updatedRows = await transaction.update(
+        'dashboard_tabs',
+        {
+          'tab_name': normalizedName,
+          'cached_at': DateTime.now().toIso8601String(),
+        },
+        where: 'dashboard_id = ? AND id = ?',
+        whereArgs: [dashboardId, tabId],
+      );
+
+      if (updatedRows == 0) {
+        throw StateError('El dashboard no existe');
+      }
+
+      final rows = await transaction.query(
+        'dashboard_tabs',
+        where: 'dashboard_id = ? AND id = ?',
+        whereArgs: [dashboardId, tabId],
+        limit: 1,
+      );
+
+      return _dashboardTabFromRow(rows.first);
+    });
+  }
+
   Future<void> deleteLocalTab({
     required String dashboardId,
     required String tabId,
@@ -144,10 +183,10 @@ class DashboardLocalDataSource {
     return db.transaction((transaction) async {
       final countRows = await transaction.rawQuery(
         '''
-      SELECT COUNT(*) AS total
-      FROM dashboard_tabs
-      WHERE dashboard_id = ?
-      ''',
+        SELECT COUNT(*) AS total
+        FROM dashboard_tabs
+        WHERE dashboard_id = ?
+        ''',
         [dashboardId],
       );
 
@@ -190,6 +229,61 @@ class DashboardLocalDataSource {
           whereArgs: [dashboardId, row['id']],
         );
       }
+    });
+  }
+
+  Future<List<DashboardTab>> updateLocalTabOrder({
+    required String dashboardId,
+    required List<DashboardTab> tabs,
+  }) async {
+    if (tabs.isEmpty) {
+      throw StateError('Debe existir al menos un dashboard');
+    }
+
+    final db = await databaseService.database;
+
+    return db.transaction((transaction) async {
+      final existingRows = await transaction.query(
+        'dashboard_tabs',
+        where: 'dashboard_id = ?',
+        whereArgs: [dashboardId],
+        orderBy: 'tab_index ASC',
+      );
+
+      final existingIds = existingRows
+          .map((row) => row['id'] as String)
+          .toSet();
+      final incomingIds = tabs.map((tab) => tab.id).toSet();
+
+      final hasSameLength = existingIds.length == incomingIds.length;
+      final hasSameIds =
+          existingIds.containsAll(incomingIds) &&
+          incomingIds.containsAll(existingIds);
+
+      if (!hasSameLength || !hasSameIds) {
+        throw StateError(
+          'La lista de dashboards no coincide con el dashboard actual',
+        );
+      }
+
+      final normalizedTabs = <DashboardTab>[];
+
+      for (var index = 0; index < tabs.length; index++) {
+        final normalizedTab = tabs[index].copyWith(position: index);
+        normalizedTabs.add(normalizedTab);
+
+        await transaction.update(
+          'dashboard_tabs',
+          {
+            'tab_index': normalizedTab.position,
+            'cached_at': DateTime.now().toIso8601String(),
+          },
+          where: 'dashboard_id = ? AND id = ?',
+          whereArgs: [dashboardId, normalizedTab.id],
+        );
+      }
+
+      return normalizedTabs;
     });
   }
 

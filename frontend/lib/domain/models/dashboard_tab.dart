@@ -8,4 +8,15 @@ class DashboardTab {
     required this.position,
     required this.name,
   });
+
+  DashboardTab copyWith({
+    int? position,
+    String? name,
+  }) {
+    return DashboardTab(
+      id: id,
+      position: position ?? this.position,
+      name: name ?? this.name,
+    );
+  }
 }

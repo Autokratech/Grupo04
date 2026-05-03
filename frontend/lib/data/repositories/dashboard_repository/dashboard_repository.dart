@@ -12,9 +12,20 @@ abstract class DashboardRepository {
     required String name,
   });
 
+  Future<DashboardTab> renameDashboardTab({
+    required String dashboardId,
+    required String tabId,
+    required String name,
+  });
+
   Future<void> deleteDashboardTab({
     required String dashboardId,
     required String tabId,
+  });
+
+  Future<List<DashboardTab>> updateDashboardTabOrder({
+    required String dashboardId,
+    required List<DashboardTab> tabs,
   });
 
   Future<List<DashboardWidgetItem>> getTabItems({

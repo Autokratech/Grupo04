@@ -86,6 +86,40 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<DashboardTab> renameDashboardTab({
+    required String dashboardId,
+    required String tabId,
+    required String name,
+  }) async {
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      throw Exception('Introduce un nombre');
+    }
+
+    return localDataSource.renameLocalTab(
+      dashboardId: dashboardId,
+      tabId: tabId,
+      name: normalizedName,
+    );
+  }
+
+  @override
+  Future<List<DashboardTab>> updateDashboardTabOrder({
+    required String dashboardId,
+    required List<DashboardTab> tabs,
+  }) async {
+    if (tabs.isEmpty) {
+      throw Exception('Debe existir al menos un dashboard');
+    }
+
+    return localDataSource.updateLocalTabOrder(
+      dashboardId: dashboardId,
+      tabs: tabs,
+    );
+  }
+
+  @override
   Future<void> deleteDashboardTab({
     required String dashboardId,
     required String tabId,
@@ -215,118 +249,106 @@ class DashboardRepositoryImpl implements DashboardRepository {
         type: WidgetType.status,
         status: WidgetStatus.ok,
         primaryValue: 'Operativa',
-        description:
-            'Estado actual del proceso de sincronización entre sistemas.',
+        description: 'Estado actual del proceso de sincronización entre sistemas.',
         position: 2,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status1',
-        title: 'Sincronización',
-        type: WidgetType.status,
+        id: '${tabId}_cpu-usage',
+        title: 'Uso de CPU',
+        type: WidgetType.metric,
         status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        primaryValue: '42%',
+        description: 'Carga media actual del procesador del agente principal.',
         position: 3,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status2',
-        title: 'Sincronización',
-        type: WidgetType.status,
+        id: '${tabId}_memory-usage',
+        title: 'Uso de memoria',
+        type: WidgetType.metric,
         status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        primaryValue: '68%',
+        description: 'Porcentaje de memoria utilizada en el entorno monitorizado.',
         position: 4,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status3',
-        title: 'Sincronización',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        id: '${tabId}_disk-space',
+        title: 'Espacio en disco',
+        type: WidgetType.metric,
+        status: WidgetStatus.error,
+        primaryValue: '91%',
+        description: 'Uso actual del almacenamiento principal.',
         position: 5,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status4',
-        title: 'Sincronización',
-        type: WidgetType.status,
+        id: '${tabId}_deployments',
+        title: 'Despliegues recientes',
+        type: WidgetType.list,
         status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        primaryValue: '5',
+        description: 'Despliegues registrados durante las últimas 24 horas.',
         position: 6,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status5',
-        title: 'Sincronización',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        id: '${tabId}_failed-jobs',
+        title: 'Jobs fallidos',
+        type: WidgetType.alert,
+        status: WidgetStatus.error,
+        primaryValue: '2',
+        description: 'Tareas automatizadas que han terminado con error.',
         position: 7,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status6',
-        title: 'Sincronización',
-        type: WidgetType.status,
+        id: '${tabId}_api-latency',
+        title: 'Latencia API',
+        type: WidgetType.metric,
         status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        primaryValue: '128 ms',
+        description: 'Tiempo medio de respuesta de la API principal.',
         position: 8,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status7',
-        title: 'Sincronización',
-        type: WidgetType.status,
+        id: '${tabId}_cloud-cost',
+        title: 'Coste cloud',
+        type: WidgetType.chart,
         status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        primaryValue: '248 €',
+        description: 'Estimación provisional del coste mensual acumulado.',
         position: 9,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status8',
-        title: 'Sincronización',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        id: '${tabId}_security-alerts',
+        title: 'Alertas de seguridad',
+        type: WidgetType.alert,
+        status: WidgetStatus.inactive,
+        primaryValue: 'Sin datos',
+        description: 'Estado pendiente de integración con proveedor de seguridad.',
         position: 10,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status9',
-        title: 'Sincronización',
-        type: WidgetType.status,
+        id: '${tabId}_repository-status',
+        title: 'Repositorios',
+        type: WidgetType.service,
         status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        primaryValue: '8',
+        description: 'Repositorios vinculados pendientes de integración real.',
         position: 11,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status10',
-        title: 'Sincronización',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        id: '${tabId}_pipeline-status',
+        title: 'Pipelines',
+        type: WidgetType.list,
+        status: WidgetStatus.error,
+        primaryValue: '1 fallido',
+        description: 'Resumen provisional del estado de pipelines recientes.',
         position: 12,
       ),
       DashboardWidgetItem(
-        id: '${tabId}_sync-status11',
-        title: 'Sincronización',
+        id: '${tabId}_agent-health',
+        title: 'Estado agentes',
         type: WidgetType.status,
         status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-        'Estado actual del proceso de sincronización entre sistemas.',
+        primaryValue: 'Todos online',
+        description: 'Estado general de los agentes instalados.',
         position: 13,
       ),
     ];
