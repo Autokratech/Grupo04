@@ -179,6 +179,123 @@ class DashboardViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> renameTab({
+    required DashboardTab tab,
+    required String name,
+  }) async {
+    final dashboard = _dashboard;
+
+    if (dashboard == null) return;
+
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      _errorMessage = 'Introduce un nombre';
+      notifyListeners();
+      return;
+    }
+
+    final tabExists = _tabs.any((currentTab) => currentTab.id == tab.id);
+
+    if (!tabExists) return;
+
+    try {
+      _clearErrorMessage();
+
+      final renamedTab = await _dashboardRepository.renameDashboardTab(
+        dashboardId: dashboard.id,
+        tabId: tab.id,
+        name: normalizedName,
+      );
+
+      _tabs = _tabs
+          .map((currentTab) {
+        if (currentTab.id == renamedTab.id) {
+          return renamedTab;
+        }
+
+        return currentTab;
+      })
+          .toList()
+        ..sort((a, b) => a.position.compareTo(b.position));
+
+      if (_selectedTab?.id == renamedTab.id) {
+        _selectedTab = renamedTab;
+      }
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al renombrar el dashboard';
+      notifyListeners();
+    }
+  }
+
+  Future<void> reorderTabs(List<DashboardTab> reorderedTabs) async {
+    final dashboard = _dashboard;
+    final selectedTab = _selectedTab;
+
+    if (dashboard == null) return;
+
+    if (reorderedTabs.isEmpty) {
+      _errorMessage = 'Debe existir al menos un dashboard';
+      notifyListeners();
+      return;
+    }
+
+    if (reorderedTabs.length != _tabs.length) {
+      _errorMessage = 'No se ha podido reordenar los dashboards';
+      notifyListeners();
+      return;
+    }
+
+    final currentIds = _tabs.map((tab) => tab.id).toSet();
+    final reorderedIds = reorderedTabs.map((tab) => tab.id).toSet();
+
+    final hasSameIds =
+        currentIds.containsAll(reorderedIds) &&
+            reorderedIds.containsAll(currentIds);
+
+    if (!hasSameIds) {
+      _errorMessage = 'No se ha podido reordenar los dashboards';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _clearErrorMessage();
+
+      _tabs = await _dashboardRepository.updateDashboardTabOrder(
+        dashboardId: dashboard.id,
+        tabs: reorderedTabs,
+      );
+
+      if (selectedTab != null) {
+        DashboardTab? updatedSelectedTab;
+
+        for (final tab in _tabs) {
+          if (tab.id == selectedTab.id) {
+            updatedSelectedTab = tab;
+            break;
+          }
+        }
+
+        _selectedTab = updatedSelectedTab;
+
+        if (_selectedTab != null) {
+          await _dashboardPreferencesService.saveSelectedTabId(
+            dashboardId: dashboard.id,
+            tabId: _selectedTab!.id,
+          );
+        }
+      }
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al reordenar los dashboards';
+      notifyListeners();
+    }
+  }
+
   Future<void> deleteTab(DashboardTab tab) async {
     final dashboard = _dashboard;
 
