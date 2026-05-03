@@ -9,7 +9,13 @@ supabase
 
 # -- Librerías para la gestión de operaciones criptográficas
 cryptography
-#azure
+
+# -- Integración KMS Azure
+azure-identity
+azure-keyvault-keys
+azure-core
+aiohttp
+
 google-cloud-kms
 
 # -- Librería para cargar las variables de entorno 
@@ -31,3 +37,5 @@ factory_boy
 
 # -- Librería para la gestión del caché
 redis
+
+

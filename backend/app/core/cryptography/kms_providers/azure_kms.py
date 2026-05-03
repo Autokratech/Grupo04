@@ -1,6 +1,6 @@
-from azure.identity import ClientSecretCredential
+from azure.identity.aio import ClientSecretCredential
 from azure.keyvault.keys.aio import KeyClient
-from azure.keyvault.keys.models import KeyVaultKey
+from azure.keyvault.keys import KeyVaultKey
 from azure.keyvault.keys.crypto.aio import CryptographyClient, KeyWrapAlgorithm
 from app.core.cryptography.kms_providers.kms_client import IKMSClient
 from app.core.exceptions import GenericError, KMSConnectionError
@@ -48,7 +48,7 @@ class AzureKMSClient(IKMSClient):
     def get_key_client(self): 
         vault_url = os.getenv("KMS_INSTANCE_ENDPOINT")
         if not vault_url:
-            raise ValueError("No se ha podido identifiar la instancia de AKV necesaria para gestionar las claves.")
+            raise ValueError("No se ha podido identificar la instancia de AKV necesaria para gestionar las claves.")
         try:     
             return KeyClient(vault_url, self.credential)
         except ClientAuthenticationError as e:
@@ -62,7 +62,7 @@ class AzureKMSClient(IKMSClient):
     # -- Método para obtener los datos de una clave de AKV (entre otras cosas, la versión actual de la key)
     async def get_key_data(self, key_name : str) -> KeyVaultKey:
         try:
-            key_data = self.key_client.get_key(key_name)
+            key_data = await self.key_client.get_key(key_name)
             return key_data
         except ResourceNotFoundError as e:
             raise ValueError(f"No se ha podido encontrar la key '{key_name}' especificada: {e}")
@@ -94,18 +94,22 @@ class AzureKMSClient(IKMSClient):
     async def wrap_key(self, dek : bytes, kek_name : str) -> bytes:
         try:
             crypto_client = await self.get_crypto_client(kek_name)
-            key_wrapped = crypto_client.wrap_key(KeyWrapAlgorithm.rsa_oaep, dek)
+            key_wrapped = await crypto_client.wrap_key(KeyWrapAlgorithm.rsa_oaep, dek)
             return key_wrapped.encrypted_key
         except Exception as e:
             raise GenericError(e)
-
+        finally:
+            if crypto_client:
+                await crypto_client.close()
 
     # -- Método para unwrappear la DEK wrappeada con su correspondiente KEK
     async def unwrap_key(self, wrapped_dek : bytes, kek_name : str) -> bytes: 
         try:
             crypto_client = await self.get_crypto_client(kek_name)
-            key_unwrapped = crypto_client.unwrap_key(KeyWrapAlgorithm.rsa_oaep, wrapped_dek)
+            key_unwrapped = await crypto_client.unwrap_key(KeyWrapAlgorithm.rsa_oaep, wrapped_dek)
             return key_unwrapped.key
         except Exception as e:
             raise GenericError(e)
-
+        finally:
+            if crypto_client:
+                await crypto_client.close()
