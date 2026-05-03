@@ -1,4 +1,4 @@
-from supabase import acreate_client, Client
+from supabase import acreate_client
 from app.core.exceptions import DatabaseError
 from dotenv import load_dotenv
 import os
