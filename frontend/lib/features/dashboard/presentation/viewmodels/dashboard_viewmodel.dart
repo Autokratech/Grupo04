@@ -72,13 +72,7 @@ class DashboardViewModel extends ChangeNotifier {
         dashboardId: dashboard.id,
       );
 
-      DashboardTab? savedTab;
-      for (final tab in _tabs) {
-        if (tab.id == savedTabId) {
-          savedTab = tab;
-          break;
-        }
-      }
+      final savedTab = _findTabById(savedTabId);
 
       if (savedTab != null) {
         _selectedTab = savedTab;
@@ -104,6 +98,29 @@ class DashboardViewModel extends ChangeNotifier {
     }
   }
 
+  DashboardTab? _findTabById(String? tabId) {
+    if (tabId == null) return null;
+
+    for (final tab in _tabs) {
+      if (tab.id == tabId) {
+        return tab;
+      }
+    }
+
+    return null;
+  }
+
+  bool _hasSameTabIds(List<DashboardTab> otherTabs) {
+    if (otherTabs.length != _tabs.length) {
+      return false;
+    }
+
+    final currentIds = _tabs.map((tab) => tab.id).toSet();
+    final otherIds = otherTabs.map((tab) => tab.id).toSet();
+
+    return currentIds.containsAll(otherIds) && otherIds.containsAll(currentIds);
+  }
+
   Future<void> changeTab(DashboardTab tab) async {
     final dashboard = _dashboard;
 
@@ -111,15 +128,17 @@ class DashboardViewModel extends ChangeNotifier {
 
     if (_selectedTab?.id == tab.id) return;
 
-    final tabExists = _tabs.any((currentTab) => currentTab.id == tab.id);
+    final existingTab = _findTabById(tab.id);
 
-    if (!tabExists) return;
+    if (existingTab == null) return;
 
-    _selectedTab = tab;
+    _selectedTab = existingTab;
+
     await _dashboardPreferencesService.saveSelectedTabId(
       dashboardId: dashboard.id,
-      tabId: tab.id,
+      tabId: existingTab.id,
     );
+
     _clearSelectedItem();
     await loadTabItems();
   }
@@ -156,14 +175,7 @@ class DashboardViewModel extends ChangeNotifier {
         dashboardId: dashboard.id,
       );
 
-      DashboardTab? selectedCreatedTab;
-      for (final tab in _tabs) {
-        if (tab.id == createdTab.id) {
-          selectedCreatedTab = tab;
-          break;
-        }
-      }
-
+      final selectedCreatedTab = _findTabById(createdTab.id);
       _selectedTab = selectedCreatedTab ?? createdTab;
 
       await _dashboardPreferencesService.saveSelectedTabId(
@@ -195,9 +207,9 @@ class DashboardViewModel extends ChangeNotifier {
       return;
     }
 
-    final tabExists = _tabs.any((currentTab) => currentTab.id == tab.id);
+    final existingTab = _findTabById(tab.id);
 
-    if (!tabExists) return;
+    if (existingTab == null) return;
 
     try {
       _clearErrorMessage();
@@ -208,16 +220,13 @@ class DashboardViewModel extends ChangeNotifier {
         name: normalizedName,
       );
 
-      _tabs = _tabs
-          .map((currentTab) {
+      _tabs = _tabs.map((currentTab) {
         if (currentTab.id == renamedTab.id) {
           return renamedTab;
         }
 
         return currentTab;
-      })
-          .toList()
-        ..sort((a, b) => a.position.compareTo(b.position));
+      }).toList()..sort((a, b) => a.position.compareTo(b.position));
 
       if (_selectedTab?.id == renamedTab.id) {
         _selectedTab = renamedTab;
@@ -242,20 +251,7 @@ class DashboardViewModel extends ChangeNotifier {
       return;
     }
 
-    if (reorderedTabs.length != _tabs.length) {
-      _errorMessage = 'No se ha podido reordenar los dashboards';
-      notifyListeners();
-      return;
-    }
-
-    final currentIds = _tabs.map((tab) => tab.id).toSet();
-    final reorderedIds = reorderedTabs.map((tab) => tab.id).toSet();
-
-    final hasSameIds =
-        currentIds.containsAll(reorderedIds) &&
-            reorderedIds.containsAll(currentIds);
-
-    if (!hasSameIds) {
+    if (!_hasSameTabIds(reorderedTabs)) {
       _errorMessage = 'No se ha podido reordenar los dashboards';
       notifyListeners();
       return;
@@ -270,16 +266,7 @@ class DashboardViewModel extends ChangeNotifier {
       );
 
       if (selectedTab != null) {
-        DashboardTab? updatedSelectedTab;
-
-        for (final tab in _tabs) {
-          if (tab.id == selectedTab.id) {
-            updatedSelectedTab = tab;
-            break;
-          }
-        }
-
-        _selectedTab = updatedSelectedTab;
+        _selectedTab = _findTabById(selectedTab.id);
 
         if (_selectedTab != null) {
           await _dashboardPreferencesService.saveSelectedTabId(
@@ -341,16 +328,10 @@ class DashboardViewModel extends ChangeNotifier {
         );
       } else {
         final currentSelectedTabId = _selectedTab?.id;
-
-        DashboardTab? stillExistingSelectedTab;
-        for (final currentTab in _tabs) {
-          if (currentTab.id == currentSelectedTabId) {
-            stillExistingSelectedTab = currentTab;
-            break;
-          }
-        }
+        final stillExistingSelectedTab = _findTabById(currentSelectedTabId);
 
         _selectedTab = stillExistingSelectedTab ?? _tabs.first;
+
         await _dashboardPreferencesService.saveSelectedTabId(
           tabId: _selectedTab!.id,
           dashboardId: dashboard.id,

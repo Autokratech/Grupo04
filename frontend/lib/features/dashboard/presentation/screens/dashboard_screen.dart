@@ -1,23 +1,23 @@
-import 'package:frontend/core/utils/app_platform.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/models/dashboard_tab.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/delete_dashboard_tab_dialog.dart';
-import 'package:frontend/features/profile/presentation/widgets/profile_menu_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/app/router/app_routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
-import 'package:frontend/app/di/service_locator.dart';
+import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
+import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
-import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
+import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/details_side_panel.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_tab_selector.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/delete_dashboard_tab_dialog.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/details_side_panel.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/widget_grid.dart';
+import 'package:frontend/features/profile/presentation/widgets/profile_menu_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,6 +27,11 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  static const double _wideLayoutBreakpoint = 900;
+  static const double _detailsPanelWidth = 320;
+  static const double _portraitBottomSheetHeightFactor = 0.40;
+  static const double _landscapeBottomSheetHeightFactor = 0.90;
+
   final DashboardViewModel _viewModel = DashboardViewModel(
     dashboardRepository: sl<DashboardRepository>(),
     dashboardPreferencesService: sl<DashboardPreferencesService>(),
@@ -167,7 +172,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final isLandscape = mediaQuery.orientation == Orientation.landscape;
 
         return FractionallySizedBox(
-          heightFactor: isLandscape ? 0.90 : 0.40,
+          heightFactor: isLandscape
+              ? _landscapeBottomSheetHeightFactor
+              : _portraitBottomSheetHeightFactor,
           child: SafeArea(
             top: false,
             child: SingleChildScrollView(
@@ -194,6 +201,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _viewModel.clearSelectedItem();
       },
       child: child,
+    );
+  }
+
+  Widget _buildTabSelector({
+    required List<DashboardTab> tabs,
+    required DashboardTab selectedTab,
+  }) {
+    return DashboardTabSelector(
+      tabs: tabs,
+      selectedTab: selectedTab,
+      canCreateTab: _viewModel.canCreateTab,
+      canDeleteTab: tabs.length > 1,
+      onTabChanged: _viewModel.changeTab,
+      onCreateTabPressed: _handleCreateTabPressed,
+      onRenameTabPressed: _handleRenameTabPressed,
+      onDeleteTabPressed: _handleDeleteTabPressed,
+      onTabsReordered: _handleTabsReordered,
     );
   }
 
@@ -235,16 +259,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: DashboardTabSelector(
+                            child: _buildTabSelector(
                               tabs: tabs,
                               selectedTab: selectedTab,
-                              canCreateTab: _viewModel.canCreateTab,
-                              canDeleteTab: tabs.length > 1,
-                              onTabChanged: _viewModel.changeTab,
-                              onCreateTabPressed: _handleCreateTabPressed,
-                              onRenameTabPressed: _handleRenameTabPressed,
-                              onDeleteTabPressed: _handleDeleteTabPressed,
-                              onTabsReordered: _handleTabsReordered,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
@@ -265,24 +282,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     if (selectedTab != null) ...[
-                      DashboardTabSelector(
-                        tabs: tabs,
-                        selectedTab: selectedTab,
-                        canCreateTab: _viewModel.canCreateTab,
-                        canDeleteTab: tabs.length > 1,
-                        onTabChanged: _viewModel.changeTab,
-                        onCreateTabPressed: _handleCreateTabPressed,
-                        onRenameTabPressed: _handleRenameTabPressed,
-                        onDeleteTabPressed: _handleDeleteTabPressed,
-                        onTabsReordered: _handleTabsReordered,
-                      ),
+                      _buildTabSelector(tabs: tabs, selectedTab: selectedTab),
                       const SizedBox(height: AppSpacing.lg),
                     ],
                   ],
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final isWideLayout = constraints.maxWidth >= 900;
+                        final isWideLayout =
+                            constraints.maxWidth >= _wideLayoutBreakpoint;
 
                         final mainContent = _buildTapProtectedArea(
                           child: _buildDashboardContent(
@@ -291,11 +299,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             selectedItem,
                             errorMessage,
                             onItemSelected: (item) {
-                              if (isWideLayout) {
-                                _viewModel.selectItem(item);
-                                return;
-                              }
-
                               if (_isMobilePlatform) {
                                 _showDetailsBottomSheet(item);
                                 return;
@@ -342,7 +345,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             if (selectedItem != null) ...[
                               const SizedBox(width: AppSpacing.lg),
                               SizedBox(
-                                width: 320,
+                                width: _detailsPanelWidth,
                                 child: _buildTapProtectedArea(
                                   child: DetailsSidePanel(item: selectedItem),
                                 ),
