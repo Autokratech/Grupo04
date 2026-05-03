@@ -4,6 +4,16 @@ import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 
 class DashboardTabSelector extends StatelessWidget {
+  static const double _selectedTabMaxWidth = 120;
+  static const double _unselectedTabMaxWidth = 140;
+  static const double _actionsButtonSize = 20;
+  static const double _actionsIconSize = 16;
+  static const double _createButtonSize = 30;
+  static const double _createIconSize = 18;
+
+  static const Duration _desktopDragDelay = Duration(milliseconds: 450);
+  static const Duration _mobileDragDelay = Duration(milliseconds: 650);
+
   final List<DashboardTab> tabs;
   final DashboardTab selectedTab;
   final bool canCreateTab;
@@ -27,6 +37,15 @@ class DashboardTabSelector extends StatelessWidget {
     required this.onTabsReordered,
   });
 
+  void _toggleMenu(MenuController controller) {
+    if (controller.isOpen) {
+      controller.close();
+      return;
+    }
+
+    controller.open();
+  }
+
   List<DashboardTab> _moveTab({
     required DashboardTab draggedTab,
     required DashboardTab targetTab,
@@ -37,12 +56,10 @@ class DashboardTabSelector extends StatelessWidget {
 
     final reorderedTabs = [...tabs];
 
-    final oldIndex = reorderedTabs.indexWhere(
-          (tab) => tab.id == draggedTab.id,
-    );
+    final oldIndex = reorderedTabs.indexWhere((tab) => tab.id == draggedTab.id);
 
     final targetIndex = reorderedTabs.indexWhere(
-          (tab) => tab.id == targetTab.id,
+      (tab) => tab.id == targetTab.id,
     );
 
     if (oldIndex == -1 || targetIndex == -1) {
@@ -74,15 +91,11 @@ class DashboardTabSelector extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: isSelected
-          ? colorScheme.secondaryContainer
-          : colorScheme.surface,
+      color: isSelected ? colorScheme.secondaryContainer : colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
-          color: isSelected
-              ? Colors.transparent
-              : colorScheme.outlineVariant,
+          color: isSelected ? Colors.transparent : colorScheme.outlineVariant,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -104,7 +117,9 @@ class DashboardTabSelector extends StatelessWidget {
             children: [
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: isSelected ? 120 : 140,
+                  maxWidth: isSelected
+                      ? _selectedTabMaxWidth
+                      : _unselectedTabMaxWidth,
                 ),
                 child: Text(
                   tab.name,
@@ -147,17 +162,11 @@ class DashboardTabSelector extends StatelessWidget {
           message: 'Opciones del dashboard',
           child: InkResponse(
             radius: 14,
-            onTap: () {
-              if (controller.isOpen) {
-                controller.close();
-              } else {
-                controller.open();
-              }
-            },
+            onTap: () => _toggleMenu(controller),
             child: const SizedBox(
-              width: 20,
-              height: 20,
-              child: Icon(Icons.more_vert, size: 16),
+              width: _actionsButtonSize,
+              height: _actionsButtonSize,
+              child: Icon(Icons.more_vert, size: _actionsIconSize),
             ),
           ),
         );
@@ -167,8 +176,8 @@ class DashboardTabSelector extends StatelessWidget {
 
   Widget _buildDraggableTab(DashboardTab tab) {
     final dragDelay = AppPlatform.isMobile
-        ? const Duration(milliseconds: 650)
-        : const Duration(milliseconds: 450);
+        ? _mobileDragDelay
+        : _desktopDragDelay;
 
     return DragTarget<DashboardTab>(
       onWillAcceptWithDetails: (details) {
@@ -219,13 +228,13 @@ class DashboardTabSelector extends StatelessWidget {
             child: FilledButton.tonal(
               onPressed: canCreateTab ? onCreateTabPressed : null,
               style: FilledButton.styleFrom(
-                minimumSize: const Size(30, 30),
+                minimumSize: const Size(_createButtonSize, _createButtonSize),
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5),
                 ),
               ),
-              child: const Icon(Icons.add, size: 18),
+              child: const Icon(Icons.add, size: _createIconSize),
             ),
           ),
         ],

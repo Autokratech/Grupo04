@@ -73,15 +73,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String dashboardId,
     required String name,
   }) async {
-    final normalizedName = name.trim();
-
-    if (normalizedName.isEmpty) {
-      throw Exception('Introduce un nombre');
-    }
-
     return localDataSource.createLocalTab(
       dashboardId: dashboardId,
-      name: normalizedName,
+      name: _normalizeTabName(name),
     );
   }
 
@@ -91,16 +85,10 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String tabId,
     required String name,
   }) async {
-    final normalizedName = name.trim();
-
-    if (normalizedName.isEmpty) {
-      throw Exception('Introduce un nombre');
-    }
-
     return localDataSource.renameLocalTab(
       dashboardId: dashboardId,
       tabId: tabId,
-      name: normalizedName,
+      name: _normalizeTabName(name),
     );
   }
 
@@ -110,7 +98,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required List<DashboardTab> tabs,
   }) async {
     if (tabs.isEmpty) {
-      throw Exception('Debe existir al menos un dashboard');
+      throw StateError('Debe existir al menos un dashboard');
     }
 
     return localDataSource.updateLocalTabOrder(
@@ -193,7 +181,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return [];
     }
 
-    final initialWidgets = _buildWidgetsItems(tabId)
+    final initialWidgets = _buildInitialWidgetItems(tabId)
       ..sort((a, b) => a.position.compareTo(b.position));
 
     await localDataSource.cacheTabWidgets(
@@ -222,8 +210,18 @@ class DashboardRepositoryImpl implements DashboardRepository {
     return '${dashboardId}_widgets';
   }
 
+  String _normalizeTabName(String name) {
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      throw StateError('Introduce un nombre');
+    }
+
+    return normalizedName;
+  }
+
   // TODO: sustituir por widgets recibidos desde backend.
-  List<DashboardWidgetItem> _buildWidgetsItems(String tabId) {
+  List<DashboardWidgetItem> _buildInitialWidgetItems(String tabId) {
     return [
       DashboardWidgetItem(
         id: '${tabId}_active-services',

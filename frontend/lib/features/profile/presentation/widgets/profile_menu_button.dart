@@ -17,6 +17,10 @@ class ProfileMenuButton extends StatefulWidget {
 }
 
 class _ProfileMenuButtonState extends State<ProfileMenuButton> {
+  static const double _menuWidth = 300;
+  static const double _loadingHeight = 120;
+  static const Offset _menuOffset = Offset(-200, 8);
+
   final MenuController _menuController = MenuController();
   late final ProfileViewModel _viewModel;
 
@@ -58,19 +62,17 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
   Widget build(BuildContext context) {
     return MenuAnchor(
       controller: _menuController,
-      alignmentOffset: const Offset(-200, 8),
+      alignmentOffset: _menuOffset,
       reservedPadding: const EdgeInsets.all(AppSpacing.lg),
       style: MenuStyle(
         alignment: AlignmentDirectional.bottomStart,
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
       menuChildren: [
         SizedBox(
-          width: 300,
+          width: _menuWidth,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: ListenableBuilder(
@@ -117,7 +119,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(
-          height: 120,
+          height: _loadingHeight,
           child: Center(child: CircularProgressIndicator()),
         ),
         const Divider(height: 1),
@@ -136,7 +138,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
         const SizedBox(height: AppSpacing.md),
         const Divider(height: 1),
         const SizedBox(height: AppSpacing.md),
-        _buildProvidersSection(context),
+        _buildProvidersSection(),
         const SizedBox(height: AppSpacing.md),
         const Divider(height: 1),
         const SizedBox(height: AppSpacing.md),
@@ -186,7 +188,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     );
   }
 
-  Widget _buildProvidersSection(BuildContext context) {
+  Widget _buildProvidersSection() {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -239,8 +241,8 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          textAlign: TextAlign.center,
           _viewModel.errorMessage ?? 'No se ha podido cargar el perfil.',
+          textAlign: TextAlign.center,
           style: TextStyle(color: colorScheme.error),
         ),
         const SizedBox(height: AppSpacing.sm),

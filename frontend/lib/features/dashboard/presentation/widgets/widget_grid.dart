@@ -6,6 +6,16 @@ import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_card.dart';
 
 class WidgetGrid extends StatelessWidget {
+  static const double _maxCardWidth = 170;
+  static const double _mobileCardAspectRatio = 1.05;
+  static const double _desktopCardAspectRatio = 1.2;
+
+  static const double _dragFeedbackOpacity = 0.85;
+  static const double _draggingChildOpacity = 0.35;
+
+  static const Duration _mobileDragDelay = Duration(milliseconds: 650);
+  static const Duration _desktopDragDelay = Duration(milliseconds: 450);
+
   final List<DashboardWidgetItem> items;
   final DashboardWidgetItem? selectedItem;
   final ValueChanged<DashboardWidgetItem> onItemSelected;
@@ -82,17 +92,19 @@ class WidgetGrid extends StatelessWidget {
         final mobileCardWidth = (availableWidth - spacing) / 2;
 
         final preferredCardWidth = AppPlatform.isMobile
-            ? math.min(mobileCardWidth, 170.0)
-            : 170.0;
+            ? math.min(mobileCardWidth, _maxCardWidth)
+            : _maxCardWidth;
 
         final cardWidth = math.min(preferredCardWidth, availableWidth);
 
-        final cardAspectRatio = AppPlatform.isMobile ? 1.05 : 1.2;
+        final cardAspectRatio = AppPlatform.isMobile
+            ? _mobileCardAspectRatio
+            : _desktopCardAspectRatio;
         final cardHeight = cardWidth / cardAspectRatio;
 
         final dragDelay = AppPlatform.isMobile
-            ? const Duration(milliseconds: 650)
-            : const Duration(milliseconds: 450);
+            ? _mobileDragDelay
+            : _desktopDragDelay;
 
         final columns = math.max(
           1,
@@ -135,7 +147,7 @@ class WidgetGrid extends StatelessWidget {
                               width: cardWidth,
                               height: cardHeight,
                               child: Opacity(
-                                opacity: 0.85,
+                                opacity: _dragFeedbackOpacity,
                                 child: _buildCard(item),
                               ),
                             ),
@@ -144,7 +156,7 @@ class WidgetGrid extends StatelessWidget {
                             width: cardWidth,
                             height: cardHeight,
                             child: Opacity(
-                              opacity: 0.35,
+                              opacity: _draggingChildOpacity,
                               child: _buildCard(item),
                             ),
                           ),

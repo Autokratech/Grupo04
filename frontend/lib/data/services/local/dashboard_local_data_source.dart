@@ -255,12 +255,13 @@ class DashboardLocalDataSource {
           .toSet();
       final incomingIds = tabs.map((tab) => tab.id).toSet();
 
-      final hasSameLength = existingIds.length == incomingIds.length;
+      final hasSameLength = existingRows.length == tabs.length;
+      final hasNoDuplicateIncomingIds = incomingIds.length == tabs.length;
       final hasSameIds =
           existingIds.containsAll(incomingIds) &&
           incomingIds.containsAll(existingIds);
 
-      if (!hasSameLength || !hasSameIds) {
+      if (!hasSameLength || !hasNoDuplicateIncomingIds || !hasSameIds) {
         throw StateError(
           'La lista de dashboards no coincide con el dashboard actual',
         );
