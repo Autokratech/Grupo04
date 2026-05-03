@@ -91,8 +91,8 @@ class WidgetGrid extends StatelessWidget {
         final cardHeight = cardWidth / cardAspectRatio;
 
         final dragDelay = AppPlatform.isMobile
-            ? const Duration(milliseconds: 350)
-            : const Duration(milliseconds: 100);
+            ? const Duration(milliseconds: 650)
+            : const Duration(milliseconds: 450);
 
         final columns = math.max(
           1,

@@ -116,15 +116,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     await _viewModel.createTab(tabName);
 
-    if (!mounted) return;
+    _showViewModelErrorIfNeeded();
+  }
 
-    final errorMessage = _viewModel.errorMessage;
+  Future<void> _handleRenameTabPressed(DashboardTab tab) async {
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (_) => CreateDashboardTabDialog(
+        title: 'Renombrar dashboard',
+        initialName: tab.name,
+        submitLabel: 'Guardar',
+      ),
+    );
 
-    if (errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
-    }
+    if (newName == null || !mounted) return;
+
+    await _viewModel.renameTab(tab: tab, name: newName);
+
+    _showViewModelErrorIfNeeded();
   }
 
   Future<void> _handleDeleteTabPressed(DashboardTab tab) async {
@@ -137,15 +146,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     await _viewModel.deleteTab(tab);
 
-    if (!mounted) return;
+    _showViewModelErrorIfNeeded();
+  }
 
-    final errorMessage = _viewModel.errorMessage;
+  Future<void> _handleTabsReordered(List<DashboardTab> reorderedTabs) async {
+    await _viewModel.reorderTabs(reorderedTabs);
 
-    if (errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
-    }
+    _showViewModelErrorIfNeeded();
   }
 
   Future<void> _showDetailsBottomSheet(DashboardWidgetItem item) async {
@@ -190,6 +197,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _showViewModelErrorIfNeeded() {
+    final errorMessage = _viewModel.errorMessage;
+
+    if (errorMessage == null || !mounted) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(errorMessage)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -225,7 +242,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               canDeleteTab: tabs.length > 1,
                               onTabChanged: _viewModel.changeTab,
                               onCreateTabPressed: _handleCreateTabPressed,
+                              onRenameTabPressed: _handleRenameTabPressed,
                               onDeleteTabPressed: _handleDeleteTabPressed,
+                              onTabsReordered: _handleTabsReordered,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
@@ -253,7 +272,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         canDeleteTab: tabs.length > 1,
                         onTabChanged: _viewModel.changeTab,
                         onCreateTabPressed: _handleCreateTabPressed,
+                        onRenameTabPressed: _handleRenameTabPressed,
                         onDeleteTabPressed: _handleDeleteTabPressed,
+                        onTabsReordered: _handleTabsReordered,
                       ),
                       const SizedBox(height: AppSpacing.lg),
                     ],
