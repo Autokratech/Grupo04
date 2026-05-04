@@ -8,7 +8,7 @@ from app.controllers.users_controller import (
     controlador_listar_usuarios,
 )
 from app.schemas.user_schema import DatosActualizarUsuario, DatosCrearUsuario, RespuestaMensaje, RespuestaUsuario
-from app.core.guardias import pedir_permiso, pedir_usuario_logueado
+from app.guardias import pedir_permiso, pedir_usuario_logueado
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

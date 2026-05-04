@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from app.core.security import generar_hash_password
+from app.core.security import hash_password
 from app.repositories import roles_repository, users_repository
 from app.schemas.user_schema import DatosActualizarUsuario, DatosCrearUsuario
 from app.services.audit_service import registrar_evento_auditoria
@@ -41,10 +41,10 @@ def servicio_crear_usuario(datos_usuario: DatosCrearUsuario):
         raise HTTPException(status_code=404, detail="El rol indicado no existe")
 
     #hasheamos el password para no guardarlo tal cual.
-    hash_password = generar_hash_password(datos_usuario.password)
+    hash_pwd = hash_password(datos_usuario.password)
     usuario_creado = users_repository.crear_usuario_en_bd(
         email=datos_usuario.email,
-        password_hash=hash_password,
+        password_hash=hash_pwd,
         role_id=datos_usuario.role_id,
         active=datos_usuario.active,
     )
@@ -88,7 +88,7 @@ def servicio_actualizar_usuario(id_usuario: str, datos_usuario: DatosActualizarU
             raise HTTPException(status_code=404, detail="El rol indicado no existe")
 
     if "password" in campos_a_actualizar:
-        campos_a_actualizar["password_hash"] = generar_hash_password(campos_a_actualizar["password"])
+        campos_a_actualizar["password_hash"] = hash_password(campos_a_actualizar["password"])
         del campos_a_actualizar["password"]
 
     usuario_actualizado = users_repository.actualizar_usuario_en_bd(id_usuario, campos_a_actualizar)

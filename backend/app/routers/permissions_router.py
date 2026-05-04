@@ -13,7 +13,7 @@ from app.schemas.permission_schema import (
     RespuestaMensaje,
     RespuestaPermiso,
 )
-from app.core.guardias import pedir_permiso
+from app.guardias import pedir_permiso
 
 router = APIRouter(prefix="/permissions", tags=["Permissions"])
 

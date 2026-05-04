@@ -1,0 +1,25 @@
+FROM python:3.14-slim as backend-base
+LABEL org.opencontainers.image.authors="fromero@fp.lasalle.es, rgonzalez@fp.lasalle.es"
+LABEL version="0.1.0"
+
+WORKDIR /backend
+
+RUN apt-get update && \
+    apt-get install -y build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ./app/requirements.txt ./app/requirements.txt 
+
+RUN pip install --prefix=/dependencies -r ./app/requirements.txt
+
+# ----------------------------------------
+# Versión correcta de phyton?
+FROM python:3.14-slim
+
+WORKDIR /backend
+
+COPY --from=backend-base /dependencies /usr/local
+
+COPY ./app/ ./app/
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

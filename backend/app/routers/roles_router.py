@@ -12,7 +12,7 @@ from app.controllers.roles_controller import (
 )
 from app.schemas.permission_schema import RespuestaPermiso
 from app.schemas.role_schema import DatosActualizarRol, DatosCrearRol, RespuestaMensaje, RespuestaRol
-from app.core.guardias import pedir_permiso
+from app.guardias import pedir_permiso
 
 router = APIRouter(prefix="/roles", tags=["Roles"])
 
@@ -40,7 +40,7 @@ def ruta_actualizar_rol(id_rol: int, datos_rol: DatosActualizarRol, usuario_actu
 # ruta para borrar un rol
 @router.delete("/{id_rol}", response_model=RespuestaMensaje)
 def ruta_borrar_rol(id_rol: int, usuario_actual=Depends(pedir_permiso("roles.delete"))):
-  
+
     return controlador_borrar_rol(id_rol)
 
 # ruta para listar los permisos de rol

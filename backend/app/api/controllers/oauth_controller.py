@@ -1,12 +1,6 @@
-from fastapi import APIRouter, Request, Response
+from fastapi import Request, Response
 from fastapi.responses import RedirectResponse
-from services.oauth_manager import OAuthManager
-
-router = APIRouter(
-    prefix="/oauth",
-    tags=["oauth"],
-    responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
-)
+from app.services.oauth_manager import OAuthManager
 
 
 # -- Controladores para gestionar las conexiones OAuth

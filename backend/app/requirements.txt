@@ -1,0 +1,36 @@
+## -----  Dependencias Autokratech  ----- ##
+
+# -- Framework y servidor para ejecutar la app
+fastapi[standard]
+uvicorn
+
+# -- Librería para la gestión de la BBDD: Supabase
+supabase
+
+# -- Librerías para la gestión de operaciones criptográficas
+cryptography
+#azure
+google-cloud-kms
+
+# -- Librería para cargar las variables de entorno 
+python-dotenv
+
+# -- Librería para la gestión de las conexiones OAuth
+requests-oauthlib
+
+# -- Librería para la validación de datos
+pydantic
+pydantic[email]
+
+# -- Librería para la gestión de tokens JWT
+PyJWT
+
+# -- Librería para la gestión de las peticiones HTTP
+httpx
+
+# -- Librerías para testing/pruebas
+pytest-asyncio
+factory_boy
+
+# -- Librería para la gestión del caché
+redis
