@@ -317,19 +317,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(
-                                flex: selectedItem == null ? 1 : 2,
-                                child: mainContent,
-                              ),
+                              Expanded(child: mainContent),
+
                               if (selectedItem != null) ...[
                                 const SizedBox(height: AppSpacing.lg),
-                                Flexible(
-                                  flex: 1,
-                                  child: _buildTapProtectedArea(
+                                _buildTapProtectedArea(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxHeight: constraints.maxHeight * 0.40,
+                                    ),
                                     child: SingleChildScrollView(
-                                      child: DetailsSidePanel(
-                                        item: selectedItem,
-                                      ),
+                                      child: DetailsSidePanel(item: selectedItem),
                                     ),
                                   ),
                                 ),
