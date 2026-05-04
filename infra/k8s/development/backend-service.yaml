@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/neg: '{"ingress":true}'
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"backend-svc","namespace":"development"},"spec":{"ports":[{"port":8001,"targetPort":8001}],"selector":{"app":"backend"}}}
+  name: backend-svc
+  namespace: development
+spec:
+  - 34.118.233.75
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 8001
+    protocol: TCP
+    targetPort: 8001
+  selector:
+    app: backend
+  sessionAffinity: None
+  type: ClusterIP
+  loadBalancer: {}
