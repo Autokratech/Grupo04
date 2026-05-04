@@ -1,0 +1,30 @@
+# ── Etapa 1: Build Flutter Web ────────────────────────────────────────────────
+FROM ghcr.io/cirruslabs/flutter:stable AS build
+
+WORKDIR /app
+
+# Copiar dependencias primero para aprovechar cache de capas
+COPY pubspec.yaml pubspec.lock ./
+RUN flutter pub get
+
+# Copiar el resto del codigo
+COPY . .
+
+# Compilar la app para web
+RUN flutter build web --release
+
+# ── Etapa 2: Servir con nginx ──────────────────────────────────────────────────
+FROM nginx:alpine
+
+LABEL org.opencontainers.image.authors="fromero@fp.lasalle.es"
+LABEL version="0.1.0"
+
+# Copiar los ficheros compilados de Flutter al servidor nginx
+COPY --from=build /app/build/web /usr/share/nginx/html
+
+# Configuracion nginx para Flutter web (manejo de rutas SPA)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
