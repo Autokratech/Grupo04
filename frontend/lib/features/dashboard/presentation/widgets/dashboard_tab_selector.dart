@@ -7,7 +7,7 @@ class DashboardTabSelector extends StatelessWidget {
   static const double _selectedTabMaxWidth = 120;
   static const double _unselectedTabMaxWidth = 140;
   static const double _actionsButtonSize = 20;
-  static const double _actionsIconSize = 16;
+  static const double _actionsIconSize = 15;
   static const double _createButtonSize = 30;
   static const double _createIconSize = 18;
 
@@ -166,7 +166,11 @@ class DashboardTabSelector extends StatelessWidget {
             child: const SizedBox(
               width: _actionsButtonSize,
               height: _actionsButtonSize,
-              child: Icon(Icons.more_vert, size: _actionsIconSize),
+              child: Icon(
+                Icons.more_vert,
+                size: _actionsIconSize,
+                color: Colors.black,
+              ),
             ),
           ),
         );
