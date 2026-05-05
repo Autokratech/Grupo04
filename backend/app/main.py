@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 from app.middlewares.jwt_auth_middleware import MiddlewareJwt
-from app.routers import auth_router, permissions_router, roles_router, users_router
+from app.routers import auth_router, permissions_router, roles_router, users_router, metrics_router
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
@@ -23,6 +23,7 @@ app.include_router(auth_router.router, prefix="/api")
 app.include_router(users_router.router, prefix="/api")
 app.include_router(roles_router.router, prefix="/api")
 app.include_router(permissions_router.router, prefix="/api")
+app.include_router(metrics_router.router, prefix="/api")
 
 
 @app.get("/", response_class=HTMLResponse)
