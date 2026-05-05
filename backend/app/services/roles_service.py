@@ -11,7 +11,7 @@ def servicio_listar_roles():
 
     return roles_repository.listar_roles()
 
-# busca un rol por el
+# busca un rol por el 
 def servicio_buscar_rol_por_id(id_rol: int):
     rol = roles_repository.buscar_rol_por_id(id_rol)
     if not rol:

@@ -1,4 +1,4 @@
-from app.database_sync import supabase
+from app.core.database import supabase
 
 NOMBRE_TABLA_PERMISOS = "t_permissions"
 NOMBRE_TABLA_ROL_PERMISO = "t_role_permissions"
@@ -91,7 +91,7 @@ def listar_permisos_de_rol(id_rol: int):
 
     filas = respuesta_rol_permiso.data or []
     ids_permisos = [fila["permission_id"] for fila in filas]
-
+  
     if not ids_permisos:
         return []
 

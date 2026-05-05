@@ -1,8 +1,7 @@
 from fastapi import HTTPException
-from app.config import SYSTEM_USER_ID
-from app.config import DEFAULT_ROLE_NAME_FOR_REGISTER
-from app.core.security import hash_password
-from app.utils.jwt_utils import crear_token_jwt
+from app.core.config import SYSTEM_USER_ID
+from app.core.config import DEFAULT_ROLE_NAME_FOR_REGISTER
+from app.core.security import comprobar_password, crear_token_jwt, generar_hash_password
 from app.repositories import permissions_repository, roles_repository, users_repository
 from app.schemas.auth_schema import DatosLogin, DatosRegistro
 from app.services.audit_service import registrar_evento_auditoria
@@ -28,10 +27,10 @@ def servicio_registrar_usuario(datos_registro: DatosRegistro):
     if not rol_defecto:
         raise HTTPException(status_code=500, detail="no existe el rol por defecto para el registro")
 
-    hash_pwd = hash_password(datos_registro.password)
+    hash_password = generar_hash_password(datos_registro.password)
     usuario_creado = users_repository.crear_usuario_en_bd(
         email=datos_registro.email,
-        password_hash=hash_pwd,
+        password_hash=hash_password,
         role_id=rol_defecto["id"],
         active=True,
     )
@@ -84,13 +83,13 @@ def servicio_login_usuario(datos_login: DatosLogin):
             }
         )
         print ("Pasa por aqui")
-
+    
         raise HTTPException(status_code=401,detail="Email o contraseña incorrectas")
 
     if usuario.get("active") is not True:
         raise HTTPException(status_code=403, detail="Tu usuario esta desactivado")
 
-    password_ok = hash_password(datos_login.password) == usuario.get("password_hash", "")
+    password_ok = comprobar_password(datos_login.password, usuario.get("password_hash", ""))
     if not password_ok:
         registrar_evento_auditoria(
             user_id=usuario["id"],

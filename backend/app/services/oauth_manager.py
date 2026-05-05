@@ -1,5 +1,5 @@
 from requests_oauthlib import OAuth2Session
-from app.services.oauth_config import oauth_config
+from .oauth_config import oauth_config
 from fastapi import HTTPException
 
 class OAuthManager:

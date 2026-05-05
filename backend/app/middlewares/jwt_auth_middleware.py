@@ -1,6 +1,6 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.utils.jwt_utils import leer_token_jwt
+from app.core.security import leer_token_jwt
 from app.repositories import permissions_repository, roles_repository, users_repository
 
 # Mira si viene un Bearer token y carga el usuario en la request
