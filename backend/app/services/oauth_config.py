@@ -11,7 +11,8 @@ oauth_config = {
         "client_id" : os.getenv("GITLAB_OAUTH_CLIENT_ID"),
         "client_secret" : os.getenv("GITLAB_OAUTH_CLIENT_SECRET"),
         "redirect_url" : os.getenv("GITLAB_OAUTH_REDIRECT_URL"),
-        "scopes" : os.getenv("GITLAB_OAUTH_SCOPES") 
+        "refresh_url" : os.getenv("GITLAB_OAUTH_REFRESH_URL"),
+        "scopes" : os.getenv("GITLAB_OAUTH_SCOPES")
     },
 
     "github" : {
@@ -38,7 +39,11 @@ oauth_config = {
         "client_id" : os.getenv("GCP_OAUTH_CLIENT_ID"),
         "client_secret" : os.getenv("GCP_OAUTH_CLIENT_SECRET"),
         "redirect_url" : os.getenv("GCP_OAUTH_REDIRECT_URL"),
-        "scopes" : os.getenv("GCP_OAUTH_SCOPES") 
+        "refresh_url" : os.getenv("GCP_OAUTH_REFRESH_URL"),
+        "scopes" : os.getenv("GCP_OAUTH_SCOPES"),
+        "extra_params": {       
+            "access_type": "offline"
+        },
     },
 
     "azure" : {
@@ -47,6 +52,7 @@ oauth_config = {
         "client_id" : os.getenv("AZURE_OAUTH_CLIENT_ID"),
         "client_secret" : os.getenv("AZURE_OAUTH_CLIENT_SECRET"),
         "redirect_url" : os.getenv("AZURE_OAUTH_REDIRECT_URL"),
+        "refresh_url" : os.getenv("AZURE_OAUTH_REFRESH_URL"),
         "scopes" : os.getenv("AZURE_OAUTH_SCOPES") 
     },
 
@@ -56,6 +62,7 @@ oauth_config = {
         "client_id" : os.getenv("AWS_OAUTH_CLIENT_ID"),
         "client_secret" : os.getenv("AWS_OAUTH_CLIENT_SECRET"),
         "redirect_url" : os.getenv("AWS_OAUTH_REDIRECT_URL"),
+        "refresh_url" : os.getenv("AWS_OAUTH_REFRESH_URL"),
         "scopes" : os.getenv("AWS_OAUTH_SCOPES") 
     }
 }

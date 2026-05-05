@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.api.controllers import tabs_controller as tc
 
 router = APIRouter(
-    prefix="/dashboards",
+    prefix="/dashboard",
     tags=["tabs"],
     responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
 )
