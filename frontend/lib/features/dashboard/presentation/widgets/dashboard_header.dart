@@ -3,19 +3,22 @@ import 'package:flutter/material.dart';
 class DashboardHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final VoidCallback onLogoutPressed;
+  final Widget? trailing;
+  final bool showText;
 
   const DashboardHeader({
     super.key,
     required this.title,
     this.subtitle,
-    required this.onLogoutPressed,
+    this.trailing,
+    this.showText = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
+        if (showText)
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,11 +30,10 @@ class DashboardHeader extends StatelessWidget {
               ],
             ],
           ),
-        ),
-        TextButton(
-            onPressed: onLogoutPressed,
-            child: const Text('Cerrar sesión')
-        ),
+        )
+        else
+          const Spacer(),
+        ?trailing,
       ],
     );
   }

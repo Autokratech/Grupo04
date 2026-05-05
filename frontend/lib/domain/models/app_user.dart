@@ -1,15 +1,15 @@
 import 'package:frontend/domain/models/user_role.dart';
 
 class AppUser {
-  final int id;
-  final String displayName;
+  final String id;
   final String email;
   final UserRole role;
+  final bool active;
 
-  AppUser({
+  const AppUser({
     required this.id,
-    required this.displayName,
     required this.email,
     required this.role,
+    required this.active,
   });
 }

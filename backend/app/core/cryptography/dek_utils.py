@@ -19,7 +19,7 @@ def encrypt_token_with_dek(token : bytes, base64_dek):
         if len(dek) != 32: raise ValueError(f"La DEK proporcionada debe tener una longitud de 32 bytes.")
 
         fernet_dek_key = Fernet(base64_dek)
-        return fernet_dek_key.encrypt(token)
+        return fernet_dek_key.encrypt(token.encode())
     except TypeError:
         raise TypeError("No se ha podido realizar la encriptación porque la key proporcionada no posee un formato válido: bytes.")
     except Exception as e:

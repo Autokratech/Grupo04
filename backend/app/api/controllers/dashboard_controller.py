@@ -19,7 +19,7 @@ dashboard_service = Annotated[DashboardService, Depends(get_dashboard_service)]
 
 
 # -- Controladores para gestionar el dashboard
-async def get_user_dashboard(user_id: int, service: dashboard_service):  
+async def get_user_dashboard(user_id: UUID, service: dashboard_service):  
     return await service.get_user_dashboard(user_id)
 
 
