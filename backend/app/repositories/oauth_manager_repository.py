@@ -33,23 +33,38 @@ class OAuthManagerRepository(IOAuthManagerRepository):
     #-- Método para vincular un nuevo provider al usuario especificado
     async def create_user_oauth_provider(self, user_id : UUID, provider_name : str, access_token : str, refresh_token : str, dek, created_at, expires_at):
         try:
-            return await self.supabase.table(self.OAUTH_USER_PROVIDERS) \
-                .insert({'user_id' : user_id, 
+            oauth_provider_data = {'user_id' : user_id, 
                          'provider_name' : provider_name, 
                          'access_token' : access_token,
                          'refresh_token' : refresh_token,
-                         'dek' : dek,
-                         'created_at' : created_at.isoformat(),
-                         'expires_at' : expires_at.isoformat()
-                         }) \
+                         'dek' : dek }
+
+            if created_at is not None and expires_at is not None: 
+                oauth_provider_data.update({
+                    'created_at' : created_at.isoformat(),
+                    'expires_at' : expires_at.isoformat()})
+
+            return await self.supabase.table(self.OAUTH_USER_PROVIDERS) \
+                .insert(oauth_provider_data) \
                 .execute() 
         except DatabaseError as e:
             raise DatabaseError(e)
 
 
     #-- Método para actualizar los parámetros del provider (access_token, refresh_token, dek, expiration_time)
-    async def update_user_oauth_provider(self, user_id, provider_name : str, update_params : dict):
+    async def update_user_oauth_provider(self, user_id, provider_name : str, access_token : str, refresh_token : str, dek, created_at, expires_at):
         try:
+            update_params = {
+                         'access_token' : access_token,
+                         'refresh_token' : refresh_token,
+                         'dek' : dek }
+
+            if created_at is not None and expires_at is not None: 
+                update_params.update({
+                    'created_at' : created_at.isoformat(),
+                    'expires_at' : expires_at.isoformat()})
+
+
             return await self.supabase.table(self.OAUTH_USER_PROVIDERS) \
                 .update(update_params) \
                 .match({"user_id" : user_id, "provider_name" : provider_name}) \

@@ -15,7 +15,7 @@ class UserOAuthProvider(BaseModel):
     @field_validator("created_at", "expires_at", mode="before")
     @classmethod
     def parse_timestamp(cls, field_value):
-        if isinstance(field_value, str):
+        if isinstance(field_value, str) and field_value is not None:
             return datetime.fromisoformat(field_value)
         return field_value
  
