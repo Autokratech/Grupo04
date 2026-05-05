@@ -15,7 +15,7 @@ class DashboardRepository:
     async def get_user_dashboard(self, user_id : int):
         try:
             return await self.supabase.table(self.DASHBOARD_TABLE) \
-                .select('dashboard_id') \
+                .select("dashboard_id, dashboard_theme, dashboard_language") \
                 .eq("user_id", user_id) \
                 .execute() 
         except DatabaseError as e:

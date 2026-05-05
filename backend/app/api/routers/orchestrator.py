@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from app.api.controllers import orchestrator_controller as oc
+from fastapi.sse import EventSourceResponse
 
 #Modificar el prefijo y la ruta, de momento lo pongo así para pruebas
 router = APIRouter(
@@ -9,4 +10,4 @@ router = APIRouter(
 )
 
 # -- Rutas para gestionar el orquestador 
-router.add_api_route("/orchestrator", oc.get_active_tab_widgets, methods=["GET"])
+router.add_api_route("/", oc.get_active_tab_widgets, methods=["GET"], response_class=EventSourceResponse)

@@ -1,5 +1,6 @@
 from app.repositories.interfaces.tabs_interface import ITabsRepository
 from app.models.tab_model import *
+from app.schemas.tab_schema import *
 from app.core.exceptions import DatabaseError
 from uuid import UUID
 
@@ -21,7 +22,7 @@ class TabsService:
         response = await self.repository.get_dashboard_tabs(dashboard_id)
         if not response.data:
             raise DatabaseError("No se encontraron pestañas asociadas al dashboard del usuario.")
-        return response.data
+        return TabsListResponse(tabs=response.data)
 
 
     #-- Método para obtener las tabs asociadas a un dashboard en concreto
