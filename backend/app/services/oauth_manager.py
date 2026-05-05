@@ -89,7 +89,7 @@ class OAuthManager:
             raise Exception(f"Se ha producido un error: {e}")
 
 
-    #-- Método para incorproar un nuevo provider oauth para un usuario concreto
+    #-- Método para incorporar un nuevo provider oauth para un usuario concreto
     async def create_user_oauth_provider(self, user_id : UUID, provider_name : str, oauth_token_data : OAuthProviderResponse):
         #TODO: Verificar que exista antes de intentar crearlo
         tokens_to_encrypt = {"access_token": oauth_token_data.access_token}
@@ -97,6 +97,8 @@ class OAuthManager:
 
         #Se encriptan los tokens antes de almacenarlos
         encrypted_tokens, wrapped_dek = await self.crypto_manager.encrypt_tokens_with_key_wrapping(tokens_to_encrypt, self.kek_name)
+        if "refresh_token" not in encrypted_tokens: encrypted_tokens.update({"refresh_token" : None })
+
         return await self.repository.create_user_oauth_provider(user_id, provider_name, encrypted_tokens["access_token"], 
                                                                 encrypted_tokens["refresh_token"], wrapped_dek,
                                                                 oauth_token_data.created_at, oauth_token_data.expires_at)
@@ -106,20 +108,63 @@ class OAuthManager:
     async def fetch_oauth_tokens(self, user_id : UUID, provider_name : str):
         user_oauth_data = await self.repository.get_user_oauth_provider(user_id, provider_name)
 
-        token_is_expired = user_oauth_data.expires_at < datetime.now(timezone.utc) 
+        encrypted_tokens = { "access_token" : user_oauth_data.access_token }
+        if user_oauth_data.refresh_token is not None: encrypted_tokens.update({ "refresh_token" : user_oauth_data.refresh_token })
+        decrypted_tokens, unwrapped_dek = await self.crypto_manager.decrypt_tokens_with_key_wrapping(encrypted_tokens, user_oauth_data.dek, self.kek_name)
 
-        if not token_is_expired:
-            encrypted_tokens = { "access_token" : user_oauth_data.access_token }
-            if user_oauth_data.refresh_token is not None: encrypted_tokens.update({ "refresh_token" : user_oauth_data.refresh_token })
-            decrypted_tokens, unwrapped_dek = await self.crypto_manager.decrypt_tokens_with_key_wrapping(encrypted_tokens, user_oauth_data.dek, self.kek_name)
+        #TODO: Mejorar esto, es para contemplar aquellos casos que NO tienen expiración porque son permanentes
+        if user_oauth_data.expires_at is not None: 
+            token_is_expired = user_oauth_data.expires_at < datetime.now(timezone.utc)
+        else:
+            token_is_expired = False
+        if not token_is_expired:    
             return decrypted_tokens, unwrapped_dek 
         else:
-            return await self.refresh_access_token()
+            print("El access token especificado ha expirado. Obteniendo un nuevo access token...")
+            #Se solicita un token nuevo y se actualiza la base de datos
+            new_access_token = await self.refresh_access_token(decrypted_tokens["refresh_token"], provider_name, user_id)
+            
+            return { "access_token" : new_access_token }, None
 
 
     #-- Método para obtener un access_token nuevo a partir del refresh_token, en aquellos provider que lo requieran
-    async def refresh_access_token(self, oauth_refresh_token : bytes, provider_name : str):
+    async def refresh_access_token(self, oauth_refresh_token : bytes, provider_name : str, user_id : UUID):
         #TODO: Reimplementar, no todos los providers tienen refresh_token o lo gestionan de la misma forma
         #encrypted_tokens, wrapped_dek = await self.crypto_manager.encrypt_tokens_with_key_wrapping(tokens_to_encrypt, self.kek_name)
-        pass
+        provider_config = OAuthManager.get_oauth_config(provider_name)
+        #La llamada requiere que refresh_token sea un diccionario, y el token un string
+        refresh_token = { "refresh_token" : oauth_refresh_token }
+        print(type(refresh_token))
+        try:
+            oauth = OAuth2Session(
+                client_id=provider_config["client_id"],
+                token=refresh_token,
+            )
 
+            refresh_oauth_response = oauth.refresh_token(
+                token_url=provider_config["refresh_url"],  
+                client_id=provider_config["client_id"],
+                client_secret=provider_config["client_secret"],
+                refresh_token=refresh_token["refresh_token"]
+                )
+            print(refresh_oauth_response)
+
+            refresh_oauth_data = OAuthProviderResponse(**refresh_oauth_response)
+
+            #TODO! Mejoras: No regenerar la DEK si no cambia el refresh token, reutilizar la misma para encriptar el nuevo access_token
+            tokens_to_encrypt = { "access_token" : refresh_oauth_data.access_token }
+            if refresh_oauth_data.refresh_token is not None: tokens_to_encrypt.update({"refresh_token" : refresh_oauth_data.refresh_token})
+
+            encrypted_tokens, wrapped_dek = await self.crypto_manager.encrypt_tokens_with_key_wrapping(tokens_to_encrypt, self.kek_name)
+
+            #TODO: Revisar si todos devuelven un nuevo refresh_token, o el mismo, si no devuelven el refresh token actualizar con éste opcional
+            if "refresh_token" not in encrypted_tokens: encrypted_tokens.update({"refresh_token" : None })
+
+            #TODO: Verificar que se inserta correctamente
+            await self.repository.update_user_oauth_provider(user_id, provider_name, encrypted_tokens["access_token"], 
+                                                                encrypted_tokens["refresh_token"], wrapped_dek,
+                                                                refresh_oauth_data.created_at, refresh_oauth_data.expires_at)
+            return refresh_oauth_data.access_token
+
+        except Exception as e:
+            raise Exception(f"Se ha producido un error al intentar refrescar el token de acceso: {e}")
