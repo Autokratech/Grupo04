@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import uuid
 
-from app.core.database import supabase
+from app.database_sync import supabase
 
 NOMBRE_TABLA_AUDITORIA = "t_audit_log"
 
