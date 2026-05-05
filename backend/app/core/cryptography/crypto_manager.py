@@ -31,7 +31,7 @@ class CryptoManager:
         
         for token_name, token_value in encrypted_tokens.items():
             decrypted_token = dek_utils.decrypt_token_with_dek(token_value.encode("utf-8"), unwrapped_dek)
-            decrypted_tokens[token_name] = decrypted_token
+            decrypted_tokens[token_name] = decrypted_token.decode("utf-8")
 
         #Nota: Se devuelve también la DEK unwrappeada para mantenerla en caché unos minutos, y evitar muchas llamadas al KV en caso de que se realicen llamadas constantes al servicio
         return decrypted_tokens, unwrapped_dek  
