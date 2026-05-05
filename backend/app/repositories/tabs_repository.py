@@ -15,7 +15,7 @@ class TabsRepository:
     async def get_dashboard_tabs(self, dashboard_id : UUID):
         try:
             return await self.supabase.table(self.TABS_TABLE) \
-                .select('tab_id, tab_name') \
+                .select("tab_id, tab_index, tab_name") \
                 .eq("dashboard_id", dashboard_id) \
                 .order("tab_index") \
                 .execute() 
