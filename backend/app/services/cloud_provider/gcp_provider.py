@@ -1,1 +1,0 @@
-#TODO: Desarrollar clase GCPProvider que implementa la interfaz ICloudProvider
