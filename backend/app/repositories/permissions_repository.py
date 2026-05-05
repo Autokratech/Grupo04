@@ -1,4 +1,4 @@
-from app.core.database import supabase
+from app.database_sync import supabase
 
 NOMBRE_TABLA_PERMISOS = "t_permissions"
 NOMBRE_TABLA_ROL_PERMISO = "t_role_permissions"
