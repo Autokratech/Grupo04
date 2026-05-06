@@ -16,22 +16,22 @@ class TabWidgeSkeletontList(BaseModel):
     tab_widgets : List[TabWidgetSkeleton]
 
 
-class Data(BaseModel):
-    count : int
-    items : List[Dict]  #Los campos concretos aquí ya dependen del recurso
-
-
 class TabWidgetData(BaseModel):
     tab_widget_id : UUID
     provider_tag : str
-    status : str | None = "success" #TODO: Migrar a enum una vez decididos los tipos disponibles en status
-    timestamp : str | None
+    status : str #TODO: Migrar a enum una vez decididos los tipos disponibles en status
+    timestamp : str | None = None 
     ttl : int | None = None #TODO: Crear una nueva tabla data_types con este tipo de info
-    data : Data
+    data : dict | None = None
 
 
 class TabWidgetDataList(BaseModel):
     tab_widgets_data : List[TabWidgetData]
+
+
+class ProviderResponse(BaseModel):
+    count : int | None = 0
+    items : list | None = None
 
 
 # Requests 

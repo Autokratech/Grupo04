@@ -29,8 +29,8 @@ class GitHubProvider():
             response.raise_for_status()
             return await self.normalize_response(data_type, response.json())
         except Exception as e:
-            print(f"execption: {e}")
-        #TODO:  Añadir configuración personalizada del user + postprocesamiento de la respuesta de github
+            print(f"Exception: {e}")
+        #TODO:  Añadir configuración personalizada del user
 
 
     async def get_provider_endpoint(self, data_type, data_config):
@@ -44,13 +44,11 @@ class GitHubProvider():
 
 
     async def normalize_response(self, data_type, provider_response : dict):
-        print(f"-------------------------------------{data_type}---------------------------------------------------")
-        print(provider_response)
         try:
             data_schema = self._schema_validator_types[data_type]
         except KeyError:
             raise KeyError("El tipo de datos especificado no está disponible para GITLAB.")
         response_items = [data_schema(**item) for item in provider_response]
-        return GitHubResponse(count=len(response_items), items=response_items).model_dump()
+        return GitHubResponse(count=len(response_items), items=response_items)
 
     #TODO: Idea. Añadir métodos que permitan obtener métricas combinadas, más complejas

@@ -4,6 +4,7 @@ from app.repositories.interfaces.orchestrator_interface import IOrchestratorRepo
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from app.models.orchestrator_model import *
 from app.schemas.orchestrator_schema import *
+from datetime import datetime, timezone
 from uuid import UUID
 
 '''
@@ -14,9 +15,6 @@ from uuid import UUID
     providers de cloud...) pasa por aquí. 
 
 '''
-
-#TODO: Implementar SSE para enviar primero los widgets y después los datos
-# Revisar más tarde: https://fastapi.tiangolo.com/tutorial/server-sent-events/
 
 class OrchestratorService:
     pass
@@ -47,7 +45,7 @@ class OrchestratorService:
         #TODO: Mejoras, si mismo provider reutilizar token de caché
 
         # Step 5 -- Se envían los datos a la factory of factories para que devuelva la instancia concreta a utilizar 
-        aggregated_response = {} 
+        aggregated_response = [] 
         async with asyncio.TaskGroup() as tg:
             for request in data_request_params.providers:
                 provider_instance = await self.factory.create_provider_instance(user_id, request.provider_name)
@@ -60,7 +58,7 @@ class OrchestratorService:
         # TODO: Añadir timeout y derivar la consulta al caché, y en caso de que tampoco haya datos, enviar "None" / "No data available", o {} al front
         # TODO: Revisar gestión de excepciones. Ahora mismo si una tarea falla, caen todas ~ investigar si nos conviene más usar gather
 
-        widgets_data_params = TabWidgetDataList(tab_widgets=aggregated_response)
+        widgets_data_params = TabWidgetDataList(tab_widgets_data=aggregated_response)
 
         yield {
             "event" : "widgets_data",
@@ -76,8 +74,7 @@ class OrchestratorService:
         return widgets_list
 
 
-    # -- Método para dividir los datos de los widgets en dos bloques: datos intrínsecos del widget y datos de la métrica
-    # Nota: pendiente buscar un mejor nombre para el método -- nombre provisional
+    # -- Método para dividir los datos de los widgets en dos bloques: datos para enviar al front en el primer stream y datos para hacer la request
     async def split_widgets_data(self, widgets_list):
         widgets_skeleton_params = [TabWidgetSkeleton(**widget.model_dump()) for widget in widgets_list]
         data_request_params = [ProviderData(**widget.model_dump()) for widget in widgets_list]
@@ -85,18 +82,30 @@ class OrchestratorService:
 
 
     # -- Método para obtener las métricas del provider deseado
-    async def fetch_tab_widget_data(self, provider_instance, request : ProviderData, aggregated_response : dict):
+    async def fetch_tab_widget_data(self, provider_instance, request : ProviderData, aggregated_response : list):
         try:
             provider_response = await provider_instance.fetch_provider_data(request.data_type, request.custom_config)
-            aggregated_response.update(TabWidgetData(provider_response))
+            standarized_response = await self.standarize_response(request, provider_response)
+            aggregated_response.append(standarized_response)
         except Exception as e:
             print(f"Se ha producido un error al intentar acceder a los datos de {request.data_type} del provider {request.provider_name} : {e}")
-            aggregated_response
+            aggregated_response.append(TabWidgetData(tab_widget_id = request.tab_widget_id,
+                                                          provider_tag = request.provider_name,
+                                                          status = "error"))
 
 
-    async def standarize_response(self):
-        pass
-        
+    async def standarize_response(self, request, response_data):
+        status = "success" if response_data.count else "error"
+        timestamp = datetime.now(timezone.utc).isoformat()
+        standarized_response = TabWidgetData(tab_widget_id = request.tab_widget_id,
+                                            provider_tag = request.provider_name,
+                                            status = status,
+                                            timestamp = timestamp,
+                                            ttl = 300, #Hardcodeado para pruebas, pero debería venir del data_type )
+                                            data=response_data.model_dump())
+        return standarized_response
+
+
     # -- Método para ejecutar la acción de un widget de tipo action (o híbrido, si al final disponemos de híbridos también)
     # TODO: Enlazarlo con la parte de auditoría para que 1 acción = 1 registro (salvo que más adelante estimemos auditar sólo algunas)
     async def execute_tab_widget_action(self, widget_data):
