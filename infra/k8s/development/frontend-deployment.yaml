@@ -19,8 +19,4 @@ spec:
       - name: frontend
         image: europe-west1-docker.pkg.dev/windy-skyline-490617-g7/autokratech-registry/frontend:latest
         ports:
-<<<<<<< HEAD
         - containerPort: 80
-=======
-        - containerPort: 80
->>>>>>> 81a3be992bdaeeda75c0593e8ed0193029d42eb2
