@@ -29,14 +29,13 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   static const double _wideLayoutBreakpoint = 900;
   static const double _detailsPanelWidth = 320;
-  static const double _portraitBottomSheetHeightFactor = 0.40;
+  static const double _portraitBottomSheetHeightFactor = 0.60;
   static const double _landscapeBottomSheetHeightFactor = 0.90;
 
   final DashboardViewModel _viewModel = DashboardViewModel(
     dashboardRepository: sl<DashboardRepository>(),
     dashboardPreferencesService: sl<DashboardPreferencesService>(),
   );
-  final Object _dashboardDetailTapGroup = Object();
 
   bool get _isMobilePlatform => AppPlatform.isMobile;
 
@@ -50,6 +49,136 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _viewModel.dispose();
     super.dispose();
+  }@override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: ListenableBuilder(
+            listenable: _viewModel,
+            builder: (context, _) {
+              final state = _viewModel.state;
+              final items = _viewModel.items;
+              final errorMessage = _viewModel.errorMessage;
+              final tabs = _viewModel.tabs;
+              final selectedTab = _viewModel.selectedTab;
+              final selectedItem = _viewModel.selectedItem;
+
+              final isMobileLandscape =
+                  AppPlatform.isMobile &&
+                      MediaQuery.of(context).orientation == Orientation.landscape;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isMobileLandscape) ...[
+                    if (selectedTab != null) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTabSelector(
+                              tabs: tabs,
+                              selectedTab: selectedTab,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          ProfileMenuButton(
+                            onLoggedOut: _handleProfileLoggedOut,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                  ] else ...[
+                    DashboardHeader(
+                      title: 'Dashboard',
+                      subtitle: 'Vista general de monitorización',
+                      trailing: ProfileMenuButton(
+                        onLoggedOut: _handleProfileLoggedOut,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (selectedTab != null) ...[
+                      _buildTabSelector(tabs: tabs, selectedTab: selectedTab),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                  ],
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWideLayout =
+                            constraints.maxWidth >= _wideLayoutBreakpoint;
+
+                        final mainContent = _buildDashboardContent(
+                          state,
+                          items,
+                          selectedItem,
+                          errorMessage,
+                          onItemSelected: (item) {
+                            if (_isMobilePlatform) {
+                              _showDetailsBottomSheet(item);
+                              return;
+                            }
+
+                            _handleDesktopItemSelected(item);
+                          },
+                        );
+
+                        if (!isWideLayout) {
+                          if (_isMobilePlatform) {
+                            return mainContent;
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(child: mainContent),
+
+                              if (selectedItem != null) ...[
+                                const SizedBox(height: AppSpacing.lg),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight: constraints.maxHeight * 0.40,
+                                  ),
+                                  child: DetailsSidePanel(
+                                    item: selectedItem,
+                                    placement: DetailsPanelPlacement.bottom,
+                                    onClose: _viewModel.clearSelectedItem,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: mainContent),
+                            if (selectedItem != null) ...[
+                              const SizedBox(width: AppSpacing.lg),
+                              SizedBox(
+                                width: _detailsPanelWidth,
+                                child: DetailsSidePanel(
+                                  item: selectedItem,
+                                  placement: DetailsPanelPlacement.side,
+                                  onClose: _viewModel.clearSelectedItem,
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   void _handleProfileLoggedOut() {
@@ -177,9 +306,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : _portraitBottomSheetHeightFactor,
           child: SafeArea(
             top: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: DetailsSidePanel(item: item),
+            child: DetailsSidePanel(
+              item: item,
+              showCard: false,
             ),
           ),
         );
@@ -192,16 +321,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _viewModel.clearSelectedItem();
     }
   }
+  void _handleDesktopItemSelected(DashboardWidgetItem item) {
+    if (_viewModel.selectedItem?.id == item.id) {
+      _viewModel.clearSelectedItem();
+      return;
+    }
 
-  Widget _buildTapProtectedArea({required Widget child}) {
-    return TapRegion(
-      groupId: _dashboardDetailTapGroup,
-      onTapOutside: (_) {
-        FocusScope.of(context).unfocus();
-        _viewModel.clearSelectedItem();
-      },
-      child: child,
-    );
+    _viewModel.selectItem(item);
   }
 
   Widget _buildTabSelector({
@@ -229,137 +355,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(errorMessage)));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: ListenableBuilder(
-            listenable: _viewModel,
-            builder: (context, _) {
-              final state = _viewModel.state;
-              final items = _viewModel.items;
-              final errorMessage = _viewModel.errorMessage;
-              final tabs = _viewModel.tabs;
-              final selectedTab = _viewModel.selectedTab;
-              final selectedItem = _viewModel.selectedItem;
-
-              final isMobileLandscape =
-                  AppPlatform.isMobile &&
-                  MediaQuery.of(context).orientation == Orientation.landscape;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isMobileLandscape) ...[
-                    if (selectedTab != null) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTabSelector(
-                              tabs: tabs,
-                              selectedTab: selectedTab,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          ProfileMenuButton(
-                            onLoggedOut: _handleProfileLoggedOut,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                    ],
-                  ] else ...[
-                    DashboardHeader(
-                      title: 'Dashboard',
-                      subtitle: 'Vista general de monitorización',
-                      trailing: ProfileMenuButton(
-                        onLoggedOut: _handleProfileLoggedOut,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    if (selectedTab != null) ...[
-                      _buildTabSelector(tabs: tabs, selectedTab: selectedTab),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                  ],
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWideLayout =
-                            constraints.maxWidth >= _wideLayoutBreakpoint;
-
-                        final mainContent = _buildTapProtectedArea(
-                          child: _buildDashboardContent(
-                            state,
-                            items,
-                            selectedItem,
-                            errorMessage,
-                            onItemSelected: (item) {
-                              if (_isMobilePlatform) {
-                                _showDetailsBottomSheet(item);
-                                return;
-                              }
-
-                              _viewModel.selectItem(item);
-                            },
-                          ),
-                        );
-
-                        if (!isWideLayout) {
-                          if (_isMobilePlatform) {
-                            return mainContent;
-                          }
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: mainContent),
-
-                              if (selectedItem != null) ...[
-                                const SizedBox(height: AppSpacing.lg),
-                                _buildTapProtectedArea(
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxHeight: constraints.maxHeight * 0.40,
-                                    ),
-                                    child: SingleChildScrollView(
-                                      child: DetailsSidePanel(item: selectedItem),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          );
-                        }
-
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(child: mainContent),
-                            if (selectedItem != null) ...[
-                              const SizedBox(width: AppSpacing.lg),
-                              SizedBox(
-                                width: _detailsPanelWidth,
-                                child: _buildTapProtectedArea(
-                                  child: DetailsSidePanel(item: selectedItem),
-                                ),
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
   }
 }

@@ -3,7 +3,7 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
-import 'package:frontend/domain/models/widget_type.dart';
+import 'package:frontend/features/dashboard/presentation/utils/widget_labels.dart';
 
 class DashboardCard extends StatelessWidget {
   final DashboardWidgetItem item;
@@ -16,38 +16,6 @@ class DashboardCard extends StatelessWidget {
     this.isSelected = false,
     this.onTap,
   });
-
-  String _buildTypeLabel(WidgetType type) {
-    switch (type) {
-      case WidgetType.status:
-        return 'Estado';
-      case WidgetType.metric:
-        return 'Métrica';
-      case WidgetType.list:
-        return 'Lista';
-      case WidgetType.chart:
-        return 'Gráfico';
-      case WidgetType.service:
-        return 'Servicio';
-      case WidgetType.alert:
-        return 'Alerta';
-      case WidgetType.pipeline:
-        return 'Pipeline';
-      case WidgetType.issue:
-        return 'Issue';
-    }
-  }
-
-  String _buildStatusLabel(WidgetStatus status) {
-    switch (status) {
-      case WidgetStatus.ok:
-        return 'OK';
-      case WidgetStatus.error:
-        return 'Error';
-      case WidgetStatus.inactive:
-        return 'Inactivo';
-    }
-  }
 
   Color _buildStatusColor(WidgetStatus status) {
     switch (status) {
@@ -69,7 +37,7 @@ class DashboardCard extends StatelessWidget {
       children: [
         Flexible(
           child: Text(
-            _buildTypeLabel(item.type),
+            WidgetLabels.type(item.type),
             style: labelStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -91,6 +59,7 @@ class DashboardCard extends StatelessWidget {
     required bool compact,
   }) {
     final statusColor = _buildStatusColor(item.status);
+    final isInactive = item.status == WidgetStatus.inactive;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -98,11 +67,16 @@ class DashboardCard extends StatelessWidget {
         vertical: compact ? 2 : 4,
       ),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.10),
+        color: statusColor.withValues(alpha: isInactive ? 0.06 : 0.10),
         borderRadius: borderRadius,
+        border: isInactive
+            ? Border.all(
+          color: statusColor.withValues(alpha: 0.35),
+        )
+            : null,
       ),
       child: Text(
-        _buildStatusLabel(item.status),
+        WidgetLabels.status(item.status),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: labelStyle?.copyWith(
