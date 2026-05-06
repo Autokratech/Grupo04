@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Request
 
-from app.controllers.users_controller import (
+from app.api.controllers.users_controller import (
     controlador_actualizar_usuario,
     controlador_borrar_usuario,
     controlador_buscar_usuario_por_id,
@@ -10,7 +10,7 @@ from app.controllers.users_controller import (
 from app.schemas.user_schema import DatosActualizarUsuario, DatosCrearUsuario, RespuestaMensaje, RespuestaUsuario
 from app.core.guardias import pedir_permiso, pedir_usuario_logueado
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/api/users", tags=["Users"])
 
 # ruta que devuelve el usuario logado y el token
 @router.get("/me")

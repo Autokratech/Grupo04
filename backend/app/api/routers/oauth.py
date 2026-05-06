@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.api.controllers import oauth_controller as oc
 
 router = APIRouter(
-    prefix="/oauth",
+    prefix="/api/oauth",
     tags=["oauth"],
     responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
 )

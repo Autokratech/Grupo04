@@ -15,3 +15,26 @@ from .widgets_controller import (
 )
 
 from .orchestrator_controller import get_active_tab_widgets
+
+from .auth_controller import controlador_login_usuario, controlador_registrar_usuario
+
+from .metrics_controller import (
+    controlador_metricas_por_resource_type, controlador_recursos_por_resource_type, 
+    controlador_reportar_metrica, controlador_ultima_metrica
+)
+
+from .permissions_controller import (
+    controlador_listar_permisos, controlador_buscar_permiso_por_id, controlador_crear_permiso,
+    controlador_actualizar_permiso, controlador_borrar_permiso
+)
+
+from .roles_controller import (
+    controlador_listar_roles, controlador_buscar_rol_por_id, controlador_crear_rol,
+    controlador_actualizar_rol, controlador_borrar_rol, controlador_listar_permisos_de_rol,
+    controlador_asignar_permiso_a_rol, controlador_quitar_permiso_de_rol
+)
+
+from .users_controller import (
+    controlador_listar_usuarios, controlador_buscar_usuario_por_id, controlador_crear_usuario,
+    controlador_actualizar_usuario, controlador_borrar_usuario
+)
