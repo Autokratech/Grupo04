@@ -15,6 +15,10 @@ class DashboardMapper {
     );
   }
 
+  static DashboardTab tabToDomain(DashboardTabDto dto) {
+    return _tabToDomain(dto);
+  }
+
   static List<DashboardTab> tabsToDomain(DashboardTabsResponseDto dto) {
     final tabs = dto.tabs
         .where((tab) => tab.id.trim().isNotEmpty)
