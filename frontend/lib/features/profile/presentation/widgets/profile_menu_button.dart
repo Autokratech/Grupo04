@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/domain/models/app_user.dart';
+import 'package:frontend/domain/models/linked_provider_status.dart';
 import 'package:frontend/domain/models/user_role.dart';
 import 'package:frontend/features/profile/presentation/states/profile_state.dart';
 import 'package:frontend/features/profile/presentation/viewmodels/profile_viewmodel.dart';
@@ -17,9 +18,9 @@ class ProfileMenuButton extends StatefulWidget {
 }
 
 class _ProfileMenuButtonState extends State<ProfileMenuButton> {
-  static const double _menuWidth = 300;
+  static const double _menuWidth = 340;
   static const double _loadingHeight = 120;
-  static const Offset _menuOffset = Offset(-200, 8);
+  static const Offset _menuOffset = Offset(-240, 8);
 
   final MenuController _menuController = MenuController();
   late final ProfileViewModel _viewModel;
@@ -67,7 +68,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       style: MenuStyle(
         alignment: AlignmentDirectional.bottomStart,
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       menuChildren: [
@@ -197,20 +198,23 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
         LinkedProviderTile(
           icon: Icons.code,
           title: 'GitHub',
-          statusLabel: 'Preparado para futura vinculación OAuth.',
-          connected: false,
+          description: 'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
+          status: LinkedProviderStatus.disconnected,
+          actionLabel: 'Conectar',
         ),
         LinkedProviderTile(
           icon: Icons.account_tree_outlined,
           title: 'GitLab',
-          statusLabel: 'Preparado para futura vinculación OAuth.',
-          connected: false,
+          description: 'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
+          status: LinkedProviderStatus.disconnected,
+          actionLabel: 'Conectar',
         ),
         LinkedProviderTile(
-          icon: Icons.cloud_outlined,
-          title: 'Cloud providers',
-          statusLabel: 'Pendiente de contrato backend.',
-          connected: false,
+          icon: Icons.memory_outlined,
+          title: 'Agentes',
+          description: 'Registra un agente para recibir métricas de sistema e infraestructura.',
+          status: LinkedProviderStatus.unavailable,
+          actionLabel: 'Gestionar',
         ),
       ],
     );
