@@ -9,4 +9,8 @@ spec:
   ports:
   - port: 80
     targetPort: 80
+<<<<<<< HEAD
   type: ClusterIP
+=======
+  type: ClusterIP
+>>>>>>> 81a3be992bdaeeda75c0593e8ed0193029d42eb2
