@@ -23,3 +23,4 @@ El usuario target hacia el que se plantea la aplicación se proyecta como un per
 
 
 <img src="docs/images/logo_lasalle.png" alt="Logo_Lasalle" width="200"># test
+# test
