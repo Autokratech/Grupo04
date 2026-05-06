@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 
 @dataclass
-class UserModel:
-    id: int
+class ModeloUsuario:
+    id: int | None
     nombre: str
     email: str
     password_hash: str

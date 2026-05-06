@@ -1,11 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional
 from uuid import UUID
 
 # -- Requests
 class DashboardCreate(BaseModel):
-    user_id : int
+    user_id : UUID
     dashboard_theme: str | None = "default"
+    dashboard_language: str | None = "spanish"
 
 class DashboardUpdateTheme(BaseModel):
     dashboard_theme: str
@@ -14,5 +14,5 @@ class DashboardUpdateTheme(BaseModel):
 # -- Responses
 class DashboardResponse(BaseModel):
     dashboard_id: UUID
-    user_id: int
-    dashboard_theme: str | None = None
+    dashboard_theme: str 
+    dashboard_language: str 

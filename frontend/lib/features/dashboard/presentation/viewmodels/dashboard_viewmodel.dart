@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/models/dashboard_preset.dart';
+import 'package:frontend/core/constants/app_constants.dart';
+import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
+import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
+import 'package:frontend/domain/models/dashboard.dart';
+import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
-import 'package:frontend/domain/models/widget_status.dart';
-import 'package:frontend/domain/models/widget_type.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 
 class DashboardViewModel extends ChangeNotifier {
+  final DashboardRepository _dashboardRepository;
+  final DashboardPreferencesService _dashboardPreferencesService;
+
+  DashboardViewModel({
+    required DashboardRepository dashboardRepository,
+    required DashboardPreferencesService dashboardPreferencesService,
+  }) : _dashboardRepository = dashboardRepository,
+       _dashboardPreferencesService = dashboardPreferencesService;
+
   DashboardState _state = DashboardState.initial;
   DashboardState get state => _state;
 
@@ -17,139 +28,322 @@ class DashboardViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   void _clearErrorMessage() => _errorMessage = null;
 
-  DashboardPreset? _selectedPreset;
-  DashboardPreset? get selectedPreset => _selectedPreset;
+  Dashboard? _dashboard;
+  Dashboard? get dashboard => _dashboard;
+
+  List<DashboardTab> _tabs = [];
+  List<DashboardTab> get tabs => List.unmodifiable(_tabs);
+  DashboardTab? _selectedTab;
+  DashboardTab? get selectedTab => _selectedTab;
+  bool get canCreateTab => _tabs.length < AppConstants.maxTabs;
 
   DashboardWidgetItem? _selectedItem;
   DashboardWidgetItem? get selectedItem => _selectedItem;
   void _clearSelectedItem() => _selectedItem = null;
 
-  final List<DashboardPreset> _presets = const [
-    DashboardPreset(id: 'default', name: 'Por defecto'),
-    DashboardPreset(id: 'operations', name: 'Operaciones'),
-    DashboardPreset(id: 'pc_resources', name: 'Recursos PC'),
-  ];
-  List<DashboardPreset> get presets => List.unmodifiable(_presets);
+  Future<void> initializeDashboard() async {
+    _clearErrorMessage();
+    _state = DashboardState.loading;
+    notifyListeners();
 
-  List<DashboardWidgetItem> _fetchDashboardItemsForPreset(
-      DashboardPreset preset,
-      ) {
-    switch (preset.id) {
-      case 'default':
-        return [
-          DashboardWidgetItem(
-            id: 'active-services',
-            title: 'Servicios activos',
-            type: WidgetType.service,
-            status: WidgetStatus.ok,
-            primaryValue: '12',
-            description: 'Número total de servicios operativos en este momento.',
-          ),
-          DashboardWidgetItem(
-            id: 'open-incidents',
-            title: 'Incidencias abiertas',
-            type: WidgetType.alert,
-            status: WidgetStatus.error,
-            primaryValue: '3',
-            description: 'Incidencias actualmente pendientes de revisión o cierre.',
-          ),
-          DashboardWidgetItem(
-            id: 'sync-status',
-            title: 'Sincronización',
-            type: WidgetType.status,
-            status: WidgetStatus.ok,
-            primaryValue: 'Operativa',
-            description: 'Estado actual del proceso de sincronización entre sistemas.',
-          ),
-        ];
+    try {
+      final dashboard = await _dashboardRepository.getDashboard();
+      _dashboard = dashboard;
 
-      case 'operations':
-        return [
-          DashboardWidgetItem(
-            id: 'pending-forms',
-            title: 'Formularios pendientes',
-            type: WidgetType.alert,
-            status: WidgetStatus.error,
-            primaryValue: '8',
-            description: 'Formularios aún no procesados por el equipo de operaciones.',
-          ),
-          DashboardWidgetItem(
-            id: 'failed-services',
-            title: 'Servicios con error',
-            type: WidgetType.service,
-            status: WidgetStatus.error,
-            primaryValue: '2',
-            description: 'Servicios que han registrado fallos y requieren intervención.',
-          ),
-          DashboardWidgetItem(
-            id: 'avg-response-time',
-            title: 'Tiempo medio de respuesta',
-            type: WidgetType.metric,
-            status: WidgetStatus.ok,
-            primaryValue: '240 ms',
-          ),
-        ];
+      _tabs = await _dashboardRepository.getDashboardTabs(
+        dashboardId: dashboard.id,
+      );
 
-      case 'pc_resources':
-        return [
-          DashboardWidgetItem(
-            id: 'cpu-usage',
-            title: 'Uso de CPU',
-            type: WidgetType.metric,
-            status: WidgetStatus.ok,
-            primaryValue: '34%',
-            description: 'Porcentaje actual de uso del procesador del equipo monitorizado.',
-          ),
-          DashboardWidgetItem(
-            id: 'ram-usage',
-            title: 'Uso de RAM',
-            type: WidgetType.metric,
-            status: WidgetStatus.ok,
-            primaryValue: '68%',
-            description: 'Memoria RAM utilizada actualmente por el sistema.',
-          ),
-          DashboardWidgetItem(
-            id: 'disk-space',
-            title: 'Espacio en disco',
-            type: WidgetType.metric,
-            status: WidgetStatus.ok,
-            primaryValue: '120 GB',
-            description: 'Espacio disponible actualmente en el almacenamiento principal.',
-          ),
-          DashboardWidgetItem(
-            id: 'network-status',
-            title: 'Red',
-            type: WidgetType.status,
-            status: WidgetStatus.ok,
-            primaryValue: 'Conectada',
-          ),
-        ];
+      if (_tabs.isEmpty) {
+        _selectedTab = null;
+        _clearSelectedItem();
+        _clearItems();
 
-      default:
-        return [];
+        await _dashboardPreferencesService.clearSelectedTabId(
+          dashboardId: dashboard.id,
+        );
+
+        _state = DashboardState.empty;
+        notifyListeners();
+        return;
+      }
+
+      final savedTabId = _dashboardPreferencesService.getSelectedTabId(
+        dashboardId: dashboard.id,
+      );
+
+      final savedTab = _findTabById(savedTabId);
+
+      if (savedTab != null) {
+        _selectedTab = savedTab;
+      } else {
+        _selectedTab = _tabs.first;
+
+        await _dashboardPreferencesService.saveSelectedTabId(
+          dashboardId: dashboard.id,
+          tabId: _selectedTab!.id,
+        );
+      }
+
+      await loadTabItems();
+    } catch (_) {
+      _dashboard = null;
+      _tabs = [];
+      _selectedTab = null;
+      _clearSelectedItem();
+      _clearItems();
+      _state = DashboardState.error;
+      _errorMessage = 'Ha ocurrido un error al inicializar el dashboard';
+      notifyListeners();
     }
   }
 
-  Future<void> initializeDashboard() async {
-    if (_presets.isEmpty) {
-      _selectedPreset = null;
-      _clearSelectedItem();
-      _clearItems();
-      _clearErrorMessage();
-      _state = DashboardState.empty;
+  DashboardTab? _findTabById(String? tabId) {
+    if (tabId == null) return null;
+
+    for (final tab in _tabs) {
+      if (tab.id == tabId) {
+        return tab;
+      }
+    }
+
+    return null;
+  }
+
+  bool _hasSameTabIds(List<DashboardTab> otherTabs) {
+    if (otherTabs.length != _tabs.length) {
+      return false;
+    }
+
+    final currentIds = _tabs.map((tab) => tab.id).toSet();
+    final otherIds = otherTabs.map((tab) => tab.id).toSet();
+
+    return currentIds.containsAll(otherIds) && otherIds.containsAll(currentIds);
+  }
+
+  Future<void> changeTab(DashboardTab tab) async {
+    final dashboard = _dashboard;
+
+    if (dashboard == null) return;
+
+    if (_selectedTab?.id == tab.id) return;
+
+    final existingTab = _findTabById(tab.id);
+
+    if (existingTab == null) return;
+
+    _selectedTab = existingTab;
+
+    await _dashboardPreferencesService.saveSelectedTabId(
+      dashboardId: dashboard.id,
+      tabId: existingTab.id,
+    );
+
+    _clearSelectedItem();
+    await loadTabItems();
+  }
+
+  Future<void> createTab(String name) async {
+    final dashboard = _dashboard;
+
+    if (dashboard == null) return;
+
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      _errorMessage = 'Introduce un nombre';
       notifyListeners();
       return;
     }
 
-    _selectedPreset ??= _presets.first;
-    await _loadDashboardForSelectedPreset();
+    if (!canCreateTab) {
+      _errorMessage =
+          'No se pueden crear más de ${AppConstants.maxTabs} dashboards';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _clearErrorMessage();
+
+      final createdTab = await _dashboardRepository.createDashboardTab(
+        dashboardId: dashboard.id,
+        name: normalizedName,
+      );
+
+      _tabs = await _dashboardRepository.getDashboardTabs(
+        dashboardId: dashboard.id,
+      );
+
+      final selectedCreatedTab = _findTabById(createdTab.id);
+      _selectedTab = selectedCreatedTab ?? createdTab;
+
+      await _dashboardPreferencesService.saveSelectedTabId(
+        tabId: _selectedTab!.id,
+        dashboardId: dashboard.id,
+      );
+
+      _clearSelectedItem();
+      await loadTabItems();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al crear el dashboard';
+      notifyListeners();
+    }
   }
 
-  Future<void> changePreset(DashboardPreset preset) async {
-    if (_selectedPreset?.id == preset.id) return;
+  Future<void> renameTab({
+    required DashboardTab tab,
+    required String name,
+  }) async {
+    final dashboard = _dashboard;
 
-    _selectedPreset = preset;
-    await _loadDashboardForSelectedPreset();
+    if (dashboard == null) return;
+
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      _errorMessage = 'Introduce un nombre';
+      notifyListeners();
+      return;
+    }
+
+    final existingTab = _findTabById(tab.id);
+
+    if (existingTab == null) return;
+
+    try {
+      _clearErrorMessage();
+
+      final renamedTab = await _dashboardRepository.renameDashboardTab(
+        dashboardId: dashboard.id,
+        tabId: tab.id,
+        name: normalizedName,
+      );
+
+      _tabs = _tabs.map((currentTab) {
+        if (currentTab.id == renamedTab.id) {
+          return renamedTab;
+        }
+
+        return currentTab;
+      }).toList()..sort((a, b) => a.position.compareTo(b.position));
+
+      if (_selectedTab?.id == renamedTab.id) {
+        _selectedTab = renamedTab;
+      }
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al renombrar el dashboard';
+      notifyListeners();
+    }
+  }
+
+  Future<void> reorderTabs(List<DashboardTab> reorderedTabs) async {
+    final dashboard = _dashboard;
+    final selectedTab = _selectedTab;
+
+    if (dashboard == null) return;
+
+    if (reorderedTabs.isEmpty) {
+      _errorMessage = 'Debe existir al menos un dashboard';
+      notifyListeners();
+      return;
+    }
+
+    if (!_hasSameTabIds(reorderedTabs)) {
+      _errorMessage = 'No se ha podido reordenar los dashboards';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _clearErrorMessage();
+
+      _tabs = await _dashboardRepository.updateDashboardTabOrder(
+        dashboardId: dashboard.id,
+        tabs: reorderedTabs,
+      );
+
+      if (selectedTab != null) {
+        _selectedTab = _findTabById(selectedTab.id);
+
+        if (_selectedTab != null) {
+          await _dashboardPreferencesService.saveSelectedTabId(
+            dashboardId: dashboard.id,
+            tabId: _selectedTab!.id,
+          );
+        }
+      }
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al reordenar los dashboards';
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteTab(DashboardTab tab) async {
+    final dashboard = _dashboard;
+
+    if (dashboard == null) return;
+
+    if (_tabs.length <= 1) {
+      _errorMessage = 'Debe existir al menos un dashboard';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _clearErrorMessage();
+
+      final wasSelectedTab = _selectedTab?.id == tab.id;
+
+      await _dashboardRepository.deleteDashboardTab(
+        dashboardId: dashboard.id,
+        tabId: tab.id,
+      );
+
+      _tabs = await _dashboardRepository.getDashboardTabs(
+        dashboardId: dashboard.id,
+      );
+
+      if (_tabs.isEmpty) {
+        _selectedTab = null;
+        _clearSelectedItem();
+        _clearItems();
+        await _dashboardPreferencesService.clearSelectedTabId(
+          dashboardId: dashboard.id,
+        );
+        _state = DashboardState.empty;
+        notifyListeners();
+        return;
+      }
+
+      if (wasSelectedTab) {
+        _selectedTab = _tabs.first;
+        await _dashboardPreferencesService.saveSelectedTabId(
+          tabId: _selectedTab!.id,
+          dashboardId: dashboard.id,
+        );
+      } else {
+        final currentSelectedTabId = _selectedTab?.id;
+        final stillExistingSelectedTab = _findTabById(currentSelectedTabId);
+
+        _selectedTab = stillExistingSelectedTab ?? _tabs.first;
+
+        await _dashboardPreferencesService.saveSelectedTabId(
+          tabId: _selectedTab!.id,
+          dashboardId: dashboard.id,
+        );
+      }
+
+      _clearSelectedItem();
+      await loadTabItems();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al eliminar el dashboard';
+      notifyListeners();
+    }
   }
 
   void selectItem(DashboardWidgetItem item) {
@@ -166,11 +360,12 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _loadDashboardForSelectedPreset() async {
-    final selectedPreset = _selectedPreset;
-    _clearSelectedItem();
+  Future<void> loadTabItems() async {
+    final dashboard = _dashboard;
+    final selectedTab = _selectedTab;
 
-    if (selectedPreset == null) {
+    if (dashboard == null || selectedTab == null) {
+      _clearSelectedItem();
       _clearItems();
       _clearErrorMessage();
       _state = DashboardState.empty;
@@ -183,11 +378,11 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final List<DashboardWidgetItem> items = _fetchDashboardItemsForPreset(
-        selectedPreset,
-      );
+      final List<DashboardWidgetItem> items = await _dashboardRepository
+          .getTabItems(dashboardId: dashboard.id, tabId: selectedTab.id);
 
       if (items.isEmpty) {
+        _clearSelectedItem();
         _clearItems();
         _state = DashboardState.empty;
       } else {
@@ -195,11 +390,32 @@ class DashboardViewModel extends ChangeNotifier {
         _state = DashboardState.loaded;
       }
     } catch (_) {
+      _clearSelectedItem();
       _clearItems();
       _state = DashboardState.error;
       _errorMessage = 'Ha ocurrido un error al cargar el dashboard';
     }
 
     notifyListeners();
+  }
+
+  Future<void> reorderWidgets(List<DashboardWidgetItem> reorderedItems) async {
+    final selectedTab = _selectedTab;
+
+    if (selectedTab == null) return;
+
+    try {
+      _clearErrorMessage();
+
+      _items = await _dashboardRepository.updateTabWidgetOrder(
+        tabId: selectedTab.id,
+        widgets: reorderedItems,
+      );
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al reordenar los widgets';
+      notifyListeners();
+    }
   }
 }

@@ -1,4 +1,5 @@
 from app.repositories.interfaces.dashboard_interface import IDashboardRepository
+from app.schemas.dashboard_schema import *
 from app.core.exceptions import DatabaseError
 
 class DashboardService:
@@ -12,10 +13,10 @@ class DashboardService:
         response = await self.repository.get_user_dashboard(user_id)
         if not response.data:
             raise DatabaseError("No se encontró el dashboard del usuario.")
-        return response.data
+        return DashboardResponse(**response.data[0])
 
 
-    #Método para crear un nuevo dashboard para el usuario recién añadido: r
+    #Método para crear un nuevo dashboard para el usuario recién añadido: 
     async def create_dashboard(self, dashboard_data : dict):
         #Se verifica que el usuario especificado NO dispone de un dashboard antes de intentar crearlo
         has_dashboard = await self.repository.get_user_dashboard(dashboard_data["user_id"])
@@ -33,3 +34,4 @@ class DashboardService:
     #Método para eliminar el dashboard asignado al usuario, cuando este es eliminado
     async def delete_dashboard(self, dashboard_id : int):
         return await self.repository.delete_dashboard(dashboard_id)
+

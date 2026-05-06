@@ -1,55 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    deployment.kubernetes.io/revision: "1"
-      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"frontend","namespace":"development"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"frontend"}},"template":{"metadata":{"labels":{"app":"frontend"}},"spec":{"containers":[{"image":"europe-west1-docker.pkg.dev/windy-skyline-490617-g7/autokratech-registry/frontend:latest","name":"frontend","ports":[{"containerPort":80}]}]}}}}
   name: frontend
   namespace: development
+  labels:
+    app: frontend
 spec:
-  progressDeadlineSeconds: 600
   replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: frontend
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
   template:
     metadata:
       labels:
         app: frontend
     spec:
       containers:
-      - image: europe-west1-docker.pkg.dev/windy-skyline-490617-g7/autokratech-registry/frontend:latest
-        imagePullPolicy: Always
-        name: frontend
+      - name: frontend
+        image: europe-west1-docker.pkg.dev/windy-skyline-490617-g7/autokratech-registry/frontend:latest
         ports:
         - containerPort: 80
-          protocol: TCP
-        resources: {}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      schedulerName: default-scheduler
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
-  conditions:
-  - lastTransitionTime: "2026-04-16T08:58:42Z"
-    lastUpdateTime: "2026-04-16T08:58:42Z"
-    message: Deployment does not have minimum availability.
-    reason: MinimumReplicasUnavailable
-    type: Available
-  - lastTransitionTime: "2026-05-03T18:10:19Z"
-    lastUpdateTime: "2026-05-03T18:10:19Z"
-    message: ReplicaSet "frontend-594d5f7d97" has timed out progressing.
-    reason: ProgressDeadlineExceeded
-    type: Progressing
-  observedGeneration: 1
-  replicas: 1
-  unavailableReplicas: 1
-  updatedReplicas: 1

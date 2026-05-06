@@ -1,5 +1,6 @@
 from app.repositories.interfaces.providers_interface import IProvidersRepository
 from app.models.endpoint_model import * 
+from app.schemas.providers.github_schema import *
 import httpx
 
 class GitHubProvider():
@@ -8,15 +9,30 @@ class GitHubProvider():
     PROVIDER_PROTOCOL = "https://"
     PROVIDER_API_HOST="api.github.com"
 
-    def __init__(self, repository: IProvidersRepository):
+    def __init__(self, repository: IProvidersRepository, access_token: str):
         self.repository = repository
+        self.access_token = access_token
 
+        self._schema_validator_types = {
+            "ISSUES": Issue,
+            "MERGE_REQUESTS": MergeRequest,
+            "PROJECTS" : Project,
+            "PIPELINES" : Pipeline
+        }
 
     async def fetch_provider_data(self, data_type, data_config):
-        response = await self.get_provider_endpoint(data_type, data_config)
-        #TODO: Añadir configuración personalizada del user, realizar llamada con httpx + postprocesamiento de la respuesta de gitlab
-        return response
-    
+        full_endpoint = await self.get_provider_endpoint(data_type, data_config)
+        try:
+            async with httpx.AsyncClient() as client:
+                    response = await client.get(full_endpoint,
+                    headers={'Authorization': f'Bearer {self.access_token}'})
+            response.raise_for_status()
+            return await self.normalize_response(data_type, response.json())
+        except Exception as e:
+            print(f"execption: {e}")
+        #TODO:  Añadir configuración personalizada del user + postprocesamiento de la respuesta de github
+
+
     async def get_provider_endpoint(self, data_type, data_config):
         response = await self.repository.get_provider_endpoint(self.PROVIDER_NAME, data_type)
         if response.data is not None:
@@ -27,7 +43,14 @@ class GitHubProvider():
             return None
 
 
-    async def normalize_response(provider_response):
-        pass
+    async def normalize_response(self, data_type, provider_response : dict):
+        print(f"-------------------------------------{data_type}---------------------------------------------------")
+        print(provider_response)
+        try:
+            data_schema = self._schema_validator_types[data_type]
+        except KeyError:
+            raise KeyError("El tipo de datos especificado no está disponible para GITLAB.")
+        response_items = [data_schema(**item) for item in provider_response]
+        return GitHubResponse(count=len(response_items), items=response_items).model_dump()
 
     #TODO: Idea. Añadir métodos que permitan obtener métricas combinadas, más complejas
