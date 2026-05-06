@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from app.controllers.auth_controller import controlador_login_usuario, controlador_registrar_usuario
+from app.api.controllers.auth_controller import controlador_login_usuario, controlador_registrar_usuario
 from app.schemas.auth_schema import DatosLogin, DatosRespuestaLogin, DatosRegistro
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 # ruta de registro de usuario
 @router.post("/register", response_model=DatosRespuestaLogin, status_code=201)

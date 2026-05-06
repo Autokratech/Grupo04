@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.controllers.metrics_controller import (
+from app.api.controllers.metrics_controller import (
     controlador_metricas_por_resource_type,
     controlador_recursos_por_resource_type,
     controlador_reportar_metrica,
@@ -13,7 +13,7 @@ from app.schemas.metrics_schema import (
     RespuestaReporte,
 )
 
-router = APIRouter(prefix="/metrics", tags=["Metrics"])
+router = APIRouter(prefix="/api/metrics", tags=["Metrics"])
 
 
 @router.post("/report", response_model=RespuestaReporte, status_code=201)

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.controllers.permissions_controller import (
+from app.api.controllers.permissions_controller import (
     controlador_actualizar_permiso,
     controlador_borrar_permiso,
     controlador_buscar_permiso_por_id,
@@ -15,7 +15,7 @@ from app.schemas.permission_schema import (
 )
 from app.core.guardias import pedir_permiso
 
-router = APIRouter(prefix="/permissions", tags=["Permissions"])
+router = APIRouter(prefix="/api/permissions", tags=["Permissions"])
 
 # ruta para la lista de permisos
 @router.get("/", response_model=list[RespuestaPermiso])

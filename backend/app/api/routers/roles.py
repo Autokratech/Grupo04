@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.controllers.roles_controller import (
+from app.api.controllers.roles_controller import (
     controlador_actualizar_rol,
     controlador_asignar_permiso_a_rol,
     controlador_borrar_rol,
@@ -14,7 +14,7 @@ from app.schemas.permission_schema import RespuestaPermiso
 from app.schemas.role_schema import DatosActualizarRol, DatosCrearRol, RespuestaMensaje, RespuestaRol
 from app.core.guardias import pedir_permiso
 
-router = APIRouter(prefix="/roles", tags=["Roles"])
+router = APIRouter(prefix="/api/roles", tags=["Roles"])
 
 # ruta para listar todos los roles
 @router.get("/", response_model=list[RespuestaRol])

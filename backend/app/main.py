@@ -2,15 +2,13 @@ import os
 from fastapi import FastAPI
 from app.api.routers import *
 from fastapi.responses import HTMLResponse
-
 from app.middlewares.jwt_auth_middleware import MiddlewareJwt
-from app.routers import auth_router, permissions_router, roles_router, users_router, metrics_router
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
-    title="Api",
+    title="Autokratech",
     version="1.0.0",
-    description="Autokratech, FastAPI, Supabase y JWT",
+    description="API Rest para la gestión del Dashboard de la aplicación.",
 )
 
 base_path = os.path.dirname(os.path.abspath(__file__))
@@ -20,11 +18,11 @@ app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 app.add_middleware(MiddlewareJwt)
 
-app.include_router(auth_router.router, prefix="/api")
-app.include_router(users_router.router, prefix="/api")
-app.include_router(roles_router.router, prefix="/api")
-app.include_router(permissions_router.router, prefix="/api")
-app.include_router(metrics_router.router, prefix="/api")
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(roles_router)
+app.include_router(permissions_router)
+app.include_router(metrics_router)
 
 # Rutas para la administración del dashboard
 app.include_router(dashboard_router)
@@ -153,7 +151,6 @@ async def root():
 <body>
     <div class="card">
         <div class="logo-container">
-            <!-- Asegúrate de que la ruta sea correcta -->
             <img src="/static/logo.png" alt="Autokratech" class="logo">
         </div>
         

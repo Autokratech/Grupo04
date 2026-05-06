@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from app.api.controllers import dashboard_controller as dc
 
 router = APIRouter(
-    prefix="/dashboard",
+    prefix="/api/dashboard",
     tags=["dashboard"],
     responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
 )
