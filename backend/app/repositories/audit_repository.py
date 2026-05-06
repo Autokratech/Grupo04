@@ -3,7 +3,7 @@ import uuid
 
 from app.database_sync import supabase
 
-NOMBRE_TABLA_AUDITORIA = "t_audit_log"
+NOMBRE_TABLA_AUDITORIA = "audit_log"
 
 
 # Inserta un registro de auditoria adaptado a la tabla real del proyecto.

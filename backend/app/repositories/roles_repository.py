@@ -1,6 +1,6 @@
 from app.database_sync import supabase
 
-NOMBRE_TABLA_ROLES = "t_roles"
+NOMBRE_TABLA_ROLES = "roles"
 
 # devuelvo la lista de los roles
 def listar_roles():

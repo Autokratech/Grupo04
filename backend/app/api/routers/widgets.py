@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.api.controllers import widgets_controller as wc
 
 router = APIRouter(
-    prefix="/widgets",
+    prefix="/api/widgets",
     tags=["widgets"],
     responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
 )

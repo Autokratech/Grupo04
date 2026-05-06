@@ -1,6 +1,6 @@
 from app.database_sync import supabase
 
-NOMBRE_TABLA_USUARIOS = "t_users"
+NOMBRE_TABLA_USUARIOS = "users"
 
 # devuelve la lista de usuario, si se le especifica un filtro lo aplica.
 def listar_usuarios(filtro_activo: bool | None = None):

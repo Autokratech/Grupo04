@@ -3,8 +3,8 @@ import uuid
 from datetime import datetime, timezone
 from app.database_sync import supabase
 
-TABLA_AGENTES = "t_agents"
-TABLA_METRICAS = "t_metrics"
+TABLA_AGENTES = "agents"
+TABLA_METRICAS = "metrics"
 
 
 def buscar_agente_por_hostname(hostname: str):

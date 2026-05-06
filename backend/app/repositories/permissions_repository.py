@@ -1,7 +1,7 @@
 from app.database_sync import supabase
 
-NOMBRE_TABLA_PERMISOS = "t_permissions"
-NOMBRE_TABLA_ROL_PERMISO = "t_role_permissions"
+NOMBRE_TABLA_PERMISOS = "permissions"
+NOMBRE_TABLA_ROL_PERMISO = "role_permissions"
 
 # Retorno la lista de permisos
 def listar_permisos():
