@@ -1,4 +1,4 @@
-import 'package:frontend/data/models/dto/dashboard_tab_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
 
 class DashboardTabsResponseDto {
   final List<DashboardTabDto> tabs;

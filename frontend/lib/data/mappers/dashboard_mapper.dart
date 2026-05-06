@@ -1,6 +1,6 @@
-import 'package:frontend/data/models/dto/dashboard_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_tab_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_tabs_response_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tabs_response_dto.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 

@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:frontend/data/models/dto/dashboard_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_tab_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_tabs_response_dto.dart';
-import 'package:frontend/data/models/dto/tab_widgets_response_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tabs_response_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets_response_dto.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 
 class DashboardApiService {

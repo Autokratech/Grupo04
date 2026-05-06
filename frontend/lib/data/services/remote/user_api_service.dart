@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:frontend/data/models/dto/app_user_dto.dart';
+import 'package:frontend/data/models/dto/auth_dtos/app_user_dto.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 
 class UserApiService {
