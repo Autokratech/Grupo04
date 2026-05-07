@@ -25,7 +25,7 @@ env:
  
 
 jobs:
-  backend:build-and-push:
+  backend-build-and-push:
     name: Build & Push Backend
     runs-on: ubuntu-latest
     permissions:
@@ -97,7 +97,7 @@ jobs:
           podman push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
 
 
-  backend:deploy-in-Azure:
+  backend-deploy-in-Azure:
     name: Despliegue Backend en Azure (AKS)
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -130,7 +130,7 @@ jobs:
           helm upgrade autokratech-backend ./helm/backend -n autokratech --install --set image.tag=${{ env.IMAGE_TAG }} --wait
 
 
-  backend:deploy-in-GCP:
+  backend-deploy-in-GCP:
     name: Deploy Backend en GKE (development)
     runs-on: self-hosted
     needs: backend:build-and-push
