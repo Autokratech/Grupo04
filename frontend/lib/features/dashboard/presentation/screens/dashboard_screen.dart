@@ -51,7 +51,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _viewModel.dispose();
     super.dispose();
-  }@override
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -69,7 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               final isMobileLandscape =
                   AppPlatform.isMobile &&
-                      MediaQuery.of(context).orientation == Orientation.landscape;
+                  MediaQuery.of(context).orientation == Orientation.landscape;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,6 +119,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           items,
                           selectedItem,
                           errorMessage,
+                          hasSelectedTab: selectedTab != null,
+                          canAddWidget: _viewModel.canAddWidget,
+                          onAddWidgetPressed: _handleAddWidgetPressed,
                           onItemSelected: (item) {
                             if (_isMobilePlatform) {
                               _showDetailsBottomSheet(item);
@@ -192,9 +197,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _handleAddWidgetPressed() async {
     final selectedCatalogItem = await showDialog<WidgetCatalogItem>(
       context: context,
-      builder: (_) => AddWidgetDialog(
-        items: _viewModel.availableWidgetCatalogItems,
-      ),
+      builder: (_) =>
+          AddWidgetDialog(items: _viewModel.availableWidgetCatalogItems),
     );
 
     if (selectedCatalogItem == null || !mounted) return;
@@ -209,6 +213,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     List<DashboardWidgetItem> items,
     DashboardWidgetItem? selectedItem,
     String? errorMessage, {
+    required bool hasSelectedTab,
+    required bool canAddWidget,
+    required VoidCallback onAddWidgetPressed,
     required ValueChanged<DashboardWidgetItem> onItemSelected,
   }) {
     if (state == DashboardState.loading) {
@@ -242,6 +249,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     if (state == DashboardState.empty) {
+      if (hasSelectedTab && canAddWidget) {
+        return WidgetGrid(
+          items: items,
+          selectedItem: selectedItem,
+          onItemSelected: onItemSelected,
+          onItemsReordered: _viewModel.reorderWidgets,
+          canAddWidget: canAddWidget,
+          onAddWidgetPressed: onAddWidgetPressed,
+        );
+      }
+
       return const Center(child: Text('No hay widgets disponibles'));
     }
 
@@ -251,8 +269,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         selectedItem: selectedItem,
         onItemSelected: onItemSelected,
         onItemsReordered: _viewModel.reorderWidgets,
-        canAddWidget: _viewModel.canAddWidget,
-        onAddWidgetPressed: _handleAddWidgetPressed,
+        canAddWidget: canAddWidget,
+        onAddWidgetPressed: onAddWidgetPressed,
       );
     }
 
@@ -325,10 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : _portraitBottomSheetHeightFactor,
           child: SafeArea(
             top: false,
-            child: DetailsSidePanel(
-              item: item,
-              showCard: false,
-            ),
+            child: DetailsSidePanel(item: item, showCard: false),
           ),
         );
       },
@@ -340,6 +355,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _viewModel.clearSelectedItem();
     }
   }
+
   void _handleDesktopItemSelected(DashboardWidgetItem item) {
     if (_viewModel.selectedItem?.id == item.id) {
       _viewModel.clearSelectedItem();
