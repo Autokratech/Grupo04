@@ -1,0 +1,31 @@
+
+from .github_provider import GitHubProvider
+from .gitlab_provider import GitlabProvider
+from .bitbucket_provider import BitBucketProvider
+from app.services.oauth_manager import OAuthManager
+from uuid import UUID
+
+class GitProvider():
+
+    _git_provider_instance = {
+        "github": GitHubProvider,
+        "gitlab": GitlabProvider,
+        "bitbucket": BitBucketProvider
+    }
+
+    def __init__(self, oauth_manager: OAuthManager):
+        self.oauth_manager = oauth_manager
+
+
+    async def get_provider_instance(self, provider_name: str, endpoints_repository, user_id: UUID):
+        provider_instance = self._git_provider_instance[provider_name]
+        if provider_instance is None:
+            raise KeyError(f"No se ha encontrado el tipo de provider solicitado: {provider_name}.")
+        
+        access_token = await self.get_auth_token(user_id, provider_name)
+        return provider_instance(endpoints_repository, access_token)
+
+
+    async def get_auth_token(self, user_id: UUID, provider_name: str):
+        decrypted_tokens, _ = await self.oauth_manager.fetch_oauth_tokens(user_id, provider_name)
+        return decrypted_tokens["access_token"]

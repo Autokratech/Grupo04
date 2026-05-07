@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from api.controllers import oauth_controller as oc
+from app.api.controllers import oauth_controller as oc
 
 router = APIRouter(
     prefix="/oauth",
