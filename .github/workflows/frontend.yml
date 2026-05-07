@@ -110,8 +110,8 @@ jobs:
  
       - name: Desplegar en GKE development
         run: |
-          kubectl apply -f infra/gvk8s/development/frontend-deployment.yaml
-          kubectl apply -f infra/k8s/development/frontend-service.yaml
+          kubectl apply -f infra/gcp/k8s/development/frontend-deployment.yaml
+          kubectl apply -f infra/gcp/k8s/development/frontend-service.yaml
           kubectl rollout status deployment/frontend \
             -n ${{ env.NAMESPACE }} --timeout=120s
  

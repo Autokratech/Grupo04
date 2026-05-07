@@ -160,8 +160,8 @@ jobs:
  
       - name: GCP - Deploy to GKE development
         run: |
-          kubectl apply -f infra/gvk8s/development/backend-deployment.yaml
-          kubectl apply -f infra/k8s/development/backend-service.yaml
+          kubectl apply -f infra/gcp/k8s/development/backend-deployment.yaml
+          kubectl apply -f infra/gcp/k8s/development/backend-service.yaml
           kubectl rollout status deployment/backend \
             -n ${{ env.NAMESPACE }} --timeout=120s
  
