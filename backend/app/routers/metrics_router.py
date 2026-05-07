@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.controllers.metrics_controller import (
     controlador_metricas_por_resource_type,
@@ -6,6 +6,7 @@ from app.controllers.metrics_controller import (
     controlador_reportar_metrica,
     controlador_ultima_metrica,
 )
+from app.core.guardias import pedir_usuario_logueado
 from app.schemas.metrics_schema import (
     DatosReportarMetrica,
     RespuestaMetrica,
@@ -22,15 +23,15 @@ def ruta_reportar_metrica(datos: DatosReportarMetrica):
 
 
 @router.get("/agent/{agent_id}/latest", response_model=RespuestaMetrica)
-def ruta_ultima_metrica(agent_id: str):
+def ruta_ultima_metrica(agent_id: str, usuario_actual=Depends(pedir_usuario_logueado)):
     return controlador_ultima_metrica(agent_id)
 
 
 @router.get("/resource-type/{resource_type}", response_model=list[RespuestaMetrica])
-def ruta_metricas_por_resource_type(resource_type: str):
+def ruta_metricas_por_resource_type(resource_type: str, usuario_actual=Depends(pedir_usuario_logueado)):
     return controlador_metricas_por_resource_type(resource_type)
 
 
 @router.get("/resource-type/{resource_type}/resources", response_model=list[RespuestaRecurso])
-def ruta_recursos_por_resource_type(resource_type: str):
+def ruta_recursos_por_resource_type(resource_type: str, usuario_actual=Depends(pedir_usuario_logueado)):
     return controlador_recursos_por_resource_type(resource_type)
