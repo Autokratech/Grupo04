@@ -10,6 +10,8 @@ class WidgetGrid extends StatelessWidget {
   static const double _maxCardWidth = 170;
   static const double _mobileCardAspectRatio = 1.05;
   static const double _desktopCardAspectRatio = 1.2;
+  static const double _addWidgetButtonHeight = 48;
+  static const double _addWidgetButtonSize = 48;
 
   static const double _dragFeedbackOpacity = 0.85;
   static const double _draggingChildOpacity = 0.35;
@@ -129,7 +131,17 @@ class WidgetGrid extends StatelessWidget {
               SizedBox(
                 width: cardWidth,
                 height: cardHeight,
-                child: _buildAddWidgetCard(context),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: AppSpacing.lg),
+                    child: SizedBox(
+                      width: _addWidgetButtonSize,
+                      height: _addWidgetButtonSize,
+                      child: _buildAddWidgetButton(context),
+                    ),
+                  ),
+                ),
               ),
           ],
         );
@@ -184,43 +196,23 @@ class WidgetGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildAddWidgetCard(BuildContext context) {
+  Widget _buildAddWidgetButton(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.35)),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onAddWidgetPressed,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.add_circle_outline,
-                size: 32,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Añadir widget',
-                textAlign: TextAlign.center,
-                style: textTheme.labelLarge?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+    return IconButton.outlined(
+        onPressed: onAddWidgetPressed,
+        icon: const Icon(Icons.add),
+        style: IconButton.styleFrom(
+          foregroundColor: colorScheme.primary,
+          backgroundColor: colorScheme.primary.withValues(alpha: 0.04),
+          side: BorderSide(
+            color: colorScheme.primary.withValues(alpha: 0.45),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-      ),
-    );
+      );
   }
 
   bool _hasSameOrder(List<DashboardWidgetItem> newItems) {
