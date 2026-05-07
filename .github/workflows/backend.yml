@@ -1,13 +1,18 @@
 name: Backend CI/CD
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - "release/*"
     paths:
-      - "backend/**"
+      - 'backend/*'
+    branches: 
+      - "release/*"
+      - "main"
 
 env:
+  IMAGE_TAG: ${{ github.sha }}
+  #Variables de GCP
+  GCP_REGISTRY: europe-west1-docker.pkg.dev
   PROJECT_ID: windy-skyline-490617-g7
   REGISTRY: europe-west1-docker.pkg.dev
   REPOSITORY: autokratech-registry
@@ -15,33 +20,69 @@ env:
   CLUSTER_ZONE: europe-west4-a
   NAMESPACE: development
   IMAGE_NAME: backend
+  #Variables de Azure
+  ACR_REGISTRY: autokratechRegistry.azurecr.io
+ 
 
 jobs:
+  backend:build-and-push:
+    name: Build & Push Backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
-  build-backend:
-    name: Build Backend (FastAPI)
-    runs-on: self-hosted
     steps:
-      - name: Checkout
+      - name: Repository checkout
         uses: actions/checkout@v4
 
-      - name: Autenticar en GCP
+      - name: Podman install
+        run: |
+          if ! command -v podman &> /dev/null; then
+            sudo apt-get update -y
+            sudo apt-get install -y podman
+          fi
+          podman --version
+
+
+      # Publicación de la imagen en el registry de Azure
+      - name: Azure - Image Build 
+        run: |
+          podman build -t autokratech-backend:${{ env.IMAGE_TAG }} ./backend
+          podman tag autokratech-backend:${{ env.IMAGE_TAG }} ${{ env.ACR_REGISTRY }}/autokratech-backend:${{ env.IMAGE_TAG }}
+
+      - name: Azure - Login Azure Container Registry
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          echo "${{ secrets.ARM_CLIENT_SECRET }}" | podman login ${{ env.ACR_REGISTRY }} \
+          --username "${{ vars.ARM_CLIENT_ID }}" \
+          --password-stdin
+
+      - name: Azure - Push Podman image
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          podman push ${{ env.ACR_REGISTRY }}/autokratech-backend:${{ env.IMAGE_TAG }}
+
+
+      # Publicación de la imagen en el registry de GCP
+      - name: GCP - Provider authentication 
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Configurar gcloud
+ 
+      - name: GCP - gcloud configuration
         uses: google-github-actions/setup-gcloud@v2
-
-      - name: Autenticar Podman en Artifact Registry
+ 
+      - name: GCP - Podman en Artifact Registry
         run: |
-          gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
           gcloud auth print-access-token | podman login \
             --username=oauth2accesstoken \
             --password-stdin \
             ${{ env.REGISTRY }}
 
-      - name: Build imagen backend
+      - name: GCP - Authentication
+        uses: google-github-actions/auth@v2
+
+      - name: GCP - Build backend image
         working-directory: backend
         run: |
           podman build \
@@ -49,40 +90,82 @@ jobs:
             -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -t ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest \
             .
-
-      - name: Push imagen backend
+ 
+      - name: GCP - Push imagen backend
         run: |
           podman push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           podman push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
 
-  deploy-backend:
+
+  backend:deploy-in-Azure:
+    name: Despliegue Backend en Azure (AKS)
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Azure - Authenticate with Azure
+        uses: azure/login@v2
+        with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure - Set Context for AKS
+        uses: azure/aks-set-context@v5
+        with:
+            resource-group: 'autokratech-rg'
+            cluster-name: 'autokratech-aks'
+
+      - name: Azure - Install HELM 
+        uses: azure/setup-helm@v5.0.0
+        with:
+            version: 'v4.1.4'
+        id: install
+
+      - name: Azure - Deploy image in AKS
+        run: |
+          helm upgrade autokratech-backend ./helm/backend -n autokratech --install --set image.tag=${{ env.IMAGE_TAG }} --wait
+
+
+  backend:deploy-in-GCP:
     name: Deploy Backend en GKE (development)
     runs-on: self-hosted
-    needs: build-backend
+    needs: backend:build-and-push
+    
     steps:
-      - name: Autenticar en GCP
+      - name: Checkout
+        uses: actions/checkout@v4
+ 
+      - name: GCP - Authenticate with GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Configurar gcloud y kubectl
+ 
+      - name: GCP - Configure gcloud and kubectl
         uses: google-github-actions/setup-gcloud@v2
-
-      - name: Conectar al cluster GKE
+ 
+      - name: GCP - Connect to GKE cluster
         run: |
           gcloud container clusters get-credentials ${{ env.CLUSTER }} \
             --zone=${{ env.CLUSTER_ZONE }} \
             --project=${{ env.PROJECT_ID }}
-
-      - name: Actualizar imagen backend
+ 
+      - name: GCP - Update image in YAML files
         run: |
-          kubectl set image deployment/backend \
-            backend=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -n ${{ env.NAMESPACE }}
+          sed -i "s|image:.*backend.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|g" \
+            infra/gcp/k8s/development/backend-deployment.yaml
+ 
+      - name: GCP - Deploy to GKE development
+        run: |
+          kubectl apply -f infra/gcp/k8s/development/backend-deployment.yaml
+          kubectl apply -f infra/gcp/k8s/development/backend-service.yaml
           kubectl rollout status deployment/backend \
             -n ${{ env.NAMESPACE }} --timeout=120s
-
-      - name: Verificar estado
+ 
+      - name: GCP - Verify deployment status
         run: |
           kubectl get pods -n ${{ env.NAMESPACE }}
           kubectl get ingress -n ${{ env.NAMESPACE }}

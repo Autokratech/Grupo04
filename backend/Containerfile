@@ -1,5 +1,5 @@
 FROM python:3.14-slim as backend-base
-LABEL org.opencontainers.image.authors="fromero@fp.lasalle.es, rgonzalez@fp.lasalle.es"
+LABEL org.opencontainers.image.authors="rgonzalez@fp.lasalle.es"
 LABEL version="0.1.0"
 
 WORKDIR /backend
