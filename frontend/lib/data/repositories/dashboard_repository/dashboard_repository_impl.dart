@@ -7,6 +7,7 @@ import 'package:frontend/data/services/remote/dashboard_api_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 
@@ -194,6 +195,51 @@ class DashboardRepositoryImpl implements DashboardRepository {
     } catch (_) {
       return _getFallbackTabItems(tabId: tabId, dashboardId: dashboardId);
     }
+  }
+
+  @override
+  Future<List<DashboardWidgetItem>> addTabWidget({
+    required String tabId,
+    required WidgetCatalogItem catalogItem,
+  }) async {
+    final cachedWidgets = await localDataSource.getCachedTabWidgets(
+      tabId: tabId,
+    );
+
+    final widgetId = '${tabId}_${catalogItem.id}';
+
+    final alreadyExists = cachedWidgets.any((widget) => widget.id == widgetId);
+
+    if (alreadyExists) {
+      throw StateError('El widget ya existe en este dashboard');
+    }
+
+    final newWidget = DashboardWidgetItem(
+      id: widgetId,
+      title: catalogItem.title,
+      type: catalogItem.type,
+      status: WidgetStatus.inactive,
+      primaryValue: 'Sin datos',
+      description: catalogItem.description,
+      position: cachedWidgets.length,
+    );
+
+    final updatedWidgets = [
+      ...cachedWidgets,
+      newWidget,
+    ];
+
+    final normalizedWidgets = [
+      for (var i = 0; i < updatedWidgets.length; i++)
+        updatedWidgets[i].copyWith(position: i),
+    ];
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: normalizedWidgets,
+    );
+
+    return normalizedWidgets;
   }
 
   @override

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/domain/models/widget_catalog_item.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/add_widget_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/app/router/app_routes.dart';
@@ -187,6 +189,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     context.go(AppRoutes.auth);
   }
 
+  Future<void> _handleAddWidgetPressed() async {
+    final selectedCatalogItem = await showDialog<WidgetCatalogItem>(
+      context: context,
+      builder: (_) => AddWidgetDialog(
+        items: _viewModel.availableWidgetCatalogItems,
+      ),
+    );
+
+    if (selectedCatalogItem == null || !mounted) return;
+
+    await _viewModel.addWidget(selectedCatalogItem);
+
+    _showViewModelErrorIfNeeded();
+  }
+
   Widget _buildDashboardContent(
     DashboardState state,
     List<DashboardWidgetItem> items,
@@ -234,6 +251,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         selectedItem: selectedItem,
         onItemSelected: onItemSelected,
         onItemsReordered: _viewModel.reorderWidgets,
+        canAddWidget: _viewModel.canAddWidget,
+        onAddWidgetPressed: _handleAddWidgetPressed,
       );
     }
 
