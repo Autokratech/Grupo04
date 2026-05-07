@@ -1,6 +1,5 @@
 import os
 from fastapi import FastAPI
-from app.api.routers import *
 from fastapi.responses import HTMLResponse
 
 from app.middlewares.jwt_auth_middleware import MiddlewareJwt
@@ -26,24 +25,9 @@ app.include_router(roles_router.router, prefix="/api")
 app.include_router(permissions_router.router, prefix="/api")
 app.include_router(metrics_router.router, prefix="/api")
 
-# Rutas para la administración del dashboard
-app.include_router(dashboard_router)
 
-# Rutas para la administración de las pestañas
-app.include_router(tabs_router)
-
-# Rutas para la administración de los widgets 
-app.include_router(widgets_router)
-
-# Rutas para la integración con servicios de terceros
-app.include_router(oauth_router)
-
-# Rutas para la integración del orquestador
-app.include_router(orchestrator_router)
-
-
-@app.get("/", summary="Home", response_class=HTMLResponse)
-async def root():
+@app.get("/", response_class=HTMLResponse)
+def mostrar_inicio():
     return """
     <!DOCTYPE html>
 <html lang="es">
@@ -168,4 +152,5 @@ async def root():
     </div>
 </body>
 </html>
+
     """

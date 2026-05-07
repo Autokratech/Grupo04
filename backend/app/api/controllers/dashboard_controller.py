@@ -1,35 +1,46 @@
-from fastapi import Depends
-from typing import Annotated
-from supabase import AsyncClient
-from app.services.dashboard_service import DashboardService
-from app.repositories.dashboard_repository import DashboardRepository
-from app.schemas.dashboard_schema import *
-from app.core.database import create_supabase_client
-from uuid import UUID
+from fastapi import APIRouter, Request, Depends
+from services.dashboard_service import DashboardService
+from core.database import create_supabase_client
 
-
-# -- Preparación del servicio de Dashboard e inyección de dependencias
-async def get_dashboard_service(supabase : AsyncClient = Depends(create_supabase_client)):
-    repository = DashboardRepository(supabase)
-    return DashboardService(repository)
-
-
-# -- Referencia anotada para simplificar llamadas
-dashboard_service = Annotated[DashboardService, Depends(get_dashboard_service)]
+router = APIRouter(
+    prefix="/dashboard",
+    tags=["dashboard"],
+    responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
+)
 
 
 # -- Controladores para gestionar el dashboard
-async def get_user_dashboard(user_id: int, service: dashboard_service):  
-    return await service.get_user_dashboard(user_id)
+async def get_dashboard(user_id: int, supabase = Depends(create_supabase_client)):
+    dashboard_id = DashboardService.get_dashboard(user_id, supabase)
+    return dashboard_id 
 
 
-async def create_dashboard(body : DashboardCreate, service: dashboard_service):
-    return await service.create_dashboard(body.dict())
+async def create_dashboard(user_id: int, supabase = Depends(create_supabase_client)):
+    return DashboardService.create_dashboard(user_id, supabase)
 
 
-async def update_dashboard(dashboard_id: UUID, body: DashboardUpdateTheme, service: dashboard_service):
-    return await service.update_dashboard(dashboard_id, body.dashboard_theme)
+async def update_dashboard(dashboard_id: int, supabase = Depends(create_supabase_client)):
+    return DashboardService.update_dashboard(dashboard_id, supabase)
 
 
-async def delete_dashboard(dashboard_id: UUID, service: dashboard_service):
-    return await service.delete_dashboard(dashboard_id)
+async def delete_dashboard(dashboard_id: int, supabase = Depends(create_supabase_client)):
+    return DashboardService.delete_dashboard(dashboard_id, supabase)
+
+
+# -- Controladores para gestionar las pestañas del dashboard
+async def get_dashboard_tabs(dashboard_id: int, supabase = Depends(create_supabase_client)):
+    return DashboardService.get_dashboard_tabs(dashboard_id, supabase)
+
+async def create_dashboard_tab(dashboard_id: int, request: Request, supabase = Depends(create_supabase_client)):
+    request_body = await request.json()
+    dashboard_tab_name = request_body.get("dashboard_tab_name", "new_tab")
+    return DashboardService.create_dashboard_tab(dashboard_id, dashboard_tab_name, supabase)
+
+async def update_dashboard_tab(dashboard_tab_id : int, request: Request, supabase = Depends(create_supabase_client)):
+    request_body = await request.json()
+    dashboard_tab_column = request_body.get("dashboard_tab_column")
+    dashboard_tab_value = request_body.get('dashboard_tab_value')
+    return DashboardService.update_dashboard_tab(dashboard_tab_id, dashboard_tab_column, dashboard_tab_value, supabase)
+
+async def delete_dashboard_tab(dashboard_tab_id : int, supabase = Depends(create_supabase_client)):
+    return DashboardService.delete_dashboard_tab(dashboard_tab_id, supabase)
