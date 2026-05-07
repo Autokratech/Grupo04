@@ -10,7 +10,6 @@ class WidgetGrid extends StatelessWidget {
   static const double _maxCardWidth = 170;
   static const double _mobileCardAspectRatio = 1.05;
   static const double _desktopCardAspectRatio = 1.2;
-  static const double _addWidgetButtonHeight = 48;
   static const double _addWidgetButtonSize = 48;
 
   static const double _dragFeedbackOpacity = 0.85;
@@ -131,15 +130,11 @@ class WidgetGrid extends StatelessWidget {
               SizedBox(
                 width: cardWidth,
                 height: cardHeight,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: AppSpacing.lg),
-                    child: SizedBox(
-                      width: _addWidgetButtonSize,
-                      height: _addWidgetButtonSize,
-                      child: _buildAddWidgetButton(context),
-                    ),
+                child: Center(
+                  child: SizedBox(
+                    width: _addWidgetButtonSize,
+                    height: _addWidgetButtonSize,
+                    child: _buildAddWidgetButton(context),
                   ),
                 ),
               ),

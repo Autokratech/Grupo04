@@ -96,8 +96,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ] else ...[
                     DashboardHeader(
-                      title: 'Dashboard',
-                      subtitle: 'Vista general de monitorización',
+                      title: 'Autokratech',
+                      subtitle: 'Centraliza métricas, alertas y conexiones en dashboards configurables.',
                       trailing: ProfileMenuButton(
                         onLoggedOut: _handleProfileLoggedOut,
                       ),

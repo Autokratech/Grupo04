@@ -46,7 +46,7 @@ class DashboardCard extends StatelessWidget {
                 ? textTheme.titleLarge
                 : textTheme.headlineSmall;
             final labelStyle = isCompact
-                ? textTheme.titleSmall
+                ? textTheme.labelMedium
                 : textTheme.labelMedium;
 
             return Padding(

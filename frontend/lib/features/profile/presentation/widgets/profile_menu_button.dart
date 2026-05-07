@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/domain/models/app_user.dart';
 import 'package:frontend/domain/models/linked_provider_status.dart';
 import 'package:frontend/domain/models/user_role.dart';
@@ -39,8 +40,23 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
   Widget build(BuildContext context) {
     return TextButton.icon(
       onPressed: _openProfileDialog,
-      icon: const Icon(Icons.account_circle_outlined),
-      label: const Text('Perfil'),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      icon: const Icon(
+        Icons.account_circle_outlined,
+        size: 25,
+      ),
+      label: Text(
+        'Perfil',
+        style: AppTextStyles.title
+      ),
     );
   }
 
