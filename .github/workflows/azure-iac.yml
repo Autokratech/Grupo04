@@ -1,0 +1,36 @@
+name: Azure IaaC
+
+on:
+  push:
+    paths:
+      - 'infra/azure/terraform/*'
+    branches: ["main"]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ./terraform
+
+jobs:
+  terraform:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+        
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        run: terraform init -backend-config="access_key=${{ secrets.ARM_BACKEND_ACCESS_KEY }}"
+
+      - name: Terraform Plan
+        run: terraform plan -var="client_secret=${{ secrets.ARM_CLIENT_SECRET }}" -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: terraform apply -auto-approve tfplan
