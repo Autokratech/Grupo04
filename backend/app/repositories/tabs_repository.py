@@ -1,6 +1,7 @@
+from uuid import UUID
 from supabase import AsyncClient
 from app.core.exceptions import DatabaseError
-from uuid import UUID
+
 
 class TabsRepository:
     
@@ -48,54 +49,39 @@ class TabsRepository:
 
 
     #-- Método para añadir una nueva pestaña al dashboard
-    async def create_tab(self, dashboard_id : UUID, tab_name : str, tab_index : int):
+    async def create_tab(self, tab_data : dict):
         try:
             return await self.supabase.table(self.TABS_TABLE) \
-                .insert({"dashboard_id" : str(dashboard_id), 
-                         'tab_name' : tab_name, 
-                         'tab_index' : tab_index}) \
+                .insert(tab_data) \
                 .execute() 
         except DatabaseError as e:
             raise DatabaseError(e)
 
 
-    #-- Métodos para actualizar los parámetros de una pestaña del dashboard:
-    ##--- Actualizar el nombre:
-    async def update_tab_name(self, tab_id : UUID, tab_name : str):
+    #-- Método para actualizar los parámetros de una pestaña del dashboard:
+    async def update_tab(self, tab_id : UUID, tab_data : dict):
         try:
             return await self.supabase.table(self.TABS_TABLE) \
-                .update({'tab_name' : tab_name}) \
+                .update(tab_data) \
                 .eq("tab_id", tab_id) \
                 .execute() 
         except DatabaseError as e:
             raise DatabaseError(e)
 
 
-#TODO: Al modifiar el data_type de un widget, verificar que esté disponible para ese tipo de widget
-    ##--- Actualizar el tipo de dato representado en el widget:
-    async def update_tab_data_type(self, tab_id : UUID, data_type : str):
+    #-- Método para actualizar el índice de una pestaña del dashboard:
+    async def update_tab_index(self, tab_id : UUID, tab_index : int):
         try:
             return await self.supabase.table(self.TABS_TABLE) \
-                .update({'data_type' : data_type}) \
+                .update({"tab_index": tab_index}) \
                 .eq("tab_id", tab_id) \
                 .execute() 
         except DatabaseError as e:
             raise DatabaseError(e)
 
-
-    ##--- Actualizar el orden:
-    async def update_tab_index(self, tab_id : int, tab_index : int):
-        try:
-            return await self.supabase.table(self.TABS_TABLE) \
-                .update({'tab_index' : tab_index}) \
-                .eq("tab_id", tab_id) \
-                .execute() 
-        except DatabaseError as e:
-            raise DatabaseError(e)
-        
 
     #--- Método para eliminar una pestaña del dashboard 
-    async def delete_tab(self, tab_id : int):
+    async def delete_tab(self, tab_id : UUID):
         try:
             return await self.supabase.table(self.TABS_TABLE) \
                 .delete() \
