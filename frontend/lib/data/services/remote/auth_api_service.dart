@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:frontend/data/models/dto/auth_response_dto.dart';
+import 'package:frontend/data/models/dto/auth_dtos/auth_response_dto.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 
 class AuthApiService {

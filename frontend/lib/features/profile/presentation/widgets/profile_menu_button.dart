@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/domain/models/app_user.dart';
+import 'package:frontend/domain/models/linked_provider_status.dart';
 import 'package:frontend/domain/models/user_role.dart';
 import 'package:frontend/features/profile/presentation/states/profile_state.dart';
 import 'package:frontend/features/profile/presentation/viewmodels/profile_viewmodel.dart';
@@ -17,11 +19,9 @@ class ProfileMenuButton extends StatefulWidget {
 }
 
 class _ProfileMenuButtonState extends State<ProfileMenuButton> {
-  static const double _menuWidth = 300;
+  static const double _menuWidth = 340;
   static const double _loadingHeight = 120;
-  static const Offset _menuOffset = Offset(-200, 8);
 
-  final MenuController _menuController = MenuController();
   late final ProfileViewModel _viewModel;
 
   @override
@@ -36,17 +36,66 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     super.dispose();
   }
 
-  void _toggleMenu() {
-    if (_menuController.isOpen) {
-      _menuController.close();
-      return;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: _openProfileDialog,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      icon: const Icon(
+        Icons.account_circle_outlined,
+        size: 25,
+      ),
+      label: Text(
+        'Perfil',
+        style: AppTextStyles.title
+      ),
+    );
+  }
 
-    _menuController.open();
-
+  Future<void> _openProfileDialog() async {
     if (_viewModel.state == ProfileState.initial) {
       _viewModel.loadCurrentUser();
     }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(AppSpacing.lg),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _menuWidth),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListenableBuilder(
+                    listenable: _viewModel,
+                    builder: (context, _) {
+                      return _buildMenuContent(
+                        context,
+                        onClose: () => Navigator.of(dialogContext).pop(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _logout() async {
@@ -54,47 +103,14 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
     if (!loggedOut || !mounted) return;
 
-    _menuController.close();
+    Navigator.of(context, rootNavigator: true).pop();
     widget.onLoggedOut();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MenuAnchor(
-      controller: _menuController,
-      alignmentOffset: _menuOffset,
-      reservedPadding: const EdgeInsets.all(AppSpacing.lg),
-      style: MenuStyle(
-        alignment: AlignmentDirectional.bottomStart,
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      ),
-      menuChildren: [
-        SizedBox(
-          width: _menuWidth,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: ListenableBuilder(
-              listenable: _viewModel,
-              builder: (context, _) {
-                return _buildMenuContent(context);
-              },
-            ),
-          ),
-        ),
-      ],
-      builder: (context, controller, child) {
-        return TextButton.icon(
-          onPressed: _toggleMenu,
-          icon: const Icon(Icons.account_circle_outlined),
-          label: const Text('Perfil'),
-        );
-      },
-    );
-  }
-
-  Widget _buildMenuContent(BuildContext context) {
+  Widget _buildMenuContent(
+    BuildContext context, {
+    required VoidCallback onClose,
+  }) {
     switch (_viewModel.state) {
       case ProfileState.initial:
       case ProfileState.loading:
@@ -110,7 +126,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           return _buildErrorContent(context);
         }
 
-        return _buildLoadedContent(context, user);
+        return _buildLoadedContent(context, user, onClose: onClose);
     }
   }
 
@@ -122,32 +138,35 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           height: _loadingHeight,
           child: Center(child: CircularProgressIndicator()),
         ),
-        const Divider(height: 1),
         const SizedBox(height: AppSpacing.md),
         _buildLogoutButton(),
       ],
     );
   }
 
-  Widget _buildLoadedContent(BuildContext context, AppUser user) {
+  Widget _buildLoadedContent(
+      BuildContext context,
+      AppUser user, {
+        required VoidCallback onClose,
+      }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAccountInfo(context, user),
-        const SizedBox(height: AppSpacing.md),
-        const Divider(height: 1),
-        const SizedBox(height: AppSpacing.md),
+        _buildAccountInfo(context, user, onClose: onClose),
+        const SizedBox(height: AppSpacing.lg),
         _buildProvidersSection(),
-        const SizedBox(height: AppSpacing.md),
-        const Divider(height: 1),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.lg),
         _buildLogoutButton(),
       ],
     );
   }
 
-  Widget _buildAccountInfo(BuildContext context, AppUser user) {
+  Widget _buildAccountInfo(
+      BuildContext context,
+      AppUser user, {
+        required VoidCallback onClose,
+      }) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -184,6 +203,17 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
             ],
           ),
         ),
+        const SizedBox(width: AppSpacing.sm),
+        IconButton(
+          onPressed: onClose,
+          icon: const Icon(Icons.close, size: 18),
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(
+            minWidth: 32,
+            minHeight: 32,
+          ),
+        ),
       ],
     );
   }
@@ -197,20 +227,26 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
         LinkedProviderTile(
           icon: Icons.code,
           title: 'GitHub',
-          statusLabel: 'Preparado para futura vinculación OAuth.',
-          connected: false,
+          description:
+              'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
+          status: LinkedProviderStatus.disconnected,
+          actionLabel: 'Conectar',
         ),
         LinkedProviderTile(
           icon: Icons.account_tree_outlined,
           title: 'GitLab',
-          statusLabel: 'Preparado para futura vinculación OAuth.',
-          connected: false,
+          description:
+              'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
+          status: LinkedProviderStatus.disconnected,
+          actionLabel: 'Conectar',
         ),
         LinkedProviderTile(
-          icon: Icons.cloud_outlined,
-          title: 'Cloud providers',
-          statusLabel: 'Pendiente de contrato backend.',
-          connected: false,
+          icon: Icons.memory_outlined,
+          title: 'Agentes',
+          description:
+              'Registra un agente para recibir métricas de sistema e infraestructura.',
+          status: LinkedProviderStatus.unavailable,
+          actionLabel: 'Gestionar',
         ),
       ],
     );
@@ -251,8 +287,6 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           icon: const Icon(Icons.refresh),
           label: const Text('Reintentar'),
         ),
-        const SizedBox(height: AppSpacing.md),
-        const Divider(height: 1),
         const SizedBox(height: AppSpacing.md),
         _buildLogoutButton(),
       ],

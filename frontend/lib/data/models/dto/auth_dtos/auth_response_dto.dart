@@ -1,4 +1,4 @@
-import 'package:frontend/data/models/dto/app_user_dto.dart';
+import 'package:frontend/data/models/dto/auth_dtos/app_user_dto.dart';
 
 class AuthResponseDto {
   final String accessToken;

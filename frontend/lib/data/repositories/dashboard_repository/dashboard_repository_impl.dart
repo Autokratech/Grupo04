@@ -1,3 +1,4 @@
+import 'package:frontend/data/mappers/dashboard_mapper.dart';
 import 'package:frontend/data/mappers/dashboard_widget_mapper.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
@@ -6,6 +7,7 @@ import 'package:frontend/data/services/remote/dashboard_api_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 
@@ -23,49 +25,51 @@ class DashboardRepositoryImpl implements DashboardRepository {
   @override
   Future<Dashboard> getDashboard() async {
     final userId = _currentUserId;
-    final dashboardId = _dashboardIdForUser(userId);
 
-    final cachedDashboard = await localDataSource.getCachedDashboard(
-      dashboardId: dashboardId,
-    );
+    try {
+      final dashboardDto = await apiService.getUserDashboard(userId: userId);
+      final remoteDashboard = DashboardMapper.toDomain(dashboardDto);
 
-    if (cachedDashboard != null) {
-      return cachedDashboard;
+      if (remoteDashboard.id.trim().isEmpty) {
+        throw StateError('El dashboard remoto no tiene id válido');
+      }
+
+      await localDataSource.cacheDashboard(remoteDashboard);
+
+      return remoteDashboard;
+    } catch (_) {
+      return _getFallbackDashboard(userId);
     }
-
-    final dashboard = Dashboard(id: dashboardId, theme: null, language: null);
-
-    await localDataSource.cacheDashboard(dashboard);
-
-    return dashboard;
   }
 
   @override
   Future<List<DashboardTab>> getDashboardTabs({
     required String dashboardId,
   }) async {
-    final cachedTabs = await localDataSource.getCachedTabs(
-      dashboardId: dashboardId,
-    );
-
-    if (cachedTabs.isNotEmpty) {
-      return cachedTabs;
+    if (_isLocalDashboardId(dashboardId)) {
+      return _getFallbackDashboardTabs(dashboardId: dashboardId);
     }
 
-    final initialTabs = [
-      DashboardTab(
-        id: _defaultTabIdForDashboard(dashboardId),
-        position: 0,
-        name: 'Widgets',
-      ),
-    ];
+    try {
+      final tabsDto = await apiService.getDashboardTabs(
+        dashboardId: dashboardId,
+      );
 
-    await localDataSource.cacheTabs(
-      dashboardId: dashboardId,
-      tabs: initialTabs,
-    );
+      final remoteTabs = DashboardMapper.tabsToDomain(tabsDto);
 
-    return initialTabs;
+      if (remoteTabs.isEmpty) {
+        return _getFallbackDashboardTabs(dashboardId: dashboardId);
+      }
+
+      await localDataSource.cacheTabs(
+        dashboardId: dashboardId,
+        tabs: remoteTabs,
+      );
+
+      return remoteTabs;
+    } catch (_) {
+      return _getFallbackDashboardTabs(dashboardId: dashboardId);
+    }
   }
 
   @override
@@ -73,10 +77,52 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String dashboardId,
     required String name,
   }) async {
-    return localDataSource.createLocalTab(
+    final normalizedName = _normalizeTabName(name);
+
+    if (_isLocalDashboardId(dashboardId)) {
+      throw StateError(
+        'No se puede crear un dashboard remoto sin dashboard raíz remoto',
+      );
+    }
+
+    final createdTabDto = await apiService.createDashboardTab(
       dashboardId: dashboardId,
-      name: _normalizeTabName(name),
+      name: normalizedName,
     );
+
+    final createdTab = DashboardMapper.tabToDomain(createdTabDto);
+
+    if (createdTab.id.trim().isEmpty) {
+      throw StateError('La tab creada no tiene id válido');
+    }
+
+    try {
+      final refreshedTabsDto = await apiService.getDashboardTabs(
+        dashboardId: dashboardId,
+      );
+
+      final refreshedTabs = DashboardMapper.tabsToDomain(refreshedTabsDto);
+
+      if (refreshedTabs.isNotEmpty) {
+        await localDataSource.cacheTabs(
+          dashboardId: dashboardId,
+          tabs: refreshedTabs,
+        );
+
+        return refreshedTabs.firstWhere(
+              (tab) => tab.id == createdTab.id,
+          orElse: () => createdTab,
+        );
+      }
+    } catch (_) {
+    }
+
+    await _cacheCreatedRemoteTab(
+      dashboardId: dashboardId,
+      createdTab: createdTab,
+    );
+
+    return createdTab;
   }
 
   @override
@@ -123,6 +169,11 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String dashboardId,
     required String tabId,
   }) async {
+    if (_isLocalDashboardId(dashboardId) ||
+        _isLocalTabId(dashboardId: dashboardId, tabId: tabId)) {
+      return _getFallbackTabItems(dashboardId: dashboardId, tabId: tabId);
+    }
+
     try {
       final responseDto = await apiService.getTabWidgets(
         dashboardId: dashboardId,
@@ -147,6 +198,81 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<List<DashboardWidgetItem>> addTabWidget({
+    required String tabId,
+    required WidgetCatalogItem catalogItem,
+  }) async {
+    final cachedWidgets = await localDataSource.getCachedTabWidgets(
+      tabId: tabId,
+    );
+
+    final widgetId = '${tabId}_${catalogItem.id}';
+
+    final alreadyExists = cachedWidgets.any((widget) => widget.id == widgetId);
+
+    if (alreadyExists) {
+      throw StateError('El widget ya existe en este dashboard');
+    }
+
+    final newWidget = DashboardWidgetItem(
+      id: widgetId,
+      title: catalogItem.title,
+      type: catalogItem.type,
+      status: WidgetStatus.inactive,
+      primaryValue: 'Sin datos',
+      description: catalogItem.description,
+      position: cachedWidgets.length,
+    );
+
+    final updatedWidgets = [
+      ...cachedWidgets,
+      newWidget,
+    ];
+
+    final normalizedWidgets = [
+      for (var i = 0; i < updatedWidgets.length; i++)
+        updatedWidgets[i].copyWith(position: i),
+    ];
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: normalizedWidgets,
+    );
+
+    return normalizedWidgets;
+  }
+
+  @override
+  Future<List<DashboardWidgetItem>> deleteTabWidget({
+    required String tabId,
+    required String widgetId,
+  }) async {
+    final cachedWidgets = await localDataSource.getCachedTabWidgets(
+      tabId: tabId,
+    );
+
+    final updatedWidgets = cachedWidgets
+        .where((widget) => widget.id != widgetId)
+        .toList();
+
+    if (updatedWidgets.length == cachedWidgets.length) {
+      throw StateError('El widget no existe en este dashboard');
+    }
+
+    final normalizedWidgets = [
+      for (var i = 0; i < updatedWidgets.length; i++)
+        updatedWidgets[i].copyWith(position: i),
+    ];
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: normalizedWidgets,
+    );
+
+    return normalizedWidgets;
+  }
+
+  @override
   Future<List<DashboardWidgetItem>> updateTabWidgetOrder({
     required String tabId,
     required List<DashboardWidgetItem> widgets,
@@ -163,6 +289,75 @@ class DashboardRepositoryImpl implements DashboardRepository {
     );
 
     return normalizedWidgets;
+  }
+
+  Future<Dashboard> _getFallbackDashboard(String userId) async {
+    final dashboardId = _dashboardIdForUser(userId);
+
+    final cachedDashboard = await localDataSource.getCachedDashboard(
+      dashboardId: dashboardId,
+    );
+
+    if (cachedDashboard != null) {
+      return cachedDashboard;
+    }
+
+    final dashboard = Dashboard(id: dashboardId, theme: null, language: null);
+
+    await localDataSource.cacheDashboard(dashboard);
+
+    return dashboard;
+  }
+
+  Future<List<DashboardTab>> _getFallbackDashboardTabs({
+    required String dashboardId,
+  }) async {
+    final cachedTabs = await localDataSource.getCachedTabs(
+      dashboardId: dashboardId,
+    );
+
+    if (cachedTabs.isNotEmpty) {
+      return cachedTabs;
+    }
+
+    final initialTabs = [
+      DashboardTab(
+        id: _defaultTabIdForDashboard(dashboardId),
+        position: 0,
+        name: 'Widgets',
+      ),
+    ];
+
+    await localDataSource.cacheTabs(
+      dashboardId: dashboardId,
+      tabs: initialTabs,
+    );
+
+    return initialTabs;
+  }
+
+  Future<void> _cacheCreatedRemoteTab({
+    required String dashboardId,
+    required DashboardTab createdTab,
+  }) async {
+    final cachedTabs = await localDataSource.getCachedTabs(
+      dashboardId: dashboardId,
+    );
+
+    final mergedTabs = [
+      ...cachedTabs.where((tab) => tab.id != createdTab.id),
+      createdTab,
+    ]..sort((a, b) => a.position.compareTo(b.position));
+
+    final normalizedTabs = [
+      for (var i = 0; i < mergedTabs.length; i++)
+        mergedTabs[i].copyWith(position: i),
+    ];
+
+    await localDataSource.cacheTabs(
+      dashboardId: dashboardId,
+      tabs: normalizedTabs,
+    );
   }
 
   Future<List<DashboardWidgetItem>> _getFallbackTabItems({
@@ -218,6 +413,18 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
 
     return normalizedName;
+  }
+
+  bool _isLocalDashboardId(String dashboardId) {
+    return dashboardId.startsWith('dashboard_');
+  }
+
+  bool _isLocalTabId({
+    required String dashboardId,
+    required String tabId,
+  }) {
+    return tabId == _defaultTabIdForDashboard(dashboardId) ||
+        tabId.startsWith('${dashboardId}_local_');
   }
 
   // TODO: sustituir por widgets recibidos desde backend.

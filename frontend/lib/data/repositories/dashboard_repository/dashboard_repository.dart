@@ -1,6 +1,7 @@
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_catalog_item.dart';
 
 abstract class DashboardRepository {
   Future<Dashboard> getDashboard();
@@ -31,6 +32,16 @@ abstract class DashboardRepository {
   Future<List<DashboardWidgetItem>> getTabItems({
     required String dashboardId,
     required String tabId,
+  });
+
+  Future<List<DashboardWidgetItem>> addTabWidget({
+    required String tabId,
+    required WidgetCatalogItem catalogItem,
+  });
+
+  Future<List<DashboardWidgetItem>> deleteTabWidget({
+    required String tabId,
+    required String widgetId,
   });
 
   Future<List<DashboardWidgetItem>> updateTabWidgetOrder({

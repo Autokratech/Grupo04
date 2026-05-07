@@ -10,6 +10,7 @@ class WidgetGrid extends StatelessWidget {
   static const double _maxCardWidth = 170;
   static const double _mobileCardAspectRatio = 1.05;
   static const double _desktopCardAspectRatio = 1.2;
+  static const double _addWidgetButtonSize = 48;
 
   static const double _dragFeedbackOpacity = 0.85;
   static const double _draggingChildOpacity = 0.35;
@@ -21,6 +22,8 @@ class WidgetGrid extends StatelessWidget {
   final DashboardWidgetItem? selectedItem;
   final ValueChanged<DashboardWidgetItem> onItemSelected;
   final ValueChanged<List<DashboardWidgetItem>> onItemsReordered;
+  final bool canAddWidget;
+  final VoidCallback? onAddWidgetPressed;
 
   const WidgetGrid({
     super.key,
@@ -28,60 +31,9 @@ class WidgetGrid extends StatelessWidget {
     required this.selectedItem,
     required this.onItemSelected,
     required this.onItemsReordered,
+    this.canAddWidget = false,
+    this.onAddWidgetPressed,
   });
-
-  List<DashboardWidgetItem> _moveItem({
-    required DashboardWidgetItem draggedItem,
-    required DashboardWidgetItem targetItem,
-  }) {
-    if (draggedItem.id == targetItem.id) {
-      return items;
-    }
-
-    final reorderedItems = [...items];
-
-    final oldIndex = reorderedItems.indexWhere(
-          (item) => item.id == draggedItem.id,
-    );
-
-    final targetIndex = reorderedItems.indexWhere(
-          (item) => item.id == targetItem.id,
-    );
-
-    if (oldIndex == -1 || targetIndex == -1) {
-      return items;
-    }
-
-    final removedItem = reorderedItems.removeAt(oldIndex);
-
-    reorderedItems.insert(targetIndex, removedItem);
-
-    return reorderedItems;
-  }
-
-  Widget _buildCard(DashboardWidgetItem item) {
-    return DashboardCard(
-      item: item,
-      isSelected: selectedItem?.id == item.id,
-      onTap: () {
-        onItemSelected(item);
-      },
-    );
-  }
-
-  bool _hasSameOrder(List<DashboardWidgetItem> newItems) {
-    if (newItems.length != items.length) {
-      return false;
-    }
-
-    for (var index = 0; index < items.length; index++) {
-      if (items[index].id != newItems[index].id) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +72,8 @@ class WidgetGrid extends StatelessWidget {
           ((availableWidth + spacing) / (cardWidth + spacing)).floor(),
         );
 
-        final double gridWidth = (columns * cardWidth) + ((columns - 1) * spacing);
+        final double gridWidth =
+            (columns * cardWidth) + ((columns - 1) * spacing);
 
         final grid = Wrap(
           spacing: spacing,
@@ -173,23 +126,101 @@ class WidgetGrid extends StatelessWidget {
                   );
                 },
               ),
+            if (canAddWidget && onAddWidgetPressed != null)
+              SizedBox(
+                width: cardWidth,
+                height: cardHeight,
+                child: Center(
+                  child: SizedBox(
+                    width: _addWidgetButtonSize,
+                    height: _addWidgetButtonSize,
+                    child: _buildAddWidgetButton(context),
+                  ),
+                ),
+              ),
           ],
         );
 
         return SingleChildScrollView(
           child: shouldCenterGrid
               ? Center(
-            child: SizedBox(
-              width: gridWidth,
-              child: grid,
-            ),
-          )
-              : SizedBox(
-            width: double.infinity,
-            child: grid,
-          ),
+                  child: SizedBox(width: gridWidth, child: grid),
+                )
+              : SizedBox(width: double.infinity, child: grid),
         );
       },
     );
+  }
+
+  List<DashboardWidgetItem> _moveItem({
+    required DashboardWidgetItem draggedItem,
+    required DashboardWidgetItem targetItem,
+  }) {
+    if (draggedItem.id == targetItem.id) {
+      return items;
+    }
+
+    final reorderedItems = [...items];
+
+    final oldIndex = reorderedItems.indexWhere(
+      (item) => item.id == draggedItem.id,
+    );
+
+    final targetIndex = reorderedItems.indexWhere(
+      (item) => item.id == targetItem.id,
+    );
+
+    if (oldIndex == -1 || targetIndex == -1) {
+      return items;
+    }
+
+    final removedItem = reorderedItems.removeAt(oldIndex);
+
+    reorderedItems.insert(targetIndex, removedItem);
+
+    return reorderedItems;
+  }
+
+  Widget _buildCard(DashboardWidgetItem item) {
+    return DashboardCard(
+      item: item,
+      isSelected: selectedItem?.id == item.id,
+      onTap: () {
+        onItemSelected(item);
+      },
+    );
+  }
+
+  Widget _buildAddWidgetButton(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return IconButton.outlined(
+        onPressed: onAddWidgetPressed,
+        icon: const Icon(Icons.add),
+        style: IconButton.styleFrom(
+          foregroundColor: colorScheme.primary,
+          backgroundColor: colorScheme.primary.withValues(alpha: 0.04),
+          side: BorderSide(
+            color: colorScheme.primary.withValues(alpha: 0.45),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+  }
+
+  bool _hasSameOrder(List<DashboardWidgetItem> newItems) {
+    if (newItems.length != items.length) {
+      return false;
+    }
+
+    for (var index = 0; index < items.length; index++) {
+      if (items[index].id != newItems[index].id) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

@@ -5,7 +5,9 @@ import 'package:frontend/data/services/local/dashboard_preferences_service.dart'
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
+import 'package:frontend/features/dashboard/presentation/utils/widget_catalog_mock.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   final DashboardRepository _dashboardRepository;
@@ -23,6 +25,24 @@ class DashboardViewModel extends ChangeNotifier {
   List<DashboardWidgetItem> _items = [];
   List<DashboardWidgetItem> get items => List.unmodifiable(_items);
   void _clearItems() => _items = [];
+
+  List<WidgetCatalogItem> get widgetCatalogItems {
+    return WidgetCatalogMock.items;
+  }
+
+  List<WidgetCatalogItem> get availableWidgetCatalogItems {
+    return widgetCatalogItems.where((catalogItem) {
+      return !_isCatalogItemAlreadyAdded(catalogItem);
+    }).toList();
+  }
+
+  bool get canAddWidget => availableWidgetCatalogItems.isNotEmpty;
+
+  bool _isCatalogItemAlreadyAdded(WidgetCatalogItem catalogItem) {
+    return _items.any((item) {
+      return item.id == catalogItem.id || item.id.endsWith('_${catalogItem.id}');
+    });
+  }
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -397,6 +417,59 @@ class DashboardViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> addWidget(WidgetCatalogItem catalogItem) async {
+    final selectedTab = _selectedTab;
+
+    if (selectedTab == null) return;
+
+    try {
+      _clearErrorMessage();
+
+      _items = await _dashboardRepository.addTabWidget(
+        tabId: selectedTab.id,
+        catalogItem: catalogItem,
+      );
+
+      _state = DashboardState.loaded;
+      _clearSelectedItem();
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al añadir el widget';
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteWidget(DashboardWidgetItem widget) async {
+    final selectedTab = _selectedTab;
+
+    if (selectedTab == null) return;
+
+    final existingWidget = _items.any((item) => item.id == widget.id);
+
+    if (!existingWidget) return;
+
+    try {
+      _clearErrorMessage();
+
+      _items = await _dashboardRepository.deleteTabWidget(
+        tabId: selectedTab.id,
+        widgetId: widget.id,
+      );
+
+      if (_selectedItem?.id == widget.id) {
+        _clearSelectedItem();
+      }
+
+      _state = _items.isEmpty ? DashboardState.empty : DashboardState.loaded;
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al eliminar el widget';
+      notifyListeners();
+    }
   }
 
   Future<void> reorderWidgets(List<DashboardWidgetItem> reorderedItems) async {
