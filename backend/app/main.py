@@ -1,9 +1,10 @@
 import os
 from fastapi import FastAPI
-from app.api.routers import *
 from fastapi.responses import HTMLResponse
-from app.middlewares.jwt_auth_middleware import MiddlewareJwt
+from app.api.routers import *
 from fastapi.staticfiles import StaticFiles
+from app.middlewares.jwt_auth_middleware import MiddlewareJwt
+from app.core.exception_handler import init_exception_handlers
 
 app = FastAPI(
     title="Autokratech",
@@ -39,6 +40,8 @@ app.include_router(oauth_router)
 # Rutas para la integración del orquestador
 app.include_router(orchestrator_router)
 
+# Se incluye el exception handler personalizado para la app
+init_exception_handlers(app)
 
 @app.get("/", summary="Home", response_class=HTMLResponse)
 async def root():
@@ -166,3 +169,5 @@ async def root():
 </body>
 </html>
     """
+
+
