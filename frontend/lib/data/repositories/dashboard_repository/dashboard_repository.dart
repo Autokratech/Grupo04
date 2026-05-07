@@ -39,6 +39,11 @@ abstract class DashboardRepository {
     required WidgetCatalogItem catalogItem,
   });
 
+  Future<List<DashboardWidgetItem>> deleteTabWidget({
+    required String tabId,
+    required String widgetId,
+  });
+
   Future<List<DashboardWidgetItem>> updateTabWidgetOrder({
     required String tabId,
     required List<DashboardWidgetItem> widgets,

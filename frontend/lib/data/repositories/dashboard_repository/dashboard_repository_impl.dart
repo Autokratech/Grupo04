@@ -243,6 +243,36 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<List<DashboardWidgetItem>> deleteTabWidget({
+    required String tabId,
+    required String widgetId,
+  }) async {
+    final cachedWidgets = await localDataSource.getCachedTabWidgets(
+      tabId: tabId,
+    );
+
+    final updatedWidgets = cachedWidgets
+        .where((widget) => widget.id != widgetId)
+        .toList();
+
+    if (updatedWidgets.length == cachedWidgets.length) {
+      throw StateError('El widget no existe en este dashboard');
+    }
+
+    final normalizedWidgets = [
+      for (var i = 0; i < updatedWidgets.length; i++)
+        updatedWidgets[i].copyWith(position: i),
+    ];
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: normalizedWidgets,
+    );
+
+    return normalizedWidgets;
+  }
+
+  @override
   Future<List<DashboardWidgetItem>> updateTabWidgetOrder({
     required String tabId,
     required List<DashboardWidgetItem> widgets,

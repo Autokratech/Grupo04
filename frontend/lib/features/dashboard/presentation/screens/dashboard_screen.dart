@@ -152,7 +152,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     item: selectedItem,
                                     placement: DetailsPanelPlacement.bottom,
                                     onClose: _viewModel.clearSelectedItem,
-                                  ),
+                                    onDelete: () {
+                                      _handleDeleteWidgetPressed(selectedItem);
+                                    },
+                                  )
                                 ),
                               ],
                             ],
@@ -171,7 +174,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   item: selectedItem,
                                   placement: DetailsPanelPlacement.side,
                                   onClose: _viewModel.clearSelectedItem,
-                                ),
+                                  onDelete: () {
+                                    _handleDeleteWidgetPressed(selectedItem);
+                                  },
+                                )
                               ),
                             ],
                           ],
@@ -204,6 +210,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (selectedCatalogItem == null || !mounted) return;
 
     await _viewModel.addWidget(selectedCatalogItem);
+
+    _showViewModelErrorIfNeeded();
+  }
+
+  Future<void> _handleDeleteWidgetPressed(DashboardWidgetItem widget) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Quitar widget'),
+          content: Text(
+            '¿Quieres quitar "${widget.title}" de este dashboard?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Quitar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    await _viewModel.deleteWidget(widget);
 
     _showViewModelErrorIfNeeded();
   }
@@ -343,7 +379,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : _portraitBottomSheetHeightFactor,
           child: SafeArea(
             top: false,
-            child: DetailsSidePanel(item: item, showCard: false),
+            child: DetailsSidePanel(
+              item: item,
+              showCard: false,
+              onDelete: () async {
+                await _handleDeleteWidgetPressed(item);
+
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+            )
           ),
         );
       },

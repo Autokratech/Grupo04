@@ -442,6 +442,36 @@ class DashboardViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteWidget(DashboardWidgetItem widget) async {
+    final selectedTab = _selectedTab;
+
+    if (selectedTab == null) return;
+
+    final existingWidget = _items.any((item) => item.id == widget.id);
+
+    if (!existingWidget) return;
+
+    try {
+      _clearErrorMessage();
+
+      _items = await _dashboardRepository.deleteTabWidget(
+        tabId: selectedTab.id,
+        widgetId: widget.id,
+      );
+
+      if (_selectedItem?.id == widget.id) {
+        _clearSelectedItem();
+      }
+
+      _state = _items.isEmpty ? DashboardState.empty : DashboardState.loaded;
+
+      notifyListeners();
+    } catch (_) {
+      _errorMessage = 'Ha ocurrido un error al eliminar el widget';
+      notifyListeners();
+    }
+  }
+
   Future<void> reorderWidgets(List<DashboardWidgetItem> reorderedItems) async {
     final selectedTab = _selectedTab;
 

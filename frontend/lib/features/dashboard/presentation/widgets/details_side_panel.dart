@@ -13,6 +13,7 @@ class DetailsSidePanel extends StatelessWidget {
   final DetailsPanelPlacement placement;
   final VoidCallback? onClose;
   final bool showCard;
+  final VoidCallback? onDelete;
 
   const DetailsSidePanel({
     super.key,
@@ -20,6 +21,7 @@ class DetailsSidePanel extends StatelessWidget {
     this.placement = DetailsPanelPlacement.side,
     this.onClose,
     this.showCard = true,
+    this.onDelete,
   });
 
   @override
@@ -65,6 +67,12 @@ class DetailsSidePanel extends StatelessWidget {
               colorScheme: colorScheme,
               textTheme: textTheme,
               description: description,
+            ),
+          ],
+          if (onDelete != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _buildDeleteAction(
+              colorScheme: colorScheme,
             ),
           ],
         ],
@@ -320,6 +328,33 @@ class DetailsSidePanel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDeleteAction({
+    required ColorScheme colorScheme,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onDelete,
+        icon: Icon(
+          Icons.delete_outline,
+          color: colorScheme.error,
+        ),
+        label: Text(
+          'Quitar widget',
+          style: TextStyle(
+            color: colorScheme.error,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: colorScheme.error.withValues(alpha: 0.45),
+          ),
+        ),
+      ),
     );
   }
 
