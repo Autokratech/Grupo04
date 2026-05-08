@@ -1,9 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.api.controllers import widgets_controller as wc
+from app.core.guardias import pedir_usuario_logueado
 
 router = APIRouter(
     prefix="/api/widgets",
     tags=["widgets"],
+    dependencies=[Depends(pedir_usuario_logueado)],
     responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
 )
 

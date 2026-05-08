@@ -7,6 +7,7 @@ from app.services.dashboard_service import DashboardService
 from app.repositories.dashboard_repository import DashboardRepository
 from app.schemas.dashboard_schema import DashboardCreate, DashboardUpdate
 from app.core.database import create_supabase_client
+from app.core.guardias import pedir_usuario_logueado
 
 
 # -- Preparación del servicio de Dashboard e inyección de dependencias
@@ -20,14 +21,13 @@ dashboard_service = Annotated[DashboardService, Depends(get_dashboard_service)]
 
 
 # -- Controladores para gestionar el dashboard
-async def get_user_dashboard(service : dashboard_service, user_id : UUID): #cambiar user_id por request : Request 
-    #user_id = request.state.usuario_actual["id"]
-    print(f"El usuario es {user_id}")
+async def get_user_dashboard(service: dashboard_service, usuario_actual=Depends(pedir_usuario_logueado)):
+    user_id = UUID(usuario_actual["id"])
     return await service.get_user_dashboard(user_id)
 
 
-async def create_dashboard(body : DashboardCreate, service: dashboard_service, user_id : UUID): #cambiar user_id por request : Request
-    #user_id = request.state.usuario_actual["id"]
+async def create_dashboard(body: DashboardCreate, service: dashboard_service, usuario_actual=Depends(pedir_usuario_logueado)):
+    user_id = UUID(usuario_actual["id"])
     return await service.create_dashboard(user_id, body.model_dump())
 
 

@@ -1,10 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.api.controllers import dashboard_controller as dc
 from app.schemas.dashboard_schema import DashboardResponse
+from app.core.guardias import pedir_usuario_logueado
 
 router = APIRouter(
     prefix="/api/dashboard",
     tags=["dashboard"],
+    dependencies=[Depends(pedir_usuario_logueado)],
     responses={
         200: {"description" : "La solicitud se ha procesado correctamente."},
         201: {"description" : "El dashboard se ha creado correctamente."},
