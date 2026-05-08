@@ -25,9 +25,9 @@ class TabWidgetData(BaseModel):
     tab_widget_id : UUID
     provider_tag : str
     status : str | None = "success" #TODO: Migrar a enum una vez decididos los tipos disponibles en status
-    timestamp : str | None
+    timestamp : str | None = None
     ttl : int | None = None #TODO: Crear una nueva tabla data_types con este tipo de info
-    data : Data
+    data : Data | None = None
 
 
 class TabWidgetDataList(BaseModel):
