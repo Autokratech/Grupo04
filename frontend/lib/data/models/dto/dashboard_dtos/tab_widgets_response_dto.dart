@@ -12,10 +12,7 @@ class TabWidgetsResponseDto {
 
   factory TabWidgetsResponseDto.fromMap(Map<String, dynamic> map) {
     return TabWidgetsResponseDto(
-      tabWidgets: _parseList(
-        map['tab_widgets'],
-        TabWidgetDto.fromMap,
-      ),
+      tabWidgets: _parseList(map['tab_widgets'], TabWidgetDto.fromMap),
       tabWidgetsData: _parseList(
         map['tab_widgets_data'],
         TabWidgetDataDto.fromMap,
@@ -25,9 +22,9 @@ class TabWidgetsResponseDto {
 }
 
 List<T> _parseList<T>(
-    dynamic value,
-    T Function(Map<String, dynamic> map) fromMap,
-    ) {
+  dynamic value,
+  T Function(Map<String, dynamic> map) fromMap,
+) {
   if (value is! List) {
     return [];
   }

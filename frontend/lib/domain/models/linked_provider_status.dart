@@ -1,6 +1,1 @@
-enum LinkedProviderStatus {
-  connected,
-  disconnected,
-  unavailable,
-  error,
-}
+enum LinkedProviderStatus { connected, disconnected, unavailable, error }

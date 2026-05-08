@@ -42,7 +42,8 @@ class DashboardViewModel extends ChangeNotifier {
 
   bool _isCatalogItemAlreadyAdded(WidgetCatalogItem catalogItem) {
     return _items.any((item) {
-      return item.id == catalogItem.id || item.id.endsWith('_${catalogItem.id}');
+      return item.id == catalogItem.id ||
+          item.id.endsWith('_${catalogItem.id}');
     });
   }
 

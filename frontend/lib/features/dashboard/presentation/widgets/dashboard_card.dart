@@ -83,7 +83,9 @@ class DashboardCard extends StatelessWidget {
                         titleStyle: titleStyle,
                         statusColor: statusColor,
                       ),
-                      SizedBox(height: isCompact ? AppSpacing.sm : AppSpacing.md),
+                      SizedBox(
+                        height: isCompact ? AppSpacing.sm : AppSpacing.md,
+                      ),
                       Center(
                         child: Text(
                           item.primaryValue,
@@ -183,10 +185,7 @@ class DashboardCard extends StatelessWidget {
           ),
         ),
         SizedBox(width: isCompact ? AppSpacing.sm : AppSpacing.md),
-        _buildStatusChip(
-          labelStyle: labelStyle,
-          compact: isCompact,
-        ),
+        _buildStatusChip(labelStyle: labelStyle, compact: isCompact),
       ],
     );
   }

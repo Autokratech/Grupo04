@@ -64,13 +64,11 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<ProfileRepository>(
-        () => ProfileRepositoryImpl(
-      userApiService: sl<UserApiService>(),
-    ),
+    () => ProfileRepositoryImpl(userApiService: sl<UserApiService>()),
   );
 
   sl.registerLazySingleton<DashboardRepository>(
-        () => DashboardRepositoryImpl(
+    () => DashboardRepositoryImpl(
       localDataSource: sl<DashboardLocalDataSource>(),
       apiService: sl<DashboardApiService>(),
       sessionStorageService: sl<SessionStorageService>(),
@@ -78,7 +76,7 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerFactory<ProfileViewModel>(
-        () => ProfileViewModel(
+    () => ProfileViewModel(
       profileRepository: sl<ProfileRepository>(),
       authRepository: sl<AuthRepository>(),
     ),

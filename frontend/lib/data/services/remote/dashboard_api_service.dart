@@ -53,9 +53,9 @@ class DashboardApiService {
   }) async {
     final response = await apiClient
         .post(_dashboardTabsEndpoint(dashboardId: dashboardId), {
-      'tab_name': name.trim(),
-      'tab_index': tabIndex,
-    })
+          'tab_name': name.trim(),
+          'tab_index': tabIndex,
+        })
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -76,12 +76,12 @@ class DashboardApiService {
   }) async {
     final response = await apiClient
         .getStream(
-      _tabWidgetsEndpoint(
-        dashboardId: dashboardId,
-        tabId: tabId,
-        userId: userId,
-      ),
-    )
+          _tabWidgetsEndpoint(
+            dashboardId: dashboardId,
+            tabId: tabId,
+            userId: userId,
+          ),
+        )
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200) {
@@ -105,9 +105,9 @@ class DashboardApiService {
   }) async {
     final response = await apiClient
         .put(_dashboardTabEndpoint(dashboardId: dashboardId, tabId: tabId), {
-      'tab_name': name.trim(),
-      'tab_index': tabIndex,
-    })
+          'tab_name': name.trim(),
+          'tab_index': tabIndex,
+        })
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -194,8 +194,8 @@ class DashboardApiService {
   }
 
   Future<Map<String, dynamic>> _decodeWidgetsSse(
-      http.StreamedResponse response,
-      ) async {
+    http.StreamedResponse response,
+  ) async {
     Map<String, dynamic>? skeletonEvent;
     Map<String, dynamic>? dataEvent;
 
@@ -230,7 +230,9 @@ class DashboardApiService {
     }
 
     await for (final rawLine
-    in response.stream.transform(utf8.decoder).transform(const LineSplitter())) {
+        in response.stream
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())) {
       final line = rawLine.trimRight();
 
       if (line.isEmpty) {

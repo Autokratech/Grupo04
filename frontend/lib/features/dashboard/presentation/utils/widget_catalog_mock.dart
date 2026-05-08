@@ -23,7 +23,8 @@ class WidgetCatalogMock {
       id: 'sync-status',
       title: 'Sincronización',
       type: WidgetType.status,
-      description: 'Indica el estado general de sincronización entre integraciones.',
+      description:
+          'Indica el estado general de sincronización entre integraciones.',
       requirementLabel: 'Requiere integraciones activas',
     ),
     WidgetCatalogItem(
@@ -79,7 +80,8 @@ class WidgetCatalogMock {
       id: 'security-alerts',
       title: 'Alertas de seguridad',
       type: WidgetType.alert,
-      description: 'Muestra alertas relacionadas con seguridad o configuración.',
+      description:
+          'Muestra alertas relacionadas con seguridad o configuración.',
       requirementLabel: 'Requiere proveedor de seguridad',
     ),
     WidgetCatalogItem(

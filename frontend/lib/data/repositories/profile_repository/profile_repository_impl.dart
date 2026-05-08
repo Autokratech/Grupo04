@@ -6,9 +6,8 @@ import 'package:frontend/domain/models/app_user.dart';
 class ProfileRepositoryImpl implements ProfileRepository {
   final UserApiService _userApiService;
 
-  ProfileRepositoryImpl({
-    required UserApiService userApiService,
-  }) : _userApiService = userApiService;
+  ProfileRepositoryImpl({required UserApiService userApiService})
+    : _userApiService = userApiService;
 
   @override
   Future<AppUser> getCurrentUser() async {

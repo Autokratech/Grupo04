@@ -82,10 +82,7 @@ class _CreateDashboardTabDialogState extends State<CreateDashboardTabDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
-          onPressed: _submit,
-          child: Text(widget.submitLabel),
-        ),
+        FilledButton(onPressed: _submit, child: Text(widget.submitLabel)),
       ],
     );
   }

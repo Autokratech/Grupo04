@@ -1,4 +1,1 @@
-enum AuthMode {
-  register,
-  login
-}
+enum AuthMode { register, login }

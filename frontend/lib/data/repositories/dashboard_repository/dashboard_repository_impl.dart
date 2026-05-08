@@ -153,7 +153,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     );
 
     final currentTabDto = currentTabsDto.tabs.firstWhere(
-          (tab) => tab.id == tabId,
+      (tab) => tab.id == tabId,
       orElse: () => throw StateError('No se encontró la tab remota'),
     );
 
@@ -186,7 +186,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         );
 
         return refreshedTabs.firstWhere(
-              (tab) => tab.id == updatedTab.id,
+          (tab) => tab.id == updatedTab.id,
           orElse: () => updatedTab,
         );
       }

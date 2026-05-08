@@ -1,7 +1,1 @@
-enum DashboardState {
-  initial,
-  loading,
-  loaded,
-  empty,
-  error
-}
+enum DashboardState { initial, loading, loaded, empty, error }

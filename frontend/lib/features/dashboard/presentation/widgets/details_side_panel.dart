@@ -40,10 +40,7 @@ class DetailsSidePanel extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-          ),
+          _buildHeader(colorScheme: colorScheme, textTheme: textTheme),
           const SizedBox(height: AppSpacing.lg),
           _buildPrimaryValueSection(
             colorScheme: colorScheme,
@@ -66,9 +63,7 @@ class DetailsSidePanel extends StatelessWidget {
           ],
           if (onDelete != null) ...[
             const SizedBox(height: AppSpacing.lg),
-            _buildDeleteAction(
-              colorScheme: colorScheme,
-            ),
+            _buildDeleteAction(colorScheme: colorScheme),
           ],
         ],
       ),
@@ -86,7 +81,7 @@ class DetailsSidePanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
           color: AppColors.primary.withValues(alpha: 0.50),
-          width: 2
+          width: 2,
         ),
       ),
       child: content,
@@ -106,9 +101,7 @@ class DetailsSidePanel extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.primary,
-            ),
+            border: Border.all(color: AppColors.primary),
           ),
           child: Icon(
             _iconForType(item.type),
@@ -159,20 +152,14 @@ class DetailsSidePanel extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           IconButton(
             onPressed: onClose,
-            icon: Icon(
-              _closeIconForPlacement(),
-              size: 28,
-            ),
+            icon: Icon(_closeIconForPlacement(), size: 28),
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.surfaceContainerHighest,
               foregroundColor: colorScheme.onSurfaceVariant,
             ),
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 34,
-              minHeight: 34,
-            ),
+            constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
           ),
         ],
       ],
@@ -193,9 +180,7 @@ class DetailsSidePanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: statusColor.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: statusColor.withValues(alpha: 0.25)),
       ),
       child: Text(
         WidgetLabels.status(item.status),
@@ -232,9 +217,7 @@ class DetailsSidePanel extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.22),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -304,9 +287,7 @@ class DetailsSidePanel extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: child,
     );
   }
@@ -323,11 +304,7 @@ class DetailsSidePanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.notes_rounded,
-                size: 18,
-                color: AppColors.primary,
-              ),
+              Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Descripción',
@@ -351,9 +328,7 @@ class DetailsSidePanel extends StatelessWidget {
     );
   }
 
-  Widget _buildDeleteAction({
-    required ColorScheme colorScheme,
-  }) {
+  Widget _buildDeleteAction({required ColorScheme colorScheme}) {
     return Align(
       alignment: Alignment.center,
       child: TextButton.icon(

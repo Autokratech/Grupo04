@@ -37,10 +37,10 @@ class ApiClient {
   }
 
   Future<http.Response> put(
-      String endpoint,
-      Map<String, dynamic>? body, {
-        bool authenticated = true,
-      }) {
+    String endpoint,
+    Map<String, dynamic>? body, {
+    bool authenticated = true,
+  }) {
     final url = Uri.parse('$baseUrl$endpoint');
 
     return client.put(

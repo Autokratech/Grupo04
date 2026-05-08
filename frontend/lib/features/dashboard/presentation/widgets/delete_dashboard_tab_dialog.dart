@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class DeleteDashboardTabDialog extends StatelessWidget {
   final String dashboardName;
 
-  const DeleteDashboardTabDialog({
-    super.key,
-    required this.dashboardName,
-  });
+  const DeleteDashboardTabDialog({super.key, required this.dashboardName});
 
   @override
   Widget build(BuildContext context) {
