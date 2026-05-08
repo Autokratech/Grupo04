@@ -97,7 +97,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ] else ...[
                     DashboardHeader(
                       title: 'Autokratech',
-                      subtitle: 'Centraliza métricas, alertas y conexiones en dashboards configurables.',
+                      subtitle:
+                          'Centraliza métricas, alertas y conexiones en dashboards configurables.',
                       trailing: ProfileMenuButton(
                         onLoggedOut: _handleProfileLoggedOut,
                       ),
@@ -155,7 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     onDelete: () {
                                       _handleDeleteWidgetPressed(selectedItem);
                                     },
-                                  )
+                                  ),
                                 ),
                               ],
                             ],
@@ -177,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   onDelete: () {
                                     _handleDeleteWidgetPressed(selectedItem);
                                   },
-                                )
+                                ),
                               ),
                             ],
                           ],
@@ -219,10 +220,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Quitar widget'),
-          content: Text(
-            '¿Quieres quitar "${widget.title}" de este dashboard?',
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
+          title: const Text('Quitar widget'),
+          content: Text('¿Quieres quitar "${widget.title}" de este dashboard?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -240,6 +242,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (shouldDelete != true || !mounted) return;
 
     await _viewModel.deleteWidget(widget);
+
+    if (!mounted) return;
 
     _showViewModelErrorIfNeeded();
   }
@@ -389,7 +393,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Navigator.of(context).pop();
                 }
               },
-            )
+            ),
           ),
         );
       },
