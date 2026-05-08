@@ -1,10 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.api.controllers import tabs_controller as tc
 from app.schemas.tab_schema import TabResponse, TabListResponse
+from app.core.guardias import pedir_usuario_logueado
 
 router = APIRouter(
     prefix="/api/dashboard",
     tags=["tabs"],
+    dependencies=[Depends(pedir_usuario_logueado)],
     responses={
         200: {"description" : "La solicitud se ha procesado correctamente."},
         201: {"description" : "La tab se ha creado correctamente."},
