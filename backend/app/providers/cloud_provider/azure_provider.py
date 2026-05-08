@@ -31,7 +31,6 @@ class AzureProvider():
             return await self.fetch_data_with_post(data_type, full_endpoint, data_config)
         else: 
             return await self.fetch_data_with_get(data_type, full_endpoint)
-        #TODO:  Añadir configuración personalizada del user + postprocesamiento de la respuesta de gitlab
 
     
     async def fetch_data_with_get(self,data_type, full_endpoint):
@@ -53,7 +52,6 @@ class AzureProvider():
                     json=data_config,
                     headers={'Authorization': f'Bearer {self.access_token}'})
             response.raise_for_status()
-            print(response.json())
             return await self.normalize_response(data_type, response.json())
         except Exception as e:
             print(f"Execption: {e}")
@@ -95,9 +93,6 @@ class AzureProvider():
             provider_response_items = provider_response
         else:
             provider_response_items = [provider_response]
-        print("------------")
-        print(provider_response_items)
-        print("------------")
 
         response_items = [data_schema(**item) for item in provider_response_items]
         if data_type == "VIRTUAL_MACHINES":
@@ -109,10 +104,10 @@ class AzureProvider():
         tasks = [self.get_vm_power_state(vm) for vm in vms]
         return await asyncio.gather(*tasks)
 
+
     #-- Método helper para aquellos items que requieren llamadas adicionales para obtener parámetros extra
     async def get_vm_power_state(self, azure_vm : VirtualMachine):
         vm_resource_group = azure_vm.id[azure_vm.id.find("/resourceGroups/") + len("/resourceGroups/") : azure_vm.id.find("/providers/")]
-        print(vm_resource_group)
 
         subscription = await self.get_azure_subscription_id()
 
