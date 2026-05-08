@@ -85,7 +85,8 @@ class OrchestratorService:
     async def fetch_tab_widget_data(self, provider_instance, request : ProviderData, aggregated_response : list):
         try:
             provider_response = await provider_instance.fetch_provider_data(request.data_type, request.custom_config)
-            standarized_response = await self.standarize_response(request, provider_response)
+            standarized_response = await self.standarize_response(request, Data(**provider_response))
+
             aggregated_response.append(standarized_response)
         except Exception as e:
             print(f"Se ha producido un error al intentar acceder a los datos de {request.data_type} del provider {request.provider_name} : {e}")
@@ -94,7 +95,7 @@ class OrchestratorService:
                                                           status = "error"))
 
 
-    async def standarize_response(self, request, response_data):
+    async def standarize_response(self, request : ProviderData , response_data : Data):
         status = "success" if response_data.count else "error"
         timestamp = datetime.now(timezone.utc).isoformat()
         standarized_response = TabWidgetData(tab_widget_id = request.tab_widget_id,
@@ -102,7 +103,7 @@ class OrchestratorService:
                                             status = status,
                                             timestamp = timestamp,
                                             ttl = 300, #Hardcodeado para pruebas, pero debería venir del data_type )
-                                            data=response_data.model_dump())
+                                            data=response_data)
         return standarized_response
 
 

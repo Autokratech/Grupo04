@@ -36,7 +36,7 @@ orchestrator_service = Annotated[OrchestratorService, Depends(get_orchestrator_s
 
 # -- Controladores para gestionar el orquestador
 #-!BORRAR Solicitud user_id, obtener de la sesión, revisar en base a lo integrado en el auth
-async def get_active_tab_widgets(user_id: UUID, tab_id: UUID, service: orchestrator_service)-> AsyncIterable[ServerSentEvent]: 
+async def get_active_tab_widgets(user_id: UUID, dashboard_id : UUID, tab_id: UUID, service: orchestrator_service)-> AsyncIterable[ServerSentEvent]: 
     async for event in service.orchestate_user_tab(user_id, tab_id):
         yield ServerSentEvent(data=event["data"], event=event["event"])
 
