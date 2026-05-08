@@ -34,11 +34,11 @@ Future<void> setupDependencies() async {
 
   sl.registerLazySingleton<http.Client>(() => http.Client());
 
-  // Testing on Android -> http://10.0.2.2:8000
-  // Testing on Windows -> http://127.0.0.1:8000
+  // Testing on Android -> http://10.0.2.2:8001
+  // Testing on Windows -> http://127.0.0.1:8001
   sl.registerLazySingleton<ApiClient>(
     () => ApiClient(
-      baseUrl: 'http://127.0.0.1:8000',
+      baseUrl: 'http://127.0.0.1:8001',
       client: sl<http.Client>(),
       sessionStorageService: sl<SessionStorageService>(),
     ),

@@ -36,8 +36,8 @@ class DashboardWidgetMapper {
       title: _resolveTitle(widget, data),
       type: _mapWidgetType(widget.widgetType),
       status: _mapWidgetStatus(data?.status),
-      primaryValue: _resolvePrimaryValue(data),
-      description: _resolveDescription(data),
+      primaryValue: _resolvePrimaryValue(widget, data),
+      description: _resolveDescription(widget, data),
       position: widget.widgetIndex ?? 0,
     );
   }
@@ -45,20 +45,40 @@ class DashboardWidgetMapper {
   static WidgetType _mapWidgetType(String? value) {
     switch (value?.toLowerCase().trim()) {
       case 'metric':
+      case 'gauge':
+      case 'progress_bar':
+      case 'cost_management':
         return WidgetType.metric;
+
       case 'list':
+      case 'text_list':
       case 'pipeline_list':
+      case 'list_resources':
         return WidgetType.list;
+
       case 'chart':
       case 'bar_chart':
       case 'pie_chart':
+      case 'line_chart':
+      case 'area_chart':
         return WidgetType.chart;
+
       case 'service':
         return WidgetType.service;
+
       case 'alert':
         return WidgetType.alert;
+
+      case 'pipeline':
+        return WidgetType.pipeline;
+
+      case 'issue':
+      case 'merge_request':
+        return WidgetType.issue;
+
       case 'status':
         return WidgetType.status;
+
       default:
         return WidgetType.status;
     }
@@ -91,13 +111,17 @@ class DashboardWidgetMapper {
           _stringOrNull(data?.data['name']),
           _stringOrNull(data?.data['label']),
           _formatFallbackLabel(widget.dataType),
+          _formatFallbackLabel(widget.widgetTitle),
           _formatFallbackLabel(widget.widgetType),
-          _stringOrNull(data?.providerTag),
+          _formatFallbackLabel(data?.providerTag),
         ]) ??
         'Widget';
   }
 
-  static String _resolvePrimaryValue(TabWidgetDataDto? data) {
+  static String _resolvePrimaryValue(
+    TabWidgetDto widget,
+    TabWidgetDataDto? data,
+  ) {
     final payload = data?.data ?? {};
 
     final explicitPrimaryValue = _firstNonEmpty([
@@ -109,6 +133,14 @@ class DashboardWidgetMapper {
       return explicitPrimaryValue;
     }
 
+    if (_isCostManagementWidget(widget)) {
+      final costValue = _resolveCostValue(payload);
+
+      if (costValue != null) {
+        return costValue;
+      }
+    }
+
     final value = payload['value'];
     final unit = _stringOrNull(payload['unit']);
 
@@ -116,9 +148,15 @@ class DashboardWidgetMapper {
       return unit == null ? value.toString() : '${value.toString()}$unit';
     }
 
-    final count = payload['count'];
+    final count = _parseNumber(payload['count']);
     if (count != null) {
-      return count.toString();
+      final normalizedCount = count.toInt();
+
+      if (_isResourceListWidget(widget)) {
+        return _formatResourceCount(widget, normalizedCount);
+      }
+
+      return normalizedCount.toString();
     }
 
     final total = payload['total'];
@@ -128,19 +166,42 @@ class DashboardWidgetMapper {
 
     final items = payload['items'];
     if (items is List) {
+      if (_isResourceListWidget(widget)) {
+        return _formatResourceCount(widget, items.length);
+      }
+
       return '${items.length} elementos';
     }
 
     return 'Sin datos';
   }
 
-  static String? _resolveDescription(TabWidgetDataDto? data) {
-    return _firstNonEmpty([
+  static String? _resolveDescription(
+    TabWidgetDto widget,
+    TabWidgetDataDto? data,
+  ) {
+    final explicitDescription = _firstNonEmpty([
       _stringOrNull(data?.data['description']),
       _stringOrNull(data?.data['message']),
       _stringOrNull(data?.data['summary']),
-      _stringOrNull(data?.providerTag),
     ]);
+
+    if (explicitDescription != null) {
+      return explicitDescription;
+    }
+
+    final provider = _formatFallbackLabel(data?.providerTag);
+    final dataType = _formatFallbackLabel(widget.dataType);
+
+    if (provider != null && dataType != null) {
+      return '$dataType desde $provider.';
+    }
+
+    if (provider != null) {
+      return 'Datos recibidos desde $provider.';
+    }
+
+    return null;
   }
 
   static String? _firstNonEmpty(List<String?> values) {
@@ -177,7 +238,94 @@ class DashboardWidgetMapper {
     return text
         .split('_')
         .where((part) => part.isNotEmpty)
-        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .map((part) {
+          final lowerPart = part.toLowerCase();
+          return '${lowerPart[0].toUpperCase()}${lowerPart.substring(1)}';
+        })
         .join(' ');
+  }
+
+  static bool _isResourceListWidget(TabWidgetDto widget) {
+    return widget.widgetType?.toLowerCase().trim() == 'list_resources';
+  }
+
+  static bool _isCostManagementWidget(TabWidgetDto widget) {
+    final widgetType = widget.widgetType?.toLowerCase().trim();
+    final dataType = widget.dataType?.toLowerCase().trim();
+
+    return widgetType == 'cost_management' || dataType == 'cost_management';
+  }
+
+  static String? _resolveCostValue(Map<String, dynamic> payload) {
+    final directCost = _parseNumber(payload['total_cost']);
+    final directCurrency = _stringOrNull(payload['currency']);
+
+    if (directCost != null) {
+      return _formatCurrencyValue(directCost, directCurrency);
+    }
+
+    final firstItem = _firstMapFromItems(payload['items']);
+    final itemCost = _parseNumber(firstItem?['total_cost']);
+    final itemCurrency = _stringOrNull(firstItem?['currency']);
+
+    if (itemCost != null) {
+      return _formatCurrencyValue(itemCost, itemCurrency);
+    }
+
+    return null;
+  }
+
+  static Map<String, dynamic>? _firstMapFromItems(dynamic items) {
+    if (items is! List || items.isEmpty) {
+      return null;
+    }
+
+    for (final item in items) {
+      if (item is Map) {
+        return Map<String, dynamic>.from(item);
+      }
+    }
+
+    return null;
+  }
+
+  static num? _parseNumber(dynamic value) {
+    if (value is num) {
+      return value;
+    }
+
+    if (value is String) {
+      return num.tryParse(value);
+    }
+
+    return null;
+  }
+
+  static String _formatCurrencyValue(num value, String? currency) {
+    final formattedValue = value.toDouble().toStringAsFixed(2);
+
+    if (currency == null || currency.isEmpty) {
+      return formattedValue;
+    }
+
+    return '$formattedValue $currency';
+  }
+
+  static String _formatResourceCount(TabWidgetDto widget, int count) {
+    final dataType = widget.dataType?.toLowerCase().trim();
+
+    switch (dataType) {
+      case 'resource_groups':
+        return count == 1 ? '1 grupo' : '$count grupos';
+
+      case 'virtual_machines':
+        return count == 1 ? '1 VM' : '$count VMs';
+
+      case 'key_vaults':
+        return count == 1 ? '1 Key Vault' : '$count Key Vaults';
+
+      default:
+        return count == 1 ? '1 recurso' : '$count recursos';
+    }
   }
 }

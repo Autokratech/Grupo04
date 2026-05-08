@@ -41,33 +41,15 @@ class DashboardTabSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visibleTabs = tabs.length > 1
-        ? tabs
-        : [
-      selectedTab,
-      const DashboardTab(
-        id: 'preview-devops',
-        name: 'DevOps',
-        position: 1,
-      ),
-      const DashboardTab(
-        id: 'preview-develop',
-        name: 'Develop',
-        position: 2,
-      ),
-      const DashboardTab(
-        id: 'preview-testing',
-        name: 'Testing',
-        position: 3,
-      ),
-    ];
-
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          for (final tab in visibleTabs) ...[
-            _buildDraggableTab(tab),
+          for (final tab in tabs) ...[
+            KeyedSubtree(
+              key: ValueKey(tab.id),
+              child: _buildDraggableTab(tab),
+            ),
             const SizedBox(width: AppSpacing.sm),
           ],
           Builder(
@@ -81,7 +63,9 @@ class DashboardTabSelector extends StatelessWidget {
                 child: Material(
                   color: canCreateTab
                       ? AppColors.primary.withValues(alpha: 0.04)
-                      : colorScheme.surfaceContainerHighest.withValues(alpha: 0.60),
+                      : colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.60,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                     side: BorderSide(
@@ -105,7 +89,9 @@ class DashboardTabSelector extends StatelessWidget {
                         size: _createIconSize,
                         color: canCreateTab
                             ? AppColors.primary
-                            : colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+                            : colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.45,
+                        ),
                       ),
                     ),
                   ),
@@ -174,7 +160,7 @@ class DashboardTabSelector extends StatelessWidget {
     final textTheme = theme.textTheme;
 
     final backgroundColor = isSelected
-        ? AppColors.primary.withValues(alpha: 0.10)
+        ? AppColors.primary.withValues(alpha: 0.18)
         : AppColors.secondary.withValues(alpha: 0.05);
 
     final borderColor = isSelected
@@ -200,9 +186,12 @@ class DashboardTabSelector extends StatelessWidget {
               onTabChanged(tab);
             }
           },
-          hoverColor: colorScheme.primary.withValues(alpha: 0.05),
+          hoverColor: isSelected
+              ? colorScheme.primary.withValues(alpha: 0.05)
+              : Colors.transparent,
+          focusColor: Colors.transparent,
           splashColor: colorScheme.primary.withValues(alpha: 0.08),
-          highlightColor: colorScheme.primary.withValues(alpha: 0.03),
+          highlightColor: Colors.transparent,
           child: Padding(
             padding: EdgeInsets.only(
               left: AppSpacing.sm,
@@ -292,6 +281,8 @@ class DashboardTabSelector extends StatelessWidget {
             radius: 16,
             onTap: () => _toggleMenu(controller),
             hoverColor: colorScheme.primary.withValues(alpha: 0.08),
+            focusColor: Colors.transparent,
+            highlightColor: Colors.transparent,
             splashColor: colorScheme.primary.withValues(alpha: 0.10),
             child: SizedBox(
               width: _actionsButtonSize,
