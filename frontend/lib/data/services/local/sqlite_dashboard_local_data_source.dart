@@ -232,10 +232,7 @@ class SQLiteDashboardLocalDataSource implements DashboardLocalDataSource {
 
         await transaction.update(
           'dashboard_tabs',
-          {
-            'tab_index': index,
-            'cached_at': DateTime.now().toIso8601String(),
-          },
+          {'tab_index': index, 'cached_at': DateTime.now().toIso8601String()},
           where: 'dashboard_id = ? AND id = ?',
           whereArgs: [dashboardId, row['id']],
         );
@@ -262,14 +259,16 @@ class SQLiteDashboardLocalDataSource implements DashboardLocalDataSource {
         orderBy: 'tab_index ASC',
       );
 
-      final existingIds = existingRows.map((row) => row['id'] as String).toSet();
+      final existingIds = existingRows
+          .map((row) => row['id'] as String)
+          .toSet();
       final incomingIds = tabs.map((tab) => tab.id).toSet();
 
       final hasSameLength = existingRows.length == tabs.length;
       final hasNoDuplicateIncomingIds = incomingIds.length == tabs.length;
       final hasSameIds =
           existingIds.containsAll(incomingIds) &&
-              incomingIds.containsAll(existingIds);
+          incomingIds.containsAll(existingIds);
 
       if (!hasSameLength || !hasNoDuplicateIncomingIds || !hasSameIds) {
         throw StateError(

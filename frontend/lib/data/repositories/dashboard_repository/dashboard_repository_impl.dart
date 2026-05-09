@@ -119,7 +119,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         );
 
         return refreshedTabs.firstWhere(
-              (tab) => tab.id == createdTab.id,
+          (tab) => tab.id == createdTab.id,
           orElse: () => createdTab,
         );
       }
@@ -154,7 +154,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     );
 
     final currentTabDto = currentTabsDto.tabs.firstWhere(
-          (tab) => tab.id == tabId,
+      (tab) => tab.id == tabId,
       orElse: () => throw StateError('No se encontró la tab remota'),
     );
 
@@ -187,7 +187,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         );
 
         return refreshedTabs.firstWhere(
-              (tab) => tab.id == updatedTab.id,
+          (tab) => tab.id == updatedTab.id,
           orElse: () => updatedTab,
         );
       }
@@ -484,10 +484,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     return dashboardId.startsWith('dashboard_');
   }
 
-  bool _isLocalTabId({
-    required String dashboardId,
-    required String tabId,
-  }) {
+  bool _isLocalTabId({required String dashboardId, required String tabId}) {
     return tabId == _defaultTabIdForDashboard(dashboardId) ||
         tabId.startsWith('${dashboardId}_local_');
   }

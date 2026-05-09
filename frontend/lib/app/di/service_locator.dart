@@ -67,6 +67,12 @@ Future<void> setupDependencies() async {
     () => ProfileRepositoryImpl(userApiService: sl<UserApiService>()),
   );
 
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+        () => createDashboardLocalDataSource(
+      sharedPreferences: sl<SharedPreferences>(),
+    ),
+  );
+
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(
       localDataSource: sl<DashboardLocalDataSource>(),
@@ -79,12 +85,6 @@ Future<void> setupDependencies() async {
     () => ProfileViewModel(
       profileRepository: sl<ProfileRepository>(),
       authRepository: sl<AuthRepository>(),
-    ),
-  );
-
-  sl.registerLazySingleton<DashboardLocalDataSource>(
-    () => createDashboardLocalDataSource(
-      sharedPreferences: sl<SharedPreferences>(),
     ),
   );
 }
