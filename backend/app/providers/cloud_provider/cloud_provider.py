@@ -13,17 +13,17 @@ class CloudProvider():
         "gcp": GCPProvider
     }
 
-    def __init__(self, oauth_manager: OAuthManager):
+    def __init__(self, oauth_manager: OAuthManager, endpoints_repository):
         self.oauth_manager = oauth_manager
+        self.endpoints_repository = endpoints_repository
 
-
-    async def get_provider_instance(self, provider_name : str, endpoints_repository, user_id: UUID):
+    async def get_provider_instance(self, provider_name : str, user_id: UUID):
         provider_instance = self._cloud_provider_instance[provider_name]
         if provider_instance is None:
             raise KeyError(f"No se ha encontrado el tipo de provider solicitado: {provider_name}.")
 
         access_token = await self.get_auth_token(user_id, provider_name)
-        return provider_instance(endpoints_repository, access_token)
+        return provider_instance(self.endpoints_repository, access_token)
 
 
     async def get_auth_token(self, user_id: UUID, provider_name: str):
