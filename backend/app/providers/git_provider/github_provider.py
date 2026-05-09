@@ -49,6 +49,6 @@ class GitHubProvider():
         except KeyError:
             raise KeyError("El tipo de datos especificado no está disponible para GITLAB.")
         response_items = [data_schema(**item) for item in provider_response]
-        return GitHubResponse(count=len(response_items), items=response_items)
+        return GitHubResponse(count=len(response_items), items=response_items).model_dump()
 
     #TODO: Idea. Añadir métodos que permitan obtener métricas combinadas, más complejas
