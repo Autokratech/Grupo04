@@ -34,6 +34,8 @@ abstract class DashboardRepository {
     required String tabId,
   });
 
+  Future<List<WidgetCatalogItem>> getWidgetCatalog();
+
   Future<List<DashboardWidgetItem>> addTabWidget({
     required String tabId,
     required WidgetCatalogItem catalogItem,

@@ -3,6 +3,7 @@ import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_dto.dart';
 import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
 import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tabs_response_dto.dart';
 import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets_response_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/widget_catalog_item_dto.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 import 'package:http/http.dart' as http;
 
@@ -119,6 +120,30 @@ class DashboardApiService {
     throw Exception(
       'Failed to rename dashboard tab: Status code ${response.statusCode}',
     );
+  }
+
+  Future<List<WidgetCatalogItemDto>> getWidgetCatalog() async {
+    final response = await apiClient
+        .get(_widgetCatalogEndpoint())
+        .timeout(_requestTimeout);
+
+    if (response.statusCode == 200) {
+      final responseList = _decodeList(response.body);
+
+      return responseList
+          .whereType<Map<String, dynamic>>()
+          .map(WidgetCatalogItemDto.fromMap)
+          .where((item) => item.id.trim().isNotEmpty)
+          .toList();
+    }
+
+    throw Exception(
+      'Failed to load widget catalog: Status code ${response.statusCode}',
+    );
+  }
+
+  String _widgetCatalogEndpoint() {
+    return '/api/widgets/';
   }
 
   String _userDashboardEndpoint({required String userId}) {
@@ -271,5 +296,15 @@ class DashboardApiService {
       'tab_widgets': _extractList(skeletonEvent, 'tab_widgets'),
       'tab_widgets_data': _extractList(dataEvent, 'tab_widgets_data'),
     };
+  }
+
+  List<dynamic> _decodeList(String body) {
+    final decoded = jsonDecode(body);
+
+    if (decoded is List<dynamic>) {
+      return decoded;
+    }
+
+    throw Exception('Expected JSON list response');
   }
 }

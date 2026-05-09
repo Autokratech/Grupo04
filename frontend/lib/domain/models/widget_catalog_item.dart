@@ -5,13 +5,13 @@ class WidgetCatalogItem {
   final String title;
   final WidgetType type;
   final String description;
-  final String requirementLabel;
+  final String metadataLabel;
 
   const WidgetCatalogItem({
     required this.id,
     required this.title,
     required this.type,
     required this.description,
-    required this.requirementLabel,
+    required this.metadataLabel,
   });
 }

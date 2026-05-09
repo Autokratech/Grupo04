@@ -4,7 +4,6 @@ import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
-import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -238,62 +237,6 @@ class WebDashboardLocalDataSource implements DashboardLocalDataSource {
       _widgetsKey(tabId),
       jsonEncode(normalizedWidgets.map(_dashboardWidgetToMap).toList()),
     );
-  }
-
-  @override
-  Future<List<DashboardWidgetItem>> addTabWidget({
-    required String tabId,
-    required WidgetCatalogItem catalogItem,
-  }) async {
-    final currentWidgets = await getCachedTabWidgets(tabId: tabId);
-
-    final alreadyExists = currentWidgets.any(
-      (widget) =>
-          widget.id == catalogItem.id ||
-          widget.id.endsWith('_${catalogItem.id}'),
-    );
-
-    if (alreadyExists) {
-      return currentWidgets;
-    }
-
-    final newWidget = DashboardWidgetItem(
-      id: '${tabId}_${catalogItem.id}',
-      title: catalogItem.title,
-      type: catalogItem.type,
-      status: WidgetStatus.inactive,
-      primaryValue: 'Sin datos',
-      description: catalogItem.description,
-      position: currentWidgets.length,
-    );
-
-    final updatedWidgets = _normalizeWidgets([...currentWidgets, newWidget]);
-
-    await cacheTabWidgets(tabId: tabId, widgets: updatedWidgets);
-
-    return updatedWidgets;
-  }
-
-  @override
-  Future<List<DashboardWidgetItem>> deleteTabWidget({
-    required String tabId,
-    required String widgetId,
-  }) async {
-    final currentWidgets = await getCachedTabWidgets(tabId: tabId);
-
-    final filteredWidgets = currentWidgets
-        .where((widget) => widget.id != widgetId)
-        .toList();
-
-    if (filteredWidgets.length == currentWidgets.length) {
-      return currentWidgets;
-    }
-
-    final normalizedWidgets = _normalizeWidgets(filteredWidgets);
-
-    await cacheTabWidgets(tabId: tabId, widgets: normalizedWidgets);
-
-    return normalizedWidgets;
   }
 
   String _dashboardKey(String dashboardId) {

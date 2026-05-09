@@ -1,5 +1,7 @@
+import 'package:frontend/data/fallbacks/fallback_widget_catalog.dart';
 import 'package:frontend/data/mappers/dashboard_mapper.dart';
 import 'package:frontend/data/mappers/dashboard_widget_mapper.dart';
+import 'package:frontend/data/mappers/widget_catalog_mapper.dart';
 import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
@@ -10,7 +12,6 @@ import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
-import 'package:frontend/domain/models/widget_type.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   final DashboardLocalDataSource localDataSource;
@@ -261,6 +262,22 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<List<WidgetCatalogItem>> getWidgetCatalog() async {
+    try {
+      final catalogDtos = await apiService.getWidgetCatalog();
+      final remoteCatalog = WidgetCatalogMapper.toDomainList(catalogDtos);
+
+      if (remoteCatalog.isNotEmpty) {
+        return remoteCatalog;
+      }
+
+      return FallbackWidgetCatalog.items;
+    } catch (_) {
+      return FallbackWidgetCatalog.items;
+    }
+  }
+
+  @override
   Future<List<DashboardWidgetItem>> addTabWidget({
     required String tabId,
     required WidgetCatalogItem catalogItem,
@@ -432,19 +449,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return cachedWidgets;
     }
 
-    if (tabId != _defaultTabIdForDashboard(dashboardId)) {
-      return [];
-    }
-
-    final initialWidgets = _buildInitialWidgetItems(tabId)
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    await localDataSource.cacheTabWidgets(
-      tabId: tabId,
-      widgets: initialWidgets,
-    );
-
-    return initialWidgets;
+    return [];
   }
 
   String get _currentUserId {
@@ -500,140 +505,5 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
 
     return maxIndex + 1;
-  }
-
-  // TODO: sustituir por widgets recibidos desde backend.
-  List<DashboardWidgetItem> _buildInitialWidgetItems(String tabId) {
-    return [
-      DashboardWidgetItem(
-        id: '${tabId}_active-services',
-        title: 'Servicios activos',
-        type: WidgetType.service,
-        status: WidgetStatus.ok,
-        primaryValue: '12',
-        description: 'Número total de servicios operativos en este momento.',
-        position: 0,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_open-incidents',
-        title: 'Incidencias abiertas',
-        type: WidgetType.alert,
-        status: WidgetStatus.error,
-        primaryValue: '3',
-        description: 'Incidencias actualmente pendientes de revisión o cierre.',
-        position: 1,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_sync-status',
-        title: 'Sincronización',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-            'Estado actual del proceso de sincronización entre sistemas.',
-        position: 2,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_cpu-usage',
-        title: 'Uso de CPU',
-        type: WidgetType.metric,
-        status: WidgetStatus.ok,
-        primaryValue: '42%',
-        description: 'Carga media actual del procesador del agente principal.',
-        position: 3,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_memory-usage',
-        title: 'Uso de memoria',
-        type: WidgetType.metric,
-        status: WidgetStatus.ok,
-        primaryValue: '68%',
-        description:
-            'Porcentaje de memoria utilizada en el entorno monitorizado.',
-        position: 4,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_disk-space',
-        title: 'Espacio en disco',
-        type: WidgetType.metric,
-        status: WidgetStatus.error,
-        primaryValue: '91%',
-        description: 'Uso actual del almacenamiento principal.',
-        position: 5,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_deployments',
-        title: 'Despliegues recientes',
-        type: WidgetType.list,
-        status: WidgetStatus.ok,
-        primaryValue: '5',
-        description: 'Despliegues registrados durante las últimas 24 horas.',
-        position: 6,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_failed-jobs',
-        title: 'Jobs fallidos',
-        type: WidgetType.alert,
-        status: WidgetStatus.error,
-        primaryValue: '2',
-        description: 'Tareas automatizadas que han terminado con error.',
-        position: 7,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_api-latency',
-        title: 'Latencia API',
-        type: WidgetType.metric,
-        status: WidgetStatus.ok,
-        primaryValue: '128 ms',
-        description: 'Tiempo medio de respuesta de la API principal.',
-        position: 8,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_cloud-cost',
-        title: 'Coste cloud',
-        type: WidgetType.chart,
-        status: WidgetStatus.ok,
-        primaryValue: '248 €',
-        description: 'Estimación provisional del coste mensual acumulado.',
-        position: 9,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_security-alerts',
-        title: 'Alertas de seguridad',
-        type: WidgetType.alert,
-        status: WidgetStatus.inactive,
-        primaryValue: 'Sin datos',
-        description:
-            'Estado pendiente de integración con proveedor de seguridad.',
-        position: 10,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_repository-status',
-        title: 'Repositorios',
-        type: WidgetType.service,
-        status: WidgetStatus.ok,
-        primaryValue: '8',
-        description: 'Repositorios vinculados pendientes de integración real.',
-        position: 11,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_pipeline-status',
-        title: 'Pipelines',
-        type: WidgetType.list,
-        status: WidgetStatus.error,
-        primaryValue: '1 fallido',
-        description: 'Resumen provisional del estado de pipelines recientes.',
-        position: 12,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_agent-health',
-        title: 'Estado agentes',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Todos online',
-        description: 'Estado general de los agentes instalados.',
-        position: 13,
-      ),
-    ];
   }
 }

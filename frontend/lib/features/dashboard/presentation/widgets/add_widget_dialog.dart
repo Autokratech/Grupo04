@@ -18,7 +18,10 @@ class AddWidgetDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.all(AppSpacing.lg),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: BoxConstraints(
+          maxWidth: 520,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
@@ -32,7 +35,6 @@ class AddWidgetDialog extends StatelessWidget {
                         child: Text('No hay widgets disponibles para añadir.'),
                       )
                     : ListView.separated(
-                        shrinkWrap: true,
                         itemCount: items.length,
                         separatorBuilder: (_, _) =>
                             const SizedBox(height: AppSpacing.sm),
@@ -146,7 +148,7 @@ class _WidgetOptionTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  item.requirementLabel,
+                  item.metadataLabel,
                   style: textTheme.labelSmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),

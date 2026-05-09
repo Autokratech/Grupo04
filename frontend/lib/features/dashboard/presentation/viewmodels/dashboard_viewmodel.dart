@@ -7,7 +7,6 @@ import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
-import 'package:frontend/features/dashboard/presentation/utils/widget_catalog_mock.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   final DashboardRepository _dashboardRepository;
@@ -28,8 +27,13 @@ class DashboardViewModel extends ChangeNotifier {
 
   int _tabItemsLoadVersion = 0;
 
+  List<WidgetCatalogItem> _widgetCatalogItems = [];
   List<WidgetCatalogItem> get widgetCatalogItems {
-    return WidgetCatalogMock.items;
+    return List.unmodifiable(_widgetCatalogItems);
+  }
+
+  Future<void> _loadWidgetCatalog() async {
+    _widgetCatalogItems = await _dashboardRepository.getWidgetCatalog();
   }
 
   List<WidgetCatalogItem> get availableWidgetCatalogItems {
@@ -72,6 +76,8 @@ class DashboardViewModel extends ChangeNotifier {
     try {
       final dashboard = await _dashboardRepository.getDashboard();
       _dashboard = dashboard;
+
+      await _loadWidgetCatalog();
 
       _tabs = await _dashboardRepository.getDashboardTabs(
         dashboardId: dashboard.id,
@@ -455,6 +461,12 @@ class DashboardViewModel extends ChangeNotifier {
     final selectedTab = _selectedTab;
 
     if (selectedTab == null) return;
+
+    final catalogItemExists = _widgetCatalogItems.any(
+      (item) => item.id == catalogItem.id,
+    );
+
+    if (!catalogItemExists) return;
 
     try {
       _clearErrorMessage();

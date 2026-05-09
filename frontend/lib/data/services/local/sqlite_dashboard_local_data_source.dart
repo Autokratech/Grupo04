@@ -4,7 +4,6 @@ import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
-import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 import 'package:sqflite/sqflite.dart';
@@ -430,67 +429,5 @@ class SQLiteDashboardLocalDataSource implements DashboardLocalDataSource {
     }
 
     return WidgetStatus.inactive;
-  }
-
-  @override
-  Future<List<DashboardWidgetItem>> addTabWidget({
-    required String tabId,
-    required WidgetCatalogItem catalogItem,
-  }) async {
-    final currentWidgets = await getCachedTabWidgets(tabId: tabId);
-
-    final alreadyExists = currentWidgets.any(
-      (widget) =>
-          widget.id == catalogItem.id ||
-          widget.id.endsWith('_${catalogItem.id}'),
-    );
-
-    if (alreadyExists) {
-      return currentWidgets;
-    }
-
-    final nextPosition = currentWidgets.length;
-
-    final newWidget = DashboardWidgetItem(
-      id: '${tabId}_${catalogItem.id}',
-      title: catalogItem.title,
-      type: catalogItem.type,
-      status: WidgetStatus.inactive,
-      primaryValue: 'Sin datos',
-      description: catalogItem.description,
-      position: nextPosition,
-    );
-
-    final updatedWidgets = [...currentWidgets, newWidget];
-
-    await cacheTabWidgets(tabId: tabId, widgets: updatedWidgets);
-
-    return updatedWidgets;
-  }
-
-  @override
-  Future<List<DashboardWidgetItem>> deleteTabWidget({
-    required String tabId,
-    required String widgetId,
-  }) async {
-    final currentWidgets = await getCachedTabWidgets(tabId: tabId);
-
-    final filteredWidgets = currentWidgets
-        .where((widget) => widget.id != widgetId)
-        .toList();
-
-    if (filteredWidgets.length == currentWidgets.length) {
-      return currentWidgets;
-    }
-
-    final normalizedWidgets = <DashboardWidgetItem>[];
-
-    for (var index = 0; index < filteredWidgets.length; index++) {
-      normalizedWidgets.add(filteredWidgets[index].copyWith(position: index));
-    }
-
-    await cacheTabWidgets(tabId: tabId, widgets: normalizedWidgets);
-
-    return normalizedWidgets;
   }
 }

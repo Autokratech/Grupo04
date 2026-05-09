@@ -1,7 +1,6 @@
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
-import 'package:frontend/domain/models/widget_catalog_item.dart';
 
 abstract class DashboardLocalDataSource {
   Future<Dashboard?> getCachedDashboard({required String dashboardId});
@@ -43,15 +42,5 @@ abstract class DashboardLocalDataSource {
   Future<void> cacheTabWidgets({
     required String tabId,
     required List<DashboardWidgetItem> widgets,
-  });
-
-  Future<List<DashboardWidgetItem>> addTabWidget({
-    required String tabId,
-    required WidgetCatalogItem catalogItem,
-  });
-
-  Future<List<DashboardWidgetItem>> deleteTabWidget({
-    required String tabId,
-    required String widgetId,
   });
 }
