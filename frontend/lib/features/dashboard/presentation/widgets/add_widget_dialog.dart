@@ -7,7 +7,10 @@ import 'package:frontend/features/dashboard/presentation/utils/widget_labels.dar
 class AddWidgetDialog extends StatelessWidget {
   final List<WidgetCatalogItem> items;
 
-  const AddWidgetDialog({super.key, required this.items});
+  const AddWidgetDialog({
+    super.key,
+    required this.items,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,21 +35,21 @@ class AddWidgetDialog extends StatelessWidget {
               Flexible(
                 child: items.isEmpty
                     ? const Center(
-                        child: Text('No hay widgets disponibles para añadir.'),
-                      )
+                  child: Text('No hay widgets disponibles para añadir.'),
+                )
                     : ListView.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, index) {
-                          return _WidgetOptionTile(
-                            item: items[index],
-                            onAddPressed: (item) {
-                              Navigator.of(context).pop(item);
-                            },
-                          );
-                        },
-                      ),
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) =>
+                  const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (context, index) {
+                    return _WidgetOptionTile(
+                      item: items[index],
+                      onAddPressed: (item) {
+                        Navigator.of(context).pop(item);
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -56,14 +59,18 @@ class AddWidgetDialog extends StatelessWidget {
   }
 
   Widget _buildHeader(
-    BuildContext context,
-    TextTheme textTheme,
-    ColorScheme colorScheme,
-  ) {
+      BuildContext context,
+      TextTheme textTheme,
+      ColorScheme colorScheme,
+      ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.add_circle_outline, color: colorScheme.primary, size: 28),
+        Icon(
+          Icons.add_circle_outline,
+          color: colorScheme.primary,
+          size: 28,
+        ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
@@ -90,7 +97,10 @@ class AddWidgetDialog extends StatelessWidget {
           icon: const Icon(Icons.close, size: 18),
           visualDensity: VisualDensity.compact,
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          constraints: const BoxConstraints(
+            minWidth: 28,
+            minHeight: 28,
+          ),
         ),
       ],
     );
@@ -101,7 +111,10 @@ class _WidgetOptionTile extends StatelessWidget {
   final WidgetCatalogItem item;
   final ValueChanged<WidgetCatalogItem> onAddPressed;
 
-  const _WidgetOptionTile({required this.item, required this.onAddPressed});
+  const _WidgetOptionTile({
+    required this.item,
+    required this.onAddPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +131,11 @@ class _WidgetOptionTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(_iconForType(item.type), color: colorScheme.primary, size: 24),
+          Icon(
+            _iconForType(item.type),
+            color: colorScheme.primary,
+            size: 24,
+          ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(

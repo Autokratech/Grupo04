@@ -1,12 +1,12 @@
 from pydantic import BaseModel
+from typing import Any
 
 
 class DatosReportarMetrica(BaseModel):
-    hostname: str
-    type_id: int = 1
-    resource_type: str
-    resource_name: str
-    meta: dict
+    agent_name: str
+    agent_os: str
+    provider_name: str
+    agent_data: dict[str, Any]
 
 
 class RespuestaReporte(BaseModel):
@@ -15,14 +15,10 @@ class RespuestaReporte(BaseModel):
 
 
 class RespuestaMetrica(BaseModel):
-    ts: str
     agent_id: str
-    resource_type: str
-    resource_name: str
-    result: str | None = None
-    meta: dict | None = None
+    agent_data: dict[str, Any]
+    created_at: str
 
 
 class RespuestaRecurso(BaseModel):
     agent_id: str
-    resource_name: str

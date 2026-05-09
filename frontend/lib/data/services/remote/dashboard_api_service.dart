@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_dto.dart';
 import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
 import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tabs_response_dto.dart';
@@ -54,9 +55,9 @@ class DashboardApiService {
   }) async {
     final response = await apiClient
         .post(_dashboardTabsEndpoint(dashboardId: dashboardId), {
-          'tab_name': name.trim(),
-          'tab_index': tabIndex,
-        })
+      'tab_name': name.trim(),
+      'tab_index': tabIndex,
+    })
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -70,6 +71,30 @@ class DashboardApiService {
     );
   }
 
+  Future<DashboardTabDto> renameDashboardTab({
+    required String dashboardId,
+    required String tabId,
+    required String name,
+    required int tabIndex,
+  }) async {
+    final response = await apiClient
+        .put(_dashboardTabEndpoint(dashboardId: dashboardId, tabId: tabId), {
+      'tab_name': name.trim(),
+      'tab_index': tabIndex,
+    })
+        .timeout(_requestTimeout);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseMap = _decodeObject(response.body);
+      final tabMap = _extractTabFromCreateResponse(responseMap);
+      return DashboardTabDto.fromMap(tabMap);
+    }
+
+    throw Exception(
+      'Failed to rename dashboard tab: Status code ${response.statusCode}',
+    );
+  }
+
   Future<TabWidgetsResponseDto> getTabWidgets({
     required String dashboardId,
     required String tabId,
@@ -77,12 +102,12 @@ class DashboardApiService {
   }) async {
     final response = await apiClient
         .getStream(
-          _tabWidgetsEndpoint(
-            dashboardId: dashboardId,
-            tabId: tabId,
-            userId: userId,
-          ),
-        )
+      _tabWidgetsEndpoint(
+        dashboardId: dashboardId,
+        tabId: tabId,
+        userId: userId,
+      ),
+    )
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200) {
@@ -95,30 +120,6 @@ class DashboardApiService {
 
     throw Exception(
       'Failed to load dashboard widgets: Status code ${response.statusCode}',
-    );
-  }
-
-  Future<DashboardTabDto> renameDashboardTab({
-    required String dashboardId,
-    required String tabId,
-    required String name,
-    required int tabIndex,
-  }) async {
-    final response = await apiClient
-        .put(_dashboardTabEndpoint(dashboardId: dashboardId, tabId: tabId), {
-          'tab_name': name.trim(),
-          'tab_index': tabIndex,
-        })
-        .timeout(_requestTimeout);
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final responseMap = _decodeObject(response.body);
-      final tabMap = _extractTabFromCreateResponse(responseMap);
-      return DashboardTabDto.fromMap(tabMap);
-    }
-
-    throw Exception(
-      'Failed to rename dashboard tab: Status code ${response.statusCode}',
     );
   }
 
@@ -140,10 +141,6 @@ class DashboardApiService {
     throw Exception(
       'Failed to load widget catalog: Status code ${response.statusCode}',
     );
-  }
-
-  String _widgetCatalogEndpoint() {
-    return '/api/widgets/';
   }
 
   String _userDashboardEndpoint({required String userId}) {
@@ -178,6 +175,10 @@ class DashboardApiService {
     return '/api/dashboard/$encodedDashboardId/tabs/$encodedTabId/widgets?user_id=$encodedUserId';
   }
 
+  String _widgetCatalogEndpoint() {
+    return '/api/widgets/';
+  }
+
   Map<String, dynamic> _decodeObject(String body) {
     final decoded = jsonDecode(body);
 
@@ -188,9 +189,19 @@ class DashboardApiService {
     throw Exception('Expected JSON object response');
   }
 
+  List<dynamic> _decodeList(String body) {
+    final decoded = jsonDecode(body);
+
+    if (decoded is List<dynamic>) {
+      return decoded;
+    }
+
+    throw Exception('Expected JSON list response');
+  }
+
   Map<String, dynamic> _extractTabFromCreateResponse(
-    Map<String, dynamic> responseMap,
-  ) {
+      Map<String, dynamic> responseMap,
+      ) {
     if (responseMap.containsKey('tab_id')) {
       return responseMap;
     }
@@ -219,8 +230,8 @@ class DashboardApiService {
   }
 
   Future<Map<String, dynamic>> _decodeWidgetsSse(
-    http.StreamedResponse response,
-  ) async {
+      http.StreamedResponse response,
+      ) async {
     Map<String, dynamic>? skeletonEvent;
     Map<String, dynamic>? dataEvent;
 
@@ -255,9 +266,9 @@ class DashboardApiService {
     }
 
     await for (final rawLine
-        in response.stream
-            .transform(utf8.decoder)
-            .transform(const LineSplitter())) {
+    in response.stream
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())) {
       final line = rawLine.trimRight();
 
       if (line.isEmpty) {
@@ -296,15 +307,5 @@ class DashboardApiService {
       'tab_widgets': _extractList(skeletonEvent, 'tab_widgets'),
       'tab_widgets_data': _extractList(dataEvent, 'tab_widgets_data'),
     };
-  }
-
-  List<dynamic> _decodeList(String body) {
-    final decoded = jsonDecode(body);
-
-    if (decoded is List<dynamic>) {
-      return decoded;
-    }
-
-    throw Exception('Expected JSON list response');
   }
 }
