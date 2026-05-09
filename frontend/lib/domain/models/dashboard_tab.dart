@@ -9,10 +9,7 @@ class DashboardTab {
     required this.name,
   });
 
-  DashboardTab copyWith({
-    int? position,
-    String? name,
-  }) {
+  DashboardTab copyWith({int? position, String? name}) {
     return DashboardTab(
       id: id,
       position: position ?? this.position,

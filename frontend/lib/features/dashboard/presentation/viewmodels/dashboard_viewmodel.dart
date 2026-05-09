@@ -26,6 +26,8 @@ class DashboardViewModel extends ChangeNotifier {
   List<DashboardWidgetItem> get items => List.unmodifiable(_items);
   void _clearItems() => _items = [];
 
+  int _tabItemsLoadVersion = 0;
+
   List<WidgetCatalogItem> get widgetCatalogItems {
     return WidgetCatalogMock.items;
   }
@@ -40,7 +42,8 @@ class DashboardViewModel extends ChangeNotifier {
 
   bool _isCatalogItemAlreadyAdded(WidgetCatalogItem catalogItem) {
     return _items.any((item) {
-      return item.id == catalogItem.id || item.id.endsWith('_${catalogItem.id}');
+      return item.id == catalogItem.id ||
+          item.id.endsWith('_${catalogItem.id}');
     });
   }
 
@@ -249,7 +252,16 @@ class DashboardViewModel extends ChangeNotifier {
       }).toList()..sort((a, b) => a.position.compareTo(b.position));
 
       if (_selectedTab?.id == renamedTab.id) {
-        _selectedTab = renamedTab;
+        final updatedSelectedTab = _findTabById(renamedTab.id);
+
+        if (updatedSelectedTab != null) {
+          _selectedTab = updatedSelectedTab;
+
+          await _dashboardPreferencesService.saveSelectedTabId(
+            dashboardId: dashboard.id,
+            tabId: updatedSelectedTab.id,
+          );
+        }
       }
 
       notifyListeners();
@@ -383,6 +395,7 @@ class DashboardViewModel extends ChangeNotifier {
   Future<void> loadTabItems() async {
     final dashboard = _dashboard;
     final selectedTab = _selectedTab;
+    final loadVersion = ++_tabItemsLoadVersion;
 
     if (dashboard == null || selectedTab == null) {
       _clearSelectedItem();
@@ -393,13 +406,24 @@ class DashboardViewModel extends ChangeNotifier {
       return;
     }
 
+    final dashboardId = dashboard.id;
+    final tabId = selectedTab.id;
+
     _clearErrorMessage();
     _state = DashboardState.loading;
     notifyListeners();
 
     try {
       final List<DashboardWidgetItem> items = await _dashboardRepository
-          .getTabItems(dashboardId: dashboard.id, tabId: selectedTab.id);
+          .getTabItems(dashboardId: dashboardId, tabId: tabId);
+
+      if (loadVersion != _tabItemsLoadVersion) {
+        return;
+      }
+
+      if (_selectedTab?.id != tabId || _dashboard?.id != dashboardId) {
+        return;
+      }
 
       if (items.isEmpty) {
         _clearSelectedItem();
@@ -410,6 +434,14 @@ class DashboardViewModel extends ChangeNotifier {
         _state = DashboardState.loaded;
       }
     } catch (_) {
+      if (loadVersion != _tabItemsLoadVersion) {
+        return;
+      }
+
+      if (_selectedTab?.id != tabId || _dashboard?.id != dashboardId) {
+        return;
+      }
+
       _clearSelectedItem();
       _clearItems();
       _state = DashboardState.error;

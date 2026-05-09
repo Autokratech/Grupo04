@@ -195,19 +195,15 @@ class WidgetGrid extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return IconButton.outlined(
-        onPressed: onAddWidgetPressed,
-        icon: const Icon(Icons.add),
-        style: IconButton.styleFrom(
-          foregroundColor: colorScheme.primary,
-          backgroundColor: colorScheme.primary.withValues(alpha: 0.04),
-          side: BorderSide(
-            color: colorScheme.primary.withValues(alpha: 0.45),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+      onPressed: onAddWidgetPressed,
+      icon: const Icon(Icons.add),
+      style: IconButton.styleFrom(
+        foregroundColor: colorScheme.primary,
+        backgroundColor: colorScheme.primary.withValues(alpha: 0.04),
+        side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.45)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   bool _hasSameOrder(List<DashboardWidgetItem> newItems) {

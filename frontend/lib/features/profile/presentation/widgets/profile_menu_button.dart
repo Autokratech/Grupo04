@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
-import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/domain/models/app_user.dart';
 import 'package:frontend/domain/models/linked_provider_status.dart';
 import 'package:frontend/domain/models/user_role.dart';
@@ -19,8 +18,8 @@ class ProfileMenuButton extends StatefulWidget {
 }
 
 class _ProfileMenuButtonState extends State<ProfileMenuButton> {
-  static const double _menuWidth = 340;
-  static const double _loadingHeight = 120;
+  static const double _dialogMaxWidth = 520;
+  static const double _loadingHeight = 140;
 
   late final ProfileViewModel _viewModel;
 
@@ -38,25 +37,21 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextButton.icon(
       onPressed: _openProfileDialog,
       style: TextButton.styleFrom(
+        backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.md,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      icon: const Icon(
-        Icons.account_circle_outlined,
-        size: 25,
-      ),
-      label: Text(
-        'Perfil',
-        style: AppTextStyles.title
-      ),
+      icon: const Icon(Icons.account_circle_outlined, size: 28),
+      label: Text('Perfil', style: textTheme.titleMedium),
     );
   }
 
@@ -68,31 +63,50 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(AppSpacing.lg),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _menuWidth),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListenableBuilder(
-                    listenable: _viewModel,
-                    builder: (context, _) {
-                      return _buildMenuContent(
-                        context,
-                        onClose: () => Navigator.of(dialogContext).pop(),
-                      );
-                    },
-                  ),
-                ],
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(AppSpacing.lg),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
-            ),
-          ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: _dialogMaxWidth,
+                  maxHeight: constraints.maxHeight * 0.85,
+                ),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.lg + 32,
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                      ),
+                      child: ListenableBuilder(
+                        listenable: _viewModel,
+                        builder: (context, _) {
+                          return SingleChildScrollView(
+                            child: _buildDialogContent(context),
+                          );
+                        },
+                      ),
+                    ),
+                    Positioned(
+                      top: AppSpacing.sm,
+                      right: AppSpacing.sm,
+                      child: IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        icon: const Icon(Icons.close, size: 18),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -107,10 +121,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     widget.onLoggedOut();
   }
 
-  Widget _buildMenuContent(
-    BuildContext context, {
-    required VoidCallback onClose,
-  }) {
+  Widget _buildDialogContent(BuildContext context) {
     switch (_viewModel.state) {
       case ProfileState.initial:
       case ProfileState.loading:
@@ -126,7 +137,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           return _buildErrorContent(context);
         }
 
-        return _buildLoadedContent(context, user, onClose: onClose);
+        return _buildLoadedContent(context, user);
     }
   }
 
@@ -144,118 +155,153 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     );
   }
 
-  Widget _buildLoadedContent(
-      BuildContext context,
-      AppUser user, {
-        required VoidCallback onClose,
-      }) {
+  Widget _buildLoadedContent(BuildContext context, AppUser user) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAccountInfo(context, user, onClose: onClose),
-        const SizedBox(height: AppSpacing.lg),
-        _buildProvidersSection(),
-        const SizedBox(height: AppSpacing.lg),
-        _buildLogoutButton(),
+        _buildAccountInfo(context, user),
+        const SizedBox(height: AppSpacing.md),
+        _buildProvidersSection(context),
       ],
     );
   }
 
-  Widget _buildAccountInfo(
-      BuildContext context,
-      AppUser user, {
-        required VoidCallback onClose,
-      }) {
+  Widget _buildAccountInfo(BuildContext context, AppUser user) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Icon(Icons.account_circle_outlined, size: 32),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                user.email,
-                style: textTheme.titleSmall,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _roleLabel(user.role),
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.32),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.account_circle_outlined,
+            size: 36,
+            color: colorScheme.primary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.email,
+                  style: textTheme.titleSmall,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              if (!user.active) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Cuenta inactiva',
+                  _roleLabel(user.role),
                   style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.error,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
+                if (!user.active) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Cuenta inactiva',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        IconButton(
-          onPressed: onClose,
-          icon: const Icon(Icons.close, size: 18),
-          visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: 32,
-            minHeight: 32,
-          ),
-        ),
-      ],
+          const SizedBox(width: AppSpacing.sm),
+          _buildCompactLogoutButton(),
+        ],
+      ),
     );
   }
 
-  Widget _buildProvidersSection() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Conexiones'),
-        SizedBox(height: AppSpacing.sm),
-        LinkedProviderTile(
-          icon: Icons.code,
-          title: 'GitHub',
-          description:
-              'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
-          status: LinkedProviderStatus.disconnected,
-          actionLabel: 'Conectar',
+  Widget _buildProvidersSection(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Conexiones', style: textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text(
+            'Vinculaciones preparadas para futuros widgets. OAuth real pendiente de contrato backend.',
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          const LinkedProviderTile(
+            icon: Icons.code,
+            title: 'GitHub',
+            description:
+                'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
+            status: LinkedProviderStatus.disconnected,
+            actionLabel: 'Conectar',
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const LinkedProviderTile(
+            icon: Icons.account_tree_outlined,
+            title: 'GitLab',
+            description:
+                'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
+            status: LinkedProviderStatus.disconnected,
+            actionLabel: 'Conectar',
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const LinkedProviderTile(
+            icon: Icons.memory_outlined,
+            title: 'Agentes',
+            description:
+                'Registra un agente para recibir métricas de sistema e infraestructura.',
+            status: LinkedProviderStatus.unavailable,
+            actionLabel: 'Gestionar',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactLogoutButton() {
+    return FilledButton.tonalIcon(
+      onPressed: _viewModel.isLoggingOut ? null : _logout,
+      icon: _viewModel.isLoggingOut
+          ? const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.logout, size: 18),
+      label: Text(_viewModel.isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'),
+      style: FilledButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
         ),
-        LinkedProviderTile(
-          icon: Icons.account_tree_outlined,
-          title: 'GitLab',
-          description:
-              'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
-          status: LinkedProviderStatus.disconnected,
-          actionLabel: 'Conectar',
-        ),
-        LinkedProviderTile(
-          icon: Icons.memory_outlined,
-          title: 'Agentes',
-          description:
-              'Registra un agente para recibir métricas de sistema e infraestructura.',
-          status: LinkedProviderStatus.unavailable,
-          actionLabel: 'Gestionar',
-        ),
-      ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 
   Widget _buildLogoutButton() {
     return SizedBox(
       width: double.infinity,
-      child: TextButton.icon(
+      child: FilledButton.tonalIcon(
         onPressed: _viewModel.isLoggingOut ? null : _logout,
         icon: _viewModel.isLoggingOut
             ? const SizedBox(
@@ -265,6 +311,9 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
               )
             : const Icon(Icons.logout),
         label: Text(_viewModel.isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'),
+        style: FilledButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       ),
     );
   }
@@ -294,15 +343,11 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
   }
 
   String _roleLabel(UserRole role) {
-    switch (role) {
-      case UserRole.superadmin:
-        return 'Superadmin';
-      case UserRole.admin:
-        return 'Admin';
-      case UserRole.user:
-        return 'Usuario';
-      case UserRole.guest:
-        return 'Invitado';
-    }
+    return switch (role) {
+      UserRole.superadmin => 'Superadmin',
+      UserRole.admin => 'Admin',
+      UserRole.user => 'Usuario',
+      UserRole.guest => 'Invitado',
+    };
   }
 }

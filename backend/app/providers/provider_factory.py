@@ -2,6 +2,7 @@ from .git_provider import *
 from .cloud_provider import *
 from .agent_provider import *
 from app.repositories.interfaces.providers_interface import IProvidersRepository
+from app.repositories.interfaces.agents_interface import IAgentsRepository
 from app.repositories.interfaces.endpoints_interface import IEndpointsRepository
 from app.models.provider_model import *
 from app.services.oauth_manager import OAuthManager
@@ -19,15 +20,15 @@ from uuid import UUID
 
 class ProviderFactory:
 
-    def __init__(self, providers_repository: IProvidersRepository, endpoints_repository: IEndpointsRepository, oauth_manager : OAuthManager):
+    def __init__(self, providers_repository: IProvidersRepository, endpoints_repository: IEndpointsRepository, 
+                 agents_repository: IAgentsRepository, oauth_manager : OAuthManager):
         self.providers_repository = providers_repository
-        self.endpoints_repository  = endpoints_repository
         self.oauth_manager = oauth_manager
 
         self._provider_factory_types = {
-            "git_provider":   GitProvider(oauth_manager),
-            "cloud_provider": CloudProvider(oauth_manager),
-            "agent_provider": AgentProvider()
+            "git_provider":   GitProvider(oauth_manager, endpoints_repository),
+            "cloud_provider": CloudProvider(oauth_manager, endpoints_repository),
+            "agent_provider": AgentProvider(agents_repository)
         }
 
 
@@ -58,5 +59,5 @@ class ProviderFactory:
         '''
 
     async def get_provider_instance(self, provider_factory_type : object, provider_name : str, user_id: UUID):
-        return await provider_factory_type.get_provider_instance(provider_name, self.endpoints_repository, user_id)
+        return await provider_factory_type.get_provider_instance(provider_name, user_id)
 

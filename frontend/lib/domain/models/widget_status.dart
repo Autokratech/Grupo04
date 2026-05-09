@@ -1,5 +1,1 @@
-enum WidgetStatus {
-  ok,
-  error,
-  inactive
-}
+enum WidgetStatus { ok, error, inactive }

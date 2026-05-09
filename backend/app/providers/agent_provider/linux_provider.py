@@ -1,16 +1,15 @@
-from app.repositories.interfaces.providers_interface import IProvidersRepository
-import app.repositories.metrics_repository as mr
-from app.schemas.providers.agent_schema import AgentResponse, MetricItem
+from app.repositories.interfaces.agents_interface import IAgentsRepository
+from app.schemas.providers.linux_agent_schema import *
 
 
 class LinuxProvider():
     PROVIDER_NAME = "linux"
 
-    def __init__(self, repository: IProvidersRepository):
-        self.repository = repository
+    def __init__(self, agents_repository: IAgentsRepository):
+        self.repository = agents_repository
 
-    async def fetch_provider_data(self, data_type: str, data_config: dict):
-        raw = mr.listar_metricas_por_resource_type_y_tipo_agente(data_type, self.PROVIDER_NAME)
-        items = [MetricItem(**m) for m in raw]
-        return AgentResponse(count=len(items), items=items).model_dump()
 
+    async def fetch_provider_data(self, data_type, data_config):
+        response = await self.repository.get_agent_metric(data_config["agent_id"])
+        return LinuxAgentResponse(count=len(response.data), items=response.data).model_dump()
+    

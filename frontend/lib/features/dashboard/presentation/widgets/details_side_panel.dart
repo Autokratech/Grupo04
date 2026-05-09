@@ -40,10 +40,7 @@ class DetailsSidePanel extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-          ),
+          _buildHeader(colorScheme: colorScheme, textTheme: textTheme),
           const SizedBox(height: AppSpacing.lg),
           _buildPrimaryValueSection(
             colorScheme: colorScheme,
@@ -56,11 +53,6 @@ class DetailsSidePanel extends StatelessWidget {
               textTheme: textTheme,
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          _buildMetadataSection(
-            colorScheme: colorScheme,
-            textTheme: textTheme,
-          ),
           if (hasDescription) ...[
             const SizedBox(height: AppSpacing.lg),
             _buildDescriptionSection(
@@ -71,9 +63,7 @@ class DetailsSidePanel extends StatelessWidget {
           ],
           if (onDelete != null) ...[
             const SizedBox(height: AppSpacing.lg),
-            _buildDeleteAction(
-              colorScheme: colorScheme,
-            ),
+            _buildDeleteAction(colorScheme: colorScheme),
           ],
         ],
       ),
@@ -84,8 +74,16 @@ class DetailsSidePanel extends StatelessWidget {
     }
 
     return Card(
+      elevation: 6,
+      shadowColor: Colors.black.withValues(alpha: 0.50),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: AppColors.primary.withValues(alpha: 0.50),
+          width: 2,
+        ),
+      ),
       child: content,
     );
   }
@@ -95,19 +93,20 @@ class DetailsSidePanel extends StatelessWidget {
     required TextTheme textTheme,
   }) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 46,
+          height: 46,
           decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(10),
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primary),
           ),
           child: Icon(
             _iconForType(item.type),
-            color: colorScheme.onPrimaryContainer,
-            size: 22,
+            color: colorScheme.onPrimary,
+            size: 24,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -116,39 +115,83 @@ class DetailsSidePanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Detalles del widget',
-                style: textTheme.labelMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
                 item.title,
                 style: textTheme.titleLarge?.copyWith(
                   color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
+                  height: 1.1,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      WidgetLabels.type(item.type),
+                      style: textTheme.labelMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _buildHeaderStatusBadge(
+                    colorScheme: colorScheme,
+                    textTheme: textTheme,
+                  ),
+                ],
               ),
             ],
           ),
         ),
         if (onClose != null) ...[
+          const SizedBox(width: AppSpacing.sm),
           IconButton(
             onPressed: onClose,
-            icon: Icon(
-              _closeIconForPlacement(),
-              size: 28,
+            icon: Icon(_closeIconForPlacement(), size: 28),
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              foregroundColor: colorScheme.onSurfaceVariant,
             ),
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 28,
-              minHeight: 28,
-            ),
+            constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildHeaderStatusBadge({
+    required ColorScheme colorScheme,
+    required TextTheme textTheme,
+  }) {
+    final statusColor = _statusColor(colorScheme);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: statusColor.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        WidgetLabels.status(item.status),
+        style: textTheme.labelSmall?.copyWith(
+          color: statusColor,
+          fontWeight: FontWeight.w800,
+          height: 1,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 
@@ -156,13 +199,25 @@ class DetailsSidePanel extends StatelessWidget {
     required ColorScheme colorScheme,
     required TextTheme textTheme,
   }) {
+    final isInactive = item.status == WidgetStatus.inactive;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.lg,
+      ),
       decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.18)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.primary.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -170,17 +225,24 @@ class DetailsSidePanel extends StatelessWidget {
           Text(
             'Valor actual',
             style: textTheme.labelMedium?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             item.primaryValue,
-            style: textTheme.headlineSmall?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
+            textAlign: TextAlign.center,
+            style: textTheme.headlineMedium?.copyWith(
+              color: isInactive
+                  ? colorScheme.onSurfaceVariant
+                  : colorScheme.onSurface,
+              fontWeight: FontWeight.w900,
+              height: 1.0,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -218,89 +280,15 @@ class DetailsSidePanel extends StatelessWidget {
     );
   }
 
-  Widget _buildMetadataSection({
+  Widget _buildSectionCard({
     required ColorScheme colorScheme,
-    required TextTheme textTheme,
-  }) {
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: [
-        _buildInfoChip(
-          colorScheme: colorScheme,
-          textTheme: textTheme,
-          icon: Icons.label,
-          value: WidgetLabels.type(item.type),
-        ),
-        _buildStatusBadge(colorScheme: colorScheme, textTheme: textTheme),
-      ],
-    );
-  }
-
-  Widget _buildInfoChip({
-    required ColorScheme colorScheme,
-    required TextTheme textTheme,
-    required IconData icon,
-    required String value,
+    required Widget child,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            'Tipo: ',
-            style: textTheme.labelMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Text(
-            value,
-            style: textTheme.labelMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge({
-    required ColorScheme colorScheme,
-    required TextTheme textTheme,
-  }) {
-    final statusColor = _statusColor(colorScheme);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: item.status == WidgetStatus.inactive
-            ? Border.all(color: statusColor.withValues(alpha: 0.35))
-            : null,
-      ),
-      child: Text(
-        WidgetLabels.status(item.status),
-        style: textTheme.labelMedium?.copyWith(
-          color: statusColor,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+      child: child,
     );
   }
 
@@ -309,49 +297,52 @@ class DetailsSidePanel extends StatelessWidget {
     required TextTheme textTheme,
     required String description,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Descripción',
-          style: textTheme.titleSmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w700,
+    return _buildSectionCard(
+      colorScheme: colorScheme,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notes_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Descripción',
+                style: textTheme.titleSmall?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          description,
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            height: 1.35,
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            description,
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildDeleteAction({
-    required ColorScheme colorScheme,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
+  Widget _buildDeleteAction({required ColorScheme colorScheme}) {
+    return Align(
+      alignment: Alignment.center,
+      child: TextButton.icon(
         onPressed: onDelete,
-        icon: Icon(
-          Icons.delete_outline,
-          color: colorScheme.error,
-        ),
-        label: Text(
-          'Quitar widget',
-          style: TextStyle(
-            color: colorScheme.error,
-            fontWeight: FontWeight.w700,
+        icon: const Icon(Icons.delete_outline_rounded, size: 18),
+        label: const Text('Quitar widget'),
+        style: TextButton.styleFrom(
+          foregroundColor: colorScheme.error,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(
-            color: colorScheme.error.withValues(alpha: 0.45),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
