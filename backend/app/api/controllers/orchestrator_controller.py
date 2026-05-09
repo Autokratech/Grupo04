@@ -15,7 +15,7 @@ from app.providers.provider_factory import *
 from app.core.cryptography.crypto_manager import CryptoManager
 from app.core.cryptography.kms_providers.azure_kms import AzureKMSClient
 from app.core.database import create_supabase_client
-
+from app.core.guardias import pedir_usuario_logueado
 
 # -- Preparación del servicio del orquestador e inyección de dependencias
 async def get_orchestrator_service(supabase : AsyncClient = Depends(create_supabase_client)):
@@ -39,13 +39,10 @@ orchestrator_service = Annotated[OrchestratorService, Depends(get_orchestrator_s
 
 
 # -- Controladores para gestionar el orquestador
-#-!BORRAR Solicitud user_id, obtener de la sesión, revisar en base a lo integrado en el auth
 #- La solicitud de dashboard_id es innecesaria, pero se realiza para mantener la coherencia con los endpoints
-async def get_active_tab_widgets(user_id: UUID, dashboard_id : UUID, tab_id: UUID, service: orchestrator_service)-> AsyncIterable[ServerSentEvent]: 
-    async for event in service.orchestate_user_tab(user_id, tab_id):
+async def get_active_tab_widgets(dashboard_id : UUID, tab_id: UUID, service: orchestrator_service, user=Depends(pedir_usuario_logueado))-> AsyncIterable[ServerSentEvent]: 
+    async for event in service.orchestate_user_tab(UUID(user["id"]), tab_id):
         yield ServerSentEvent(data=event["data"], event=event["event"])
 
 async def add_widget_to_active_tab(dashboard_id : UUID, tab_id: UUID, body: AddTabWidget, service: orchestrator_service): 
     return await service.add_widget_to_active_tab(tab_id, body.model_dump(mode="json"))
-
-#REVISAR: https://fastapi.tiangolo.com/tutorial/server-sent-events/#serversentevent

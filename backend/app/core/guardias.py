@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-esquema_bearer = HTTPBearer()
+esquema_bearer = HTTPBearer(auto_error=False)
 
 # Comprueba que hay un usuario cargado en la request
 def pedir_usuario_logueado(
