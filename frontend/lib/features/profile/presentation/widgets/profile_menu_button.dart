@@ -37,21 +37,35 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
     return TextButton.icon(
       onPressed: _openProfileDialog,
-      style: TextButton.styleFrom(
-        backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      icon: Icon(
+        Icons.account_circle_outlined,
+        size: 30,
+        color: colorScheme.primary,
       ),
-      icon: const Icon(Icons.account_circle_outlined, size: 28),
-      label: Text('Perfil', style: textTheme.titleMedium),
+      label: const Text('Perfil'),
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 13,
+        ),
+        textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        side: BorderSide(
+          color: colorScheme.primary.withValues(alpha: 0.55),
+          width: 1.5,
+        ),
+      ),
     );
   }
 

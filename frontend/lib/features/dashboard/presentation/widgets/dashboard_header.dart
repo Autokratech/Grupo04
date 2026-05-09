@@ -48,7 +48,12 @@ class DashboardHeader extends StatelessWidget {
           )
         else
           const Spacer(),
-        ?trailing,
+        if (trailing != null) ...[
+          Padding(
+            padding: const EdgeInsets.only(right: 20, top: 8),
+            child: trailing!,
+          ),
+        ],
       ],
     );
   }

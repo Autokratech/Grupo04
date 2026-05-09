@@ -175,23 +175,20 @@ class DashboardCard extends StatelessWidget {
   Widget _buildProviderBadge({required bool isCompact}) {
     final size = isCompact ? 18.0 : 22.0;
 
-    return Tooltip(
-      message: item.provider!,
-      child: Container(
-        width: isCompact ? 28 : 32,
-        height: isCompact ? 28 : 32,
-        padding: EdgeInsets.all(isCompact ? 5 : 6),
-        decoration: BoxDecoration(
-          color: AppColors.textSecondary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: AppColors.textSecondary.withValues(alpha: 0.10),
-          ),
+    return Container(
+      width: isCompact ? 28 : 32,
+      height: isCompact ? 28 : 32,
+      padding: EdgeInsets.all(isCompact ? 5 : 6),
+      decoration: BoxDecoration(
+        color: AppColors.textSecondary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.textSecondary.withValues(alpha: 0.10),
         ),
-        child: ProviderLogo(
-          provider: item.provider,
-          size: size,
-        ),
+      ),
+      child: ProviderLogo(
+        provider: item.provider,
+        size: size,
       ),
     );
   }

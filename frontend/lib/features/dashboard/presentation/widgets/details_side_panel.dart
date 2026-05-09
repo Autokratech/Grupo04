@@ -80,8 +80,8 @@ class DetailsSidePanel extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
-          color: AppColors.primary.withValues(alpha: 0.50),
-          width: 2,
+          color: AppColors.primary.withValues(alpha: 0.15),
+          width: 2.5,
         ),
       ),
       child: content,

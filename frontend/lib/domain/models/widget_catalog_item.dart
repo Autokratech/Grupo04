@@ -7,6 +7,8 @@ class WidgetCatalogItem {
   final String description;
   final String metadataLabel;
   final String? provider;
+  final String? dataType;
+  final Map<String, dynamic> customConfig;
 
   const WidgetCatalogItem({
     required this.id,
@@ -15,5 +17,15 @@ class WidgetCatalogItem {
     required this.description,
     required this.metadataLabel,
     this.provider,
+    this.dataType,
+    this.customConfig = const {},
   });
+
+  bool get canBeCreatedRemotely {
+    return id.trim().isNotEmpty &&
+        provider != null &&
+        provider!.trim().isNotEmpty &&
+        dataType != null &&
+        dataType!.trim().isNotEmpty;
+  }
 }
