@@ -34,6 +34,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const double _portraitBottomSheetHeightFactor = 0.60;
   static const double _landscapeBottomSheetHeightFactor = 0.90;
 
+  static const double _footerHeight = 34;
+  static const double _footerShadowHeight = 22;
+
   final DashboardViewModel _viewModel = DashboardViewModel(
     dashboardRepository: sl<DashboardRepository>(),
     dashboardPreferencesService: sl<DashboardPreferencesService>(),
@@ -70,6 +73,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final isMobileLandscape =
                 AppPlatform.isMobile &&
                 MediaQuery.of(context).orientation == Orientation.landscape;
+
+            final showFooter = !AppPlatform.isMobile;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -168,7 +173,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         placement: DetailsPanelPlacement.bottom,
                                         onClose: _viewModel.clearSelectedItem,
                                         onDelete: () {
-                                          _handleDeleteWidgetPressed(selectedItem);
+                                          _handleDeleteWidgetPressed(
+                                            selectedItem,
+                                          );
                                         },
                                       ),
                                     ),
@@ -177,23 +184,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               );
                             }
 
+                            final sidePanelTopOffset = AppSpacing.xs;
+                            final sidePanelBottomReservedSpace =
+                                _footerHeight + AppSpacing.sm;
+                            final sidePanelHeight =
+                                constraints.maxHeight -
+                                sidePanelTopOffset -
+                                sidePanelBottomReservedSpace;
+
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Expanded(child: mainContent),
                                 if (selectedItem != null) ...[
                                   const SizedBox(width: AppSpacing.lg),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: AppSpacing.md),
-                                    child: SizedBox(
-                                      width: _detailsPanelWidth,
-                                      child: DetailsSidePanel(
-                                        item: selectedItem,
-                                        placement: DetailsPanelPlacement.side,
-                                        onClose: _viewModel.clearSelectedItem,
-                                        onDelete: () {
-                                          _handleDeleteWidgetPressed(selectedItem);
-                                        },
+                                  Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: AppSpacing.md,
+                                      ),
+                                      child: SizedBox(
+                                        width: _detailsPanelWidth,
+                                        height: sidePanelHeight,
+                                        child: DetailsSidePanel(
+                                          item: selectedItem,
+                                          placement: DetailsPanelPlacement.side,
+                                          onClose: _viewModel.clearSelectedItem,
+                                          onDelete: () {
+                                            _handleDeleteWidgetPressed(
+                                              selectedItem,
+                                            );
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -210,6 +233,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         right: 0,
                         child: _buildHeaderShadowOverlay(),
                       ),
+
+                      if (showFooter) ...[
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: _footerHeight,
+                          child: _buildFooterShadowOverlay(),
+                        ),
+
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: _buildFooterBar(),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -396,7 +435,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final isMobilePortrait =
         AppPlatform.isMobile &&
-            MediaQuery.of(context).orientation == Orientation.portrait;
+        MediaQuery.of(context).orientation == Orientation.portrait;
 
     return Container(
       width: double.infinity,
@@ -418,7 +457,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             bottom: 0,
             child: Container(
               height: 2,
-              color: AppColors.primary.withValues(alpha: 0.5),
+              color: AppColors.primary.withValues(alpha: 0.15),
             ),
           ),
         ],
@@ -434,6 +473,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.45),
+              Colors.black.withValues(alpha: 0.15),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.40, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooterBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final year = DateTime.now().year;
+
+    return Container(
+      height: _footerHeight,
+      width: double.infinity,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            width: 2,
+            color: AppColors.primary.withValues(alpha: 0.151),
+          ),
+        ),
+      ),
+      child: Text(
+        '© $year Autokratech. Todos los derechos reservados.',
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooterShadowOverlay() {
+    return IgnorePointer(
+      child: Container(
+        height: _footerShadowHeight,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
             colors: [
               Colors.black.withValues(alpha: 0.45),
               Colors.black.withValues(alpha: 0.15),

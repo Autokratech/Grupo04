@@ -64,8 +64,6 @@ class DashboardCard extends StatelessWidget {
                 final isCompact =
                     constraints.maxWidth <= 180 || constraints.maxHeight <= 150;
 
-                final isMobile = AppPlatform.isMobile;
-
                 final textTheme = Theme.of(context).textTheme;
                 final titleStyle = isCompact
                     ? textTheme.titleSmall
@@ -90,38 +88,21 @@ class DashboardCard extends StatelessWidget {
                       SizedBox(
                         height: isCompact ? AppSpacing.xs : AppSpacing.sm,
                       ),
-                      if (isMobile)
-                        Expanded(
-                          child: Center(
-                            child: Text(
-                              item.primaryValue,
-                              textAlign: TextAlign.center,
-                              style: valueStyle?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                height: 1.15,
-                                color: isInactive ? AppColors.textSecondary : null,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                      else ...[
-                        Center(
+                      Expanded(
+                        child: Align(
+                          alignment: const Alignment(0, 0),
                           child: Text(
                             item.primaryValue,
                             textAlign: TextAlign.center,
                             style: valueStyle?.copyWith(
                               fontWeight: FontWeight.w800,
-                              height: 1.2,
                               color: isInactive ? AppColors.textSecondary : null,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Spacer(),
-                      ],
+                      ),
                       _buildFooter(
                         isCompact: isCompact,
                         labelStyle: labelStyle,
@@ -144,7 +125,8 @@ class DashboardCard extends StatelessWidget {
   }) {
     final iconBoxSize = isCompact ? 30.0 : 34.0;
     final iconSize = isCompact ? 17.0 : 20.0;
-    final hasProvider = item.provider != null && item.provider!.trim().isNotEmpty;
+    final hasProvider =
+        item.provider != null && item.provider!.trim().isNotEmpty;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -207,10 +189,7 @@ class DashboardCard extends StatelessWidget {
           color: AppColors.textSecondary.withValues(alpha: 0.10),
         ),
       ),
-      child: ProviderLogo(
-        provider: item.provider,
-        size: size,
-      ),
+      child: ProviderLogo(provider: item.provider, size: size),
     );
   }
 
