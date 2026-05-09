@@ -3,9 +3,5 @@ class Dashboard {
   final String? theme;
   final String? language;
 
-  const Dashboard({
-    required this.id,
-    this.theme,
-    this.language,
-  });
+  const Dashboard({required this.id, this.theme, this.language});
 }

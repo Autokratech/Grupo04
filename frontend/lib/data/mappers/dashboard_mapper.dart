@@ -20,11 +20,12 @@ class DashboardMapper {
   }
 
   static List<DashboardTab> tabsToDomain(DashboardTabsResponseDto dto) {
-    final tabs = dto.tabs
-        .where((tab) => tab.id.trim().isNotEmpty)
-        .map(_tabToDomain)
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position));
+    final tabs =
+        dto.tabs
+            .where((tab) => tab.id.trim().isNotEmpty)
+            .map(_tabToDomain)
+            .toList()
+          ..sort((a, b) => a.position.compareTo(b.position));
 
     return _normalizeTabPositions(tabs);
   }
@@ -47,8 +48,7 @@ class DashboardMapper {
 
   static List<DashboardTab> _normalizeTabPositions(List<DashboardTab> tabs) {
     return [
-      for (var i = 0; i < tabs.length; i++)
-        tabs[i].copyWith(position: i),
+      for (var i = 0; i < tabs.length; i++) tabs[i].copyWith(position: i),
     ];
   }
 

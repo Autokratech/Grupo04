@@ -19,7 +19,7 @@ class SessionStorageService {
   Future<void> saveSession({
     required String accessToken,
     required String tokenType,
-    required String userId
+    required String userId,
   }) async {
     await _sharedPreferences.setString(_accessToken, accessToken);
     await _sharedPreferences.setString(_tokenType, tokenType);

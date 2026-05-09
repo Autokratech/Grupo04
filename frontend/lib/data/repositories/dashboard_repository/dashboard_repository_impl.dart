@@ -1,5 +1,6 @@
 import 'package:frontend/data/mappers/dashboard_mapper.dart';
 import 'package:frontend/data/mappers/dashboard_widget_mapper.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
 import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
 import 'package:frontend/data/services/local/session_storage_service.dart';
@@ -85,9 +86,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
       );
     }
 
+    final currentTabsDto = await apiService.getDashboardTabs(
+      dashboardId: dashboardId,
+    );
+
+    final nextTabIndex = _nextRemoteTabIndex(currentTabsDto.tabs);
+
     final createdTabDto = await apiService.createDashboardTab(
       dashboardId: dashboardId,
       name: normalizedName,
+      tabIndex: nextTabIndex,
     );
 
     final createdTab = DashboardMapper.tabToDomain(createdTabDto);
@@ -110,12 +118,11 @@ class DashboardRepositoryImpl implements DashboardRepository {
         );
 
         return refreshedTabs.firstWhere(
-              (tab) => tab.id == createdTab.id,
+          (tab) => tab.id == createdTab.id,
           orElse: () => createdTab,
         );
       }
-    } catch (_) {
-    }
+    } catch (_) {}
 
     await _cacheCreatedRemoteTab(
       dashboardId: dashboardId,
@@ -131,11 +138,66 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String tabId,
     required String name,
   }) async {
-    return localDataSource.renameLocalTab(
+    final normalizedName = _normalizeTabName(name);
+
+    if (_isLocalDashboardId(dashboardId)) {
+      return localDataSource.renameLocalTab(
+        dashboardId: dashboardId,
+        tabId: tabId,
+        name: normalizedName,
+      );
+    }
+
+    final currentTabsDto = await apiService.getDashboardTabs(
+      dashboardId: dashboardId,
+    );
+
+    final currentTabDto = currentTabsDto.tabs.firstWhere(
+      (tab) => tab.id == tabId,
+      orElse: () => throw StateError('No se encontró la tab remota'),
+    );
+
+    final remoteTabIndex = currentTabDto.index;
+
+    if (remoteTabIndex == null) {
+      throw StateError('La tab remota no tiene tab_index válido');
+    }
+
+    final updatedTabDto = await apiService.renameDashboardTab(
       dashboardId: dashboardId,
       tabId: tabId,
-      name: _normalizeTabName(name),
+      name: normalizedName,
+      tabIndex: remoteTabIndex,
     );
+
+    final updatedTab = DashboardMapper.tabToDomain(updatedTabDto);
+
+    try {
+      final refreshedTabsDto = await apiService.getDashboardTabs(
+        dashboardId: dashboardId,
+      );
+
+      final refreshedTabs = DashboardMapper.tabsToDomain(refreshedTabsDto);
+
+      if (refreshedTabs.isNotEmpty) {
+        await localDataSource.cacheTabs(
+          dashboardId: dashboardId,
+          tabs: refreshedTabs,
+        );
+
+        return refreshedTabs.firstWhere(
+          (tab) => tab.id == updatedTab.id,
+          orElse: () => updatedTab,
+        );
+      }
+    } catch (_) {}
+
+    await _cacheCreatedRemoteTab(
+      dashboardId: dashboardId,
+      createdTab: updatedTab,
+    );
+
+    return updatedTab;
   }
 
   @override
@@ -178,6 +240,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final responseDto = await apiService.getTabWidgets(
         dashboardId: dashboardId,
         tabId: tabId,
+        userId: _currentUserId,
       );
 
       final remoteWidgets = DashboardWidgetMapper.toDomainList(responseDto);
@@ -224,10 +287,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       position: cachedWidgets.length,
     );
 
-    final updatedWidgets = [
-      ...cachedWidgets,
-      newWidget,
-    ];
+    final updatedWidgets = [...cachedWidgets, newWidget];
 
     final normalizedWidgets = [
       for (var i = 0; i < updatedWidgets.length; i++)
@@ -419,12 +479,27 @@ class DashboardRepositoryImpl implements DashboardRepository {
     return dashboardId.startsWith('dashboard_');
   }
 
-  bool _isLocalTabId({
-    required String dashboardId,
-    required String tabId,
-  }) {
+  bool _isLocalTabId({required String dashboardId, required String tabId}) {
     return tabId == _defaultTabIdForDashboard(dashboardId) ||
         tabId.startsWith('${dashboardId}_local_');
+  }
+
+  int _nextRemoteTabIndex(List<DashboardTabDto> tabs) {
+    if (tabs.isEmpty) {
+      return 1;
+    }
+
+    var maxIndex = 0;
+
+    for (final tab in tabs) {
+      final tabIndex = tab.index;
+
+      if (tabIndex != null && tabIndex > maxIndex) {
+        maxIndex = tabIndex;
+      }
+    }
+
+    return maxIndex + 1;
   }
 
   // TODO: sustituir por widgets recibidos desde backend.
@@ -454,7 +529,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
         type: WidgetType.status,
         status: WidgetStatus.ok,
         primaryValue: 'Operativa',
-        description: 'Estado actual del proceso de sincronización entre sistemas.',
+        description:
+            'Estado actual del proceso de sincronización entre sistemas.',
         position: 2,
       ),
       DashboardWidgetItem(
@@ -472,7 +548,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
         type: WidgetType.metric,
         status: WidgetStatus.ok,
         primaryValue: '68%',
-        description: 'Porcentaje de memoria utilizada en el entorno monitorizado.',
+        description:
+            'Porcentaje de memoria utilizada en el entorno monitorizado.',
         position: 4,
       ),
       DashboardWidgetItem(
@@ -526,7 +603,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
         type: WidgetType.alert,
         status: WidgetStatus.inactive,
         primaryValue: 'Sin datos',
-        description: 'Estado pendiente de integración con proveedor de seguridad.',
+        description:
+            'Estado pendiente de integración con proveedor de seguridad.',
         position: 10,
       ),
       DashboardWidgetItem(

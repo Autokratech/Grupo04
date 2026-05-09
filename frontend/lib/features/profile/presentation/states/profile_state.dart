@@ -1,6 +1,1 @@
-enum ProfileState {
-  initial,
-  loading,
-  loaded,
-  error,
-}
+enum ProfileState { initial, loading, loaded, error }

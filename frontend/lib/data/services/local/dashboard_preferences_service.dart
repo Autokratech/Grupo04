@@ -15,10 +15,7 @@ class DashboardPreferencesService {
     required String dashboardId,
     required String tabId,
   }) {
-    return sharedPreferences.setString(
-      _keyForDashboard(dashboardId),
-      tabId,
-    );
+    return sharedPreferences.setString(_keyForDashboard(dashboardId), tabId);
   }
 
   Future<void> clearSelectedTabId({required String dashboardId}) {

@@ -4,8 +4,8 @@ import 'package:frontend/data/repositories/dashboard_repository/dashboard_reposi
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository_impl.dart';
 import 'package:frontend/data/repositories/profile_repository/profile_repository.dart';
 import 'package:frontend/data/repositories/profile_repository/profile_repository_impl.dart';
-import 'package:frontend/data/services/local/dashboard_database_service.dart';
 import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
+import 'package:frontend/data/services/local/dashboard_local_data_source_factory.dart';
 import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
 import 'package:frontend/data/services/local/session_storage_service.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
@@ -34,11 +34,11 @@ Future<void> setupDependencies() async {
 
   sl.registerLazySingleton<http.Client>(() => http.Client());
 
-  // Testing on Android -> http://10.0.2.2:8000
-  // Testing on Windows -> http://127.0.0.1:8000
+  // Testing on Android -> http://10.0.2.2:8001
+  // Testing on Windows -> http://127.0.0.1:8001
   sl.registerLazySingleton<ApiClient>(
     () => ApiClient(
-      baseUrl: 'http://127.0.0.1:8000',
+      baseUrl: 'http://127.0.0.1:8001',
       client: sl<http.Client>(),
       sessionStorageService: sl<SessionStorageService>(),
     ),
@@ -64,13 +64,11 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<ProfileRepository>(
-        () => ProfileRepositoryImpl(
-      userApiService: sl<UserApiService>(),
-    ),
+    () => ProfileRepositoryImpl(userApiService: sl<UserApiService>()),
   );
 
   sl.registerLazySingleton<DashboardRepository>(
-        () => DashboardRepositoryImpl(
+    () => DashboardRepositoryImpl(
       localDataSource: sl<DashboardLocalDataSource>(),
       apiService: sl<DashboardApiService>(),
       sessionStorageService: sl<SessionStorageService>(),
@@ -78,19 +76,15 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerFactory<ProfileViewModel>(
-        () => ProfileViewModel(
+    () => ProfileViewModel(
       profileRepository: sl<ProfileRepository>(),
       authRepository: sl<AuthRepository>(),
     ),
   );
 
-  sl.registerLazySingleton<DashboardDatabaseService>(
-    () => DashboardDatabaseService(),
-  );
-
   sl.registerLazySingleton<DashboardLocalDataSource>(
-    () => DashboardLocalDataSource(
-      databaseService: sl<DashboardDatabaseService>(),
+    () => createDashboardLocalDataSource(
+      sharedPreferences: sl<SharedPreferences>(),
     ),
   );
 }

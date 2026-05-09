@@ -1,6 +1,1 @@
-enum AuthState {
-  initial,
-  loading,
-  authenticated,
-  error
-}
+enum AuthState { initial, loading, authenticated, error }
