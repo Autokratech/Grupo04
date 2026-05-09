@@ -95,6 +95,23 @@ class DashboardApiService {
     );
   }
 
+  Future<void> deleteDashboardTab({
+    required String dashboardId,
+    required String tabId,
+  }) async {
+    final response = await apiClient
+        .delete(_dashboardTabEndpoint(dashboardId: dashboardId, tabId: tabId))
+        .timeout(_requestTimeout);
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return;
+    }
+
+    throw Exception(
+      'Failed to delete dashboard tab: Status code ${response.statusCode}',
+    );
+  }
+
   Future<TabWidgetsResponseDto> getTabWidgets({
     required String dashboardId,
     required String tabId,

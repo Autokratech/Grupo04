@@ -50,6 +50,18 @@ class ApiClient {
     );
   }
 
+  Future<http.Response> delete(
+      String endpoint, {
+        bool authenticated = true,
+      }) {
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return client.delete(
+      url,
+      headers: _buildHeaders(authenticated: authenticated),
+    );
+  }
+
   Future<http.StreamedResponse> getStream(
     String endpoint, {
     bool authenticated = true,

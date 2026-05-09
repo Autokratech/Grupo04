@@ -221,7 +221,20 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String dashboardId,
     required String tabId,
   }) async {
-    await localDataSource.deleteLocalTab(
+    if (_isLocalDashboardId(dashboardId)) {
+      await localDataSource.deleteLocalTab(
+        dashboardId: dashboardId,
+        tabId: tabId,
+      );
+      return;
+    }
+
+    await apiService.deleteDashboardTab(
+      dashboardId: dashboardId,
+      tabId: tabId,
+    );
+
+    await _removeTabFromLocalCache(
       dashboardId: dashboardId,
       tabId: tabId,
     );
@@ -366,6 +379,44 @@ class DashboardRepositoryImpl implements DashboardRepository {
     );
 
     return normalizedWidgets;
+  }
+
+  Future<void> _removeTabFromLocalCache({
+    required String dashboardId,
+    required String tabId,
+  }) async {
+    final cachedTabs = await localDataSource.getCachedTabs(
+      dashboardId: dashboardId,
+    );
+
+    if (cachedTabs.length <= 1) {
+      await localDataSource.deleteLocalTab(
+        dashboardId: dashboardId,
+        tabId: tabId,
+      );
+      return;
+    }
+
+    final updatedTabs = cachedTabs.where((tab) => tab.id != tabId).toList();
+
+    if (updatedTabs.length == cachedTabs.length) {
+      return;
+    }
+
+    final normalizedTabs = [
+      for (var i = 0; i < updatedTabs.length; i++)
+        updatedTabs[i].copyWith(position: i),
+    ];
+
+    await localDataSource.cacheTabs(
+      dashboardId: dashboardId,
+      tabs: normalizedTabs,
+    );
+
+    await localDataSource.cacheTabWidgets(
+      tabId: tabId,
+      widgets: const [],
+    );
   }
 
   Future<Dashboard> _getFallbackDashboard(String userId) async {
