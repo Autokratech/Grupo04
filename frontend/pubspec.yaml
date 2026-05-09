@@ -38,6 +38,7 @@ dependencies:
   sqflite_common_ffi: ^2.4.0+3
   path_provider: ^2.1.5
   path: ^1.9.1
+  flutter_svg: ^2.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -60,6 +61,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/icons/providers/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

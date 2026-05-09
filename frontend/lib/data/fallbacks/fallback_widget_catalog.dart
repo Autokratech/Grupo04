@@ -24,7 +24,7 @@ class FallbackWidgetCatalog {
       title: 'Sincronización',
       type: WidgetType.status,
       description:
-          'Indica el estado general de sincronización entre integraciones.',
+      'Indica el estado general de sincronización entre integraciones.',
       metadataLabel: 'Requiere integraciones activas',
     ),
     WidgetCatalogItem(
@@ -81,7 +81,7 @@ class FallbackWidgetCatalog {
       title: 'Alertas de seguridad',
       type: WidgetType.alert,
       description:
-          'Muestra alertas relacionadas con seguridad o configuración.',
+      'Muestra alertas relacionadas con seguridad o configuración.',
       metadataLabel: 'Requiere proveedor de seguridad',
     ),
     WidgetCatalogItem(
@@ -111,6 +111,7 @@ class FallbackWidgetCatalog {
       type: WidgetType.issue,
       description: 'Muestra merge requests abiertas o pendientes de revisión.',
       metadataLabel: 'Requiere GitLab',
+      provider: 'gitlab',
     ),
     WidgetCatalogItem(
       id: 'gauge',

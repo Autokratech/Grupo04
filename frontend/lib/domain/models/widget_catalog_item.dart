@@ -6,6 +6,7 @@ class WidgetCatalogItem {
   final WidgetType type;
   final String description;
   final String metadataLabel;
+  final String? provider;
 
   const WidgetCatalogItem({
     required this.id,
@@ -13,5 +14,6 @@ class WidgetCatalogItem {
     required this.type,
     required this.description,
     required this.metadataLabel,
+    this.provider,
   });
 }

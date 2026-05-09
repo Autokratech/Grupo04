@@ -9,6 +9,7 @@ class DashboardWidgetItem {
   final String primaryValue;
   final String? description;
   final int position;
+  final String? provider;
 
   const DashboardWidgetItem({
     required this.id,
@@ -18,6 +19,7 @@ class DashboardWidgetItem {
     required this.primaryValue,
     this.description,
     required this.position,
+    this.provider,
   });
 
   DashboardWidgetItem copyWith({
@@ -28,6 +30,7 @@ class DashboardWidgetItem {
     String? primaryValue,
     String? description,
     int? position,
+    String? provider,
   }) {
     return DashboardWidgetItem(
       id: id ?? this.id,
@@ -37,6 +40,7 @@ class DashboardWidgetItem {
       primaryValue: primaryValue ?? this.primaryValue,
       description: description ?? this.description,
       position: position ?? this.position,
+      provider: provider ?? this.provider,
     );
   }
 }

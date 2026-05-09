@@ -39,6 +39,7 @@ class DashboardWidgetMapper {
       primaryValue: _resolvePrimaryValue(widget, data),
       description: _resolveDescription(widget, data),
       position: widget.widgetIndex ?? 0,
+      provider: _resolveProvider(widget, data),
     );
   }
 
@@ -100,6 +101,19 @@ class DashboardWidgetMapper {
       default:
         return WidgetStatus.inactive;
     }
+  }
+
+  static String? _resolveProvider(
+      TabWidgetDto widget,
+      TabWidgetDataDto? data,
+      ) {
+    return _firstNonEmpty([
+      _stringOrNull(data?.providerTag),
+      _stringOrNull(widget.customConfig['provider']),
+      _stringOrNull(widget.customConfig['provider_tag']),
+      _stringOrNull(widget.customConfig['providerName']),
+      _stringOrNull(widget.customConfig['provider_name']),
+    ])?.toLowerCase();
   }
 
   static String _resolveTitle(TabWidgetDto widget, TabWidgetDataDto? data) {

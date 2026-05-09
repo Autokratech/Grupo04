@@ -5,6 +5,7 @@ import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 import 'package:frontend/features/dashboard/presentation/utils/widget_labels.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/provider_logo.dart';
 
 class DashboardCard extends StatelessWidget {
   final DashboardWidgetItem item;
@@ -38,7 +39,7 @@ class DashboardCard extends StatelessWidget {
           color: isSelected
               ? AppColors.primary
               : statusColor.withValues(alpha: isInactive ? 0.18 : 0.10),
-          width: isSelected ? 1.5 : 2,
+          width: 2,
         ),
         boxShadow: [
           BoxShadow(
@@ -122,6 +123,7 @@ class DashboardCard extends StatelessWidget {
   }) {
     final iconBoxSize = isCompact ? 30.0 : 34.0;
     final iconSize = isCompact ? 17.0 : 20.0;
+    final hasProvider = item.provider != null && item.provider!.trim().isNotEmpty;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -151,6 +153,10 @@ class DashboardCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (hasProvider) ...[
+          SizedBox(width: isCompact ? 6 : AppSpacing.sm),
+          _buildProviderBadge(isCompact: isCompact),
+        ],
       ],
     );
   }
@@ -164,6 +170,30 @@ class DashboardCard extends StatelessWidget {
       case WidgetStatus.inactive:
         return AppColors.textSecondary;
     }
+  }
+
+  Widget _buildProviderBadge({required bool isCompact}) {
+    final size = isCompact ? 18.0 : 22.0;
+
+    return Tooltip(
+      message: item.provider!,
+      child: Container(
+        width: isCompact ? 28 : 32,
+        height: isCompact ? 28 : 32,
+        padding: EdgeInsets.all(isCompact ? 5 : 6),
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppColors.textSecondary.withValues(alpha: 0.10),
+          ),
+        ),
+        child: ProviderLogo(
+          provider: item.provider,
+          size: size,
+        ),
+      ),
+    );
   }
 
   Widget _buildFooter({
