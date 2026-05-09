@@ -1,51 +1,47 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"nginx.ingress.kubernetes.io/proxy-body-size":"10m","nginx.ingress.kubernetes.io/proxy-read-timeout":"60","nginx.ingress.kubernetes.io/rewrite-target":"/$2"},"name":"autokratech-ingress","namespace":"development"},"spec":{"ingressClassName":"nginx","rules":[{"host":"34.6.55.176.nip.io","http":{"paths":[{"backend":{"service":{"name":"backend-svc","port":{"number":8001}}},"path":"/api(/|$)(.*)","pathType":"ImplementationSpecific"},{"backend":{"service":{"name":"frontend-svc","port":{"number":80}}},"path":"/(.*)","pathType":"ImplementationSpecific"}]}},{"host":"autokratech.duckdns.org","http":{"paths":[{"backend":{"service":{"name":"backend-svc","port":{"number":8001}}},"path":"/api(/|$)(.*)","pathType":"ImplementationSpecific"},{"backend":{"service":{"name":"frontend-svc","port":{"number":80}}},"path":"/(.*)","pathType":"ImplementationSpecific"}]}}]}}
-    nginx.ingress.kubernetes.io/proxy-body-size: 10m
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-  generation: 3
   name: autokratech-ingress
   namespace: development
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - host: 34.6.55.176.nip.io
-    http:
-      paths:
-      - backend:
-          service:
-            name: backend-svc
-            port:
-              number: 8001
-        path: /api(/|$)(.*)
-        pathType: ImplementationSpecific
-      - backend:
-          service:
-            name: frontend-svc
-            port:
-              number: 80
-        path: /(.*)
-        pathType: ImplementationSpecific
-  - host: autokratech.duckdns.org
-    http:
-      paths:
-      - backend:
-          service:
-            name: backend-svc
-            port:
-              number: 8001
-        path: /api(/|$)(.*)
-        pathType: ImplementationSpecific
-      - backend:
-          service:
-            name: frontend-svc
-            port:
-              number: 80
-        path: /(.*)
-        pathType: ImplementationSpecific
-  loadBalancer:
-    ingress:
-    - ip: 34.6.55.176
+    - host: 34.6.55.176.nip.io
+      http:
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: backend-svc
+                port:
+                  number: 8001
+          - path: /()(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80
+    - host: autokratech.duckdns.org
+      http:
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: backend-svc
+                port:
+                  number: 8001
+          - path: /()(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80
