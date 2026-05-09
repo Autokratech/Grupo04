@@ -42,7 +42,8 @@ oauth_config = {
         "refresh_url" : os.getenv("GCP_OAUTH_REFRESH_URL"),
         "scopes" : os.getenv("GCP_OAUTH_SCOPES"),
         "extra_params": {       
-            "access_type": "offline"
+            "access_type": "offline",
+            "prompt": "consent"
         },
     },
 
