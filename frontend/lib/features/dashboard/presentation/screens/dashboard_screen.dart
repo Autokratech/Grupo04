@@ -98,8 +98,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             DashboardHeader(
                               title: 'Autokratech',
-                              subtitle:
-                                  'Centraliza métricas, alertas y conexiones en dashboards configurables.',
+                              subtitle: _isMobilePlatform
+                                  ? null
+                                  : 'Centraliza métricas, alertas y conexiones en dashboards configurables.',
                               trailing: ProfileMenuButton(
                                 onLoggedOut: _handleProfileLoggedOut,
                               ),
@@ -393,25 +394,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHeaderSurface({required Widget child}) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isMobilePortrait =
+        AppPlatform.isMobile &&
+            MediaQuery.of(context).orientation == Orientation.portrait;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            width: 2,
-            color: AppColors.primary.withValues(alpha: 0.5),
+      color: colorScheme.surface,
+      child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              isMobilePortrait ? AppSpacing.xs : AppSpacing.lg,
+              AppSpacing.md,
+            ),
+            child: child,
           ),
-        ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 2,
+              color: AppColors.primary.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
       ),
-      child: child,
     );
   }
 

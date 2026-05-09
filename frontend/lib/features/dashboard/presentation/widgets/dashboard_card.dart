@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
@@ -63,6 +64,8 @@ class DashboardCard extends StatelessWidget {
                 final isCompact =
                     constraints.maxWidth <= 180 || constraints.maxHeight <= 150;
 
+                final isMobile = AppPlatform.isMobile;
+
                 final textTheme = Theme.of(context).textTheme;
                 final titleStyle = isCompact
                     ? textTheme.titleSmall
@@ -85,22 +88,40 @@ class DashboardCard extends StatelessWidget {
                         statusColor: statusColor,
                       ),
                       SizedBox(
-                        height: isCompact ? AppSpacing.sm : AppSpacing.md,
+                        height: isCompact ? AppSpacing.xs : AppSpacing.sm,
                       ),
-                      Center(
-                        child: Text(
-                          item.primaryValue,
-                          textAlign: TextAlign.center,
-                          style: valueStyle?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            height: 2.5,
-                            color: isInactive ? AppColors.textSecondary : null,
+                      if (isMobile)
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              item.primaryValue,
+                              textAlign: TextAlign.center,
+                              style: valueStyle?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
+                                color: isInactive ? AppColors.textSecondary : null,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        )
+                      else ...[
+                        Center(
+                          child: Text(
+                            item.primaryValue,
+                            textAlign: TextAlign.center,
+                            style: valueStyle?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              height: 1.2,
+                              color: isInactive ? AppColors.textSecondary : null,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
+                        const Spacer(),
+                      ],
                       _buildFooter(
                         isCompact: isCompact,
                         labelStyle: labelStyle,

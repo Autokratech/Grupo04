@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/domain/models/app_user.dart';
 import 'package:frontend/domain/models/linked_provider_status.dart';
 import 'package:frontend/domain/models/user_role.dart';
@@ -38,32 +39,36 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isMobile = AppPlatform.isMobile;
 
     return TextButton.icon(
       onPressed: _openProfileDialog,
       icon: Icon(
         Icons.account_circle_outlined,
-        size: 30,
+        size: isMobile ? 20 : 30,
         color: colorScheme.primary,
       ),
-      label: const Text('Perfil'),
+      label: Text(
+        'Perfil',
+        style: TextStyle(
+          fontSize: isMobile ? 13 : 15,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
       style: TextButton.styleFrom(
         foregroundColor: Colors.white,
         backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 13,
-        ),
-        textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          fontSize: 15,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 12 : 18,
+          vertical: isMobile ? 9 : 13,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
         side: BorderSide(
           color: colorScheme.primary.withValues(alpha: 0.55),
-          width: 1.5,
+          width: 1.2,
         ),
       ),
     );

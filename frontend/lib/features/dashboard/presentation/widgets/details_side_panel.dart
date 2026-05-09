@@ -213,7 +213,7 @@ class DetailsSidePanel extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary.withValues(alpha: 0.12),
-            AppColors.primary.withValues(alpha: 0.04),
+            AppColors.primary.withValues(alpha: 0.02),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
