@@ -1,7 +1,9 @@
+from uuid import UUID
 from app.repositories.interfaces.widgets_interface import IWidgetsRepository
 from app.models.widget_model import *
+from app.schemas.widget_schema import AvailableWidget, AvailableWidgetsResponse
 from app.core.exceptions import DatabaseError
-from uuid import UUID
+
 
 class WidgetsService:
 
@@ -18,11 +20,11 @@ class WidgetsService:
 
 
     #Método para obtener todos los widgets disponibles en la plataforma
-    async def get_all_available_widgets(self):
-        response = await self.repository.get_all_available_widgets()
+    async def get_all_available_widgets(self, available_providers : list):
+        response = await self.repository.get_all_available_widgets(available_providers)
         if not response.data:
             raise DatabaseError("No se han podido recuperar los widgets de la aplicación.")
-        return response.data
+        return AvailableWidgetsResponse(total_widgets=len(response.data), widgets=response.data)
 
 
     #-- Método para listar todos los widgets según el filtro especificado 

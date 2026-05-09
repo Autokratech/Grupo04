@@ -25,12 +25,16 @@ class WidgetsRepository(IWidgetsRepository):
             raise DatabaseError(e)
 
 
-    #-- Método para listar todos los widgets implementados 
-    async def get_all_available_widgets(self):
+    #-- Método para listar todos los widgets disponibles para un usuario
+    async def get_all_available_widgets(self, available_providers):
         try:
             return await self.supabase.table(self.WIDGETS_TABLE) \
-                .select('*') \
-                .execute() 
+                .select("""widget_id, widget_type, widget_name,
+                        widget_description, widget_function,
+                        widget_data(data_id, data!inner(data_id, data_description, data_type,
+                        data_providers!inner(provider_name)))""") \
+                    .in_("widget_data.data.data_providers.provider_name", available_providers) \
+                    .execute()
         except DatabaseError as e:
             raise DatabaseError(e)
 
