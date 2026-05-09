@@ -5,6 +5,7 @@ on:
     branches:
       - "release/*"
       - "64-*"
+      - "fix/*"
     paths:
       - "frontend/**"
  
