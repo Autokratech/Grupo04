@@ -34,6 +34,12 @@ class TabWidgetDataList(BaseModel):
     tab_widgets_data : List[TabWidgetData]
 
 
+class AddTabWidgetResponse(BaseModel):
+    tab_id: UUID
+    widget_id: UUID
+    tab_widget_id: UUID
+    widget_index: int
+
 # Requests 
 
 class ProviderData(BaseModel):
@@ -45,3 +51,11 @@ class ProviderData(BaseModel):
 class ProviderRequestList(BaseModel):
     providers : List[ProviderData]
 
+
+class AddTabWidget(BaseModel):
+    tab_id: UUID
+    widget_id: UUID
+    widget_index: int | None = None
+    provider_name: str
+    custom_config: dict | None = None
+    data_type: str

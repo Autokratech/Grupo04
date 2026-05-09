@@ -21,3 +21,11 @@ class OrchestratorRepository(IOrchestratorRepository):
                 .execute()
         except DatabaseError as e:
             raise DatabaseError(e)
+
+    async def add_widget_to_active_tab(self, widget_data: dict):
+        try:
+            return await self.supabase.table(self.TAB_WIDGETS_TABLE) \
+                .insert(widget_data) \
+                .execute()
+        except DatabaseError as e:
+            raise DatabaseError(e)
