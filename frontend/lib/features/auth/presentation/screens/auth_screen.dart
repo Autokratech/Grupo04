@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/app/router/app_routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import 'package:frontend/features/auth/presentation/states/auth_mode.dart';
 import 'package:frontend/features/auth/presentation/states/auth_state.dart';
 import 'package:frontend/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_form.dart';
+import 'package:frontend/shared/widgets/app_logo_box.dart';
 import 'package:go_router/go_router.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -206,23 +208,15 @@ class _AuthScreenState extends State<AuthScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.18),
-              ),
-            ),
-            child: Icon(
-              Icons.dashboard_customize_outlined,
-              color: colorScheme.primary,
-              size: 26,
+          SizedBox(
+            width: 68,
+            height: 68,
+            child: SvgPicture.asset(
+              'assets/icons/logo/a.svg',
+              fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

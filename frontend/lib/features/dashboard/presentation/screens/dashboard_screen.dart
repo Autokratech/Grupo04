@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/add_widget_dialog.dart';
 import 'package:go_router/go_router.dart';
@@ -106,6 +107,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               subtitle: _isMobilePlatform
                                   ? null
                                   : 'Centraliza métricas, alertas y conexiones en dashboards configurables.',
+                              leading: SizedBox(
+                                width: _isMobilePlatform ? 34 : 50,
+                                height: _isMobilePlatform ? 34 : 50,
+                                child: SvgPicture.asset(
+                                  'assets/icons/logo/a.svg',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
                               trailing: ProfileMenuButton(
                                 onLoggedOut: _handleProfileLoggedOut,
                               ),
