@@ -433,20 +433,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHeaderSurface({required Widget child}) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isMobilePortrait =
-        AppPlatform.isMobile &&
-        MediaQuery.of(context).orientation == Orientation.portrait;
+
+    final startColor = Color.alphaBlend(
+      AppColors.secondary.withValues(alpha: 0.08),
+      colorScheme.surface.withValues(alpha: 0.4),
+    );
+
+    final endColor = Color.alphaBlend(
+      AppColors.secondary.withValues(alpha: 0.01),
+      colorScheme.surface.withValues(alpha: 0.4),
+    );
 
     return Container(
       width: double.infinity,
-      color: colorScheme.surface,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            startColor,
+            endColor,
+          ],
+        ),
+      ),
       child: Stack(
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.md,
-              isMobilePortrait ? AppSpacing.xs : AppSpacing.lg,
+              AppPlatform.isMobile &&
+                  MediaQuery.of(context).orientation == Orientation.portrait
+                  ? AppSpacing.sm
+                  : AppSpacing.lg,
               AppSpacing.md,
             ),
             child: child,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
+import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/domain/models/app_user.dart';
@@ -24,6 +25,10 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
   late final ProfileViewModel _viewModel;
 
+  final ScrollController _profileScrollController = ScrollController(
+    keepScrollOffset: false,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +37,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
   @override
   void dispose() {
+    _profileScrollController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -89,6 +95,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
+              clipBehavior: Clip.antiAlias,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: _dialogMaxWidth,
@@ -100,15 +107,13 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.lg,
                         AppSpacing.lg + 32,
-                        AppSpacing.lg,
+                        AppSpacing.sm,
                         AppSpacing.lg,
                       ),
                       child: ListenableBuilder(
                         listenable: _viewModel,
                         builder: (context, _) {
-                          return SingleChildScrollView(
-                            child: _buildDialogContent(context),
-                          );
+                          return _buildDialogContent(context);
                         },
                       ),
                     ),
@@ -179,10 +184,36 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAccountInfo(context, user),
+        Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.md),
+          child: _buildAccountInfo(context, user),
+        ),
         const SizedBox(height: AppSpacing.md),
-        _buildProvidersSection(context),
+        Flexible(
+          child: _buildScrollableProvidersSection(context),
+        ),
       ],
+    );
+  }
+
+  Widget _buildScrollableProvidersSection(BuildContext context) {
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        scrollbars: false,
+      ),
+      child: Scrollbar(
+        controller: _profileScrollController,
+        thumbVisibility: false,
+        radius: const Radius.circular(999),
+        thickness: 4,
+        child: Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.md),
+          child: SingleChildScrollView(
+            controller: _profileScrollController,
+            child: _buildProvidersSection(context),
+          ),
+        ),
+      ),
     );
   }
 
@@ -194,10 +225,17 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.primary.withValues(alpha: 0.02),
+          ],
+        ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.32),
+          color: AppColors.primary.withValues(alpha: 0.22),
           width: 2,
         ),
       ),
@@ -216,14 +254,17 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
               children: [
                 Text(
                   user.email,
-                  style: textTheme.titleSmall,
+                  style: textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _roleLabel(user.role),
                   style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                    color: colorScheme.secondary,
                   ),
                 ),
                 if (!user.active) ...[
@@ -260,7 +301,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           Text(
             'Vinculaciones preparadas para futuros widgets. OAuth real pendiente de contrato backend.',
             style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+              color: colorScheme.secondary,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -268,7 +309,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
             icon: Icons.code,
             title: 'GitHub',
             description:
-                'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
+            'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
             status: LinkedProviderStatus.disconnected,
             actionLabel: 'Conectar',
           ),
@@ -277,7 +318,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
             icon: Icons.account_tree_outlined,
             title: 'GitLab',
             description:
-                'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
+            'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
             status: LinkedProviderStatus.disconnected,
             actionLabel: 'Conectar',
           ),
@@ -286,7 +327,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
             icon: Icons.memory_outlined,
             title: 'Agentes',
             description:
-                'Registra un agente para recibir métricas de sistema e infraestructura.',
+            'Registra un agente para recibir métricas de sistema e infraestructura.',
             status: LinkedProviderStatus.unavailable,
             actionLabel: 'Gestionar',
           ),
@@ -300,10 +341,10 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       onPressed: _viewModel.isLoggingOut ? null : _logout,
       icon: _viewModel.isLoggingOut
           ? const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
+        width: 14,
+        height: 14,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      )
           : const Icon(Icons.logout, size: 18),
       label: Text(_viewModel.isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'),
       style: FilledButton.styleFrom(
@@ -324,10 +365,10 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
         onPressed: _viewModel.isLoggingOut ? null : _logout,
         icon: _viewModel.isLoggingOut
             ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        )
             : const Icon(Icons.logout),
         label: Text(_viewModel.isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'),
         style: FilledButton.styleFrom(
