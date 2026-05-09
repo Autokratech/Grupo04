@@ -4,17 +4,12 @@ from app.schemas.metrics_schema import DatosReportarMetrica
 
 
 def servicio_reportar_metrica(datos: DatosReportarMetrica):
-    agente = metrics_repository.buscar_agente_por_hostname(datos.hostname)
+    agente = metrics_repository.buscar_agente_por_nombre(datos.agent_name)
     if not agente:
-        agente = metrics_repository.crear_agente(datos.hostname, datos.type_id)
+        agente = metrics_repository.crear_agente(datos.agent_name, datos.agent_os, datos.provider_name)
 
-    metrics_repository.insertar_metrica(
-        agent_id=agente["id"],
-        resource_type=datos.resource_type,
-        resource_name=datos.resource_name,
-        meta=datos.meta,
-    )
-    return {"agent_id": agente["id"], "ok": True}
+    metrics_repository.insertar_metrica(agente["agent_id"], datos.agent_data)
+    return {"agent_id": agente["agent_id"], "ok": True}
 
 
 def servicio_ultima_metrica(agent_id: str):

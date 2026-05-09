@@ -11,12 +11,11 @@ class AgentProvider():
         "macos": MacOSProvider
     }
 
-    async def get_provider_instance(self, provider_name : str, endpoints_repository):
+    async def get_provider_instance(self, provider_name: str, endpoints_repository, user_id=None):
 
-        provider_instance = self._agent_provider_instance[provider_name]
+        provider_instance = self._agent_provider_instance.get(provider_name)
         if provider_instance is None:
             raise KeyError(f"No se ha encontrado el tipo de provider solicitado: {provider_name}.")
-            
 
         return provider_instance(endpoints_repository)
 

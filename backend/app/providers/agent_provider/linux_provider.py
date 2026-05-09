@@ -1,5 +1,6 @@
 from app.repositories.interfaces.providers_interface import IProvidersRepository
-from app.models.endpoint_model import * 
+import app.repositories.metrics_repository as mr
+from app.schemas.providers.agent_schema import AgentResponse, MetricItem
 
 
 class LinuxProvider():
@@ -8,10 +9,8 @@ class LinuxProvider():
     def __init__(self, repository: IProvidersRepository):
         self.repository = repository
 
-
-    async def fetch_provider_data(self, data_type, data_config):
-        response = f"Respuesta fake de Linux, para {data_type} y {data_config}"
-        return response
-
-    #TODO: Definir la lógica para obtener los datos cuando se integren los agentes
+    async def fetch_provider_data(self, data_type: str, data_config: dict):
+        raw = mr.listar_metricas_por_resource_type_y_tipo_agente(data_type, self.PROVIDER_NAME)
+        items = [MetricItem(**m) for m in raw]
+        return AgentResponse(count=len(items), items=items).model_dump()
 
