@@ -1,9 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.api.controllers import oauth_controller as oc
+from app.core.guardias import pedir_usuario_logueado
 
 router = APIRouter(
     prefix="/api/oauth",
-    tags=["oauth"],
+    tags=["OAuth"],
+    dependencies=[Depends(pedir_usuario_logueado)],
     responses={404: {"description": "No se ha podido encontrar el recurso solicitado."}},
 )
 

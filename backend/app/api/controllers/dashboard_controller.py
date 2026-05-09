@@ -21,14 +21,12 @@ dashboard_service = Annotated[DashboardService, Depends(get_dashboard_service)]
 
 
 # -- Controladores para gestionar el dashboard
-async def get_user_dashboard(service: dashboard_service, usuario_actual=Depends(pedir_usuario_logueado)):
-    user_id = UUID(usuario_actual["id"])
-    return await service.get_user_dashboard(user_id)
+async def get_user_dashboard(service: dashboard_service, user=Depends(pedir_usuario_logueado)):
+    return await service.get_user_dashboard(UUID(user["id"]))
 
 
-async def create_dashboard(body: DashboardCreate, service: dashboard_service, usuario_actual=Depends(pedir_usuario_logueado)):
-    user_id = UUID(usuario_actual["id"])
-    return await service.create_dashboard(user_id, body.model_dump())
+async def create_dashboard(body: DashboardCreate, service: dashboard_service, user=Depends(pedir_usuario_logueado)):
+    return await service.create_dashboard(UUID(user["id"]), body.model_dump())
 
 
 async def update_dashboard(dashboard_id: UUID, body: DashboardUpdate, service: dashboard_service):
