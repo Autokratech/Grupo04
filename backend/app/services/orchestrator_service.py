@@ -107,7 +107,14 @@ class OrchestratorService:
         return standarized_response
 
 
-    # -- Método para ejecutar la acción de un widget de tipo action (o híbrido, si al final disponemos de híbridos también)
+    #-- Método para vincular un nuevo widget con la pestaña activa
+    async def add_widget_to_active_tab(self, tab_id : UUID, tab_widget_data: dict):
+        tab_widget_data.update({"tab_id" : str(tab_id)})
+        response = await self.repository.add_widget_to_active_tab(tab_widget_data)
+        return AddTabWidgetResponse(**response.data[0])
+
+
+    #-- Método para ejecutar la acción de un widget de tipo action (o híbrido, si al final disponemos de híbridos también)
     # TODO: Enlazarlo con la parte de auditoría para que 1 acción = 1 registro (salvo que más adelante estimemos auditar sólo algunas)
     async def execute_tab_widget_action(self, widget_data):
         pass

@@ -3,8 +3,9 @@ from uuid import UUID
 from supabase import AsyncClient
 from collections.abc import AsyncIterable
 from fastapi import Depends
-from fastapi.sse import EventSourceResponse, ServerSentEvent
+from fastapi.sse import ServerSentEvent
 from app.services.orchestrator_service import OrchestratorService
+from app.schemas.orchestrator_schema import AddTabWidget
 from app.repositories.orchestrator_repository import OrchestratorRepository
 from app.repositories.oauth_manager_repository import OAuthManagerRepository
 from app.repositories.providers_repository import ProvidersRepository
@@ -39,8 +40,12 @@ orchestrator_service = Annotated[OrchestratorService, Depends(get_orchestrator_s
 
 # -- Controladores para gestionar el orquestador
 #-!BORRAR Solicitud user_id, obtener de la sesión, revisar en base a lo integrado en el auth
+#- La solicitud de dashboard_id es innecesaria, pero se realiza para mantener la coherencia con los endpoints
 async def get_active_tab_widgets(user_id: UUID, dashboard_id : UUID, tab_id: UUID, service: orchestrator_service)-> AsyncIterable[ServerSentEvent]: 
     async for event in service.orchestate_user_tab(user_id, tab_id):
         yield ServerSentEvent(data=event["data"], event=event["event"])
+
+async def add_widget_to_active_tab(dashboard_id : UUID, tab_id: UUID, body: AddTabWidget, service: orchestrator_service): 
+    return await service.add_widget_to_active_tab(tab_id, body.model_dump(mode="json"))
 
 #REVISAR: https://fastapi.tiangolo.com/tutorial/server-sent-events/#serversentevent
