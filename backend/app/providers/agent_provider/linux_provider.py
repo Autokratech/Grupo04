@@ -1,17 +1,15 @@
-from app.repositories.interfaces.providers_interface import IProvidersRepository
-from app.models.endpoint_model import * 
+from app.repositories.interfaces.agents_interface import IAgentsRepository
+from app.schemas.providers.linux_agent_schema import *
 
 
 class LinuxProvider():
     PROVIDER_NAME = "linux"
 
-    def __init__(self, repository: IProvidersRepository):
-        self.repository = repository
+    def __init__(self, agents_repository: IAgentsRepository):
+        self.repository = agents_repository
 
 
     async def fetch_provider_data(self, data_type, data_config):
-        response = f"Respuesta fake de Linux, para {data_type} y {data_config}"
-        return response
-
-    #TODO: Definir la lógica para obtener los datos cuando se integren los agentes
-
+        response = await self.repository.get_agent_metric(data_config["agent_id"])
+        return LinuxAgentResponse(count=len(response.data), items=response.data).model_dump()
+    

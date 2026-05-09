@@ -79,9 +79,6 @@ jobs:
             --password-stdin \
             ${{ env.REGISTRY }}
 
-      - name: GCP - Authentication
-        uses: google-github-actions/auth@v2
-
       - name: GCP - Build backend image
         working-directory: backend
         run: |
