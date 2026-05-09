@@ -1,46 +1,34 @@
-import hashlib
-import uuid
-from datetime import datetime, timezone
 from app.database_sync import supabase
 
-TABLA_AGENTES = "t_agents"
-TABLA_METRICAS = "t_metrics"
+TABLA_AGENTES = "agents"
+TABLA_METRICAS = "agent_metrics"
 
 
-def buscar_agente_por_hostname(hostname: str):
+def buscar_agente_por_nombre(agent_name: str):
     respuesta = (
         supabase.table(TABLA_AGENTES)
-        .select("id")
-        .eq("hostname", hostname)
+        .select("agent_id, provider_name")
+        .eq("agent_name", agent_name)
         .limit(1)
         .execute()
     )
     return respuesta.data[0] if respuesta.data else None
 
 
-def crear_agente(hostname: str, type_id: int):
-    agent_key = str(uuid.uuid4())
-    api_key_hash = hashlib.sha256(agent_key.encode()).hexdigest()
+def crear_agente(agent_name: str, agent_os: str, provider_name: str):
     datos = {
-        "hostname": hostname,
-        "type_id": type_id,
-        "agent_key": agent_key,
-        "api_key_hash": api_key_hash,
-        "active": True,
+        "agent_name": agent_name,
+        "agent_os": agent_os,
+        "provider_name": provider_name,
     }
     respuesta = supabase.table(TABLA_AGENTES).insert(datos).execute()
     return respuesta.data[0] if respuesta.data else None
 
 
-def insertar_metrica(agent_id: str, resource_type: str, resource_name: str, meta: dict):
+def insertar_metrica(agent_id: str, agent_data: dict):
     datos = {
-        "ts": datetime.now(timezone.utc).isoformat(),
-        "metric_key": str(uuid.uuid4()),
         "agent_id": agent_id,
-        "resource_type": resource_type,
-        "resource_name": resource_name,
-        "result": "ok",
-        "meta": meta,
+        "agent_data": agent_data,
     }
     respuesta = supabase.table(TABLA_METRICAS).insert(datos).execute()
     return respuesta.data[0] if respuesta.data else None
@@ -51,7 +39,7 @@ def obtener_ultima_metrica_de_agente(agent_id: str):
         supabase.table(TABLA_METRICAS)
         .select("*")
         .eq("agent_id", agent_id)
-        .order("ts", desc=True)
+        .order("created_at", desc=True)
         .limit(1)
         .execute()
     )
@@ -62,8 +50,31 @@ def listar_metricas_por_resource_type(resource_type: str):
     respuesta = (
         supabase.table(TABLA_METRICAS)
         .select("*")
-        .eq("resource_type", resource_type)
-        .order("ts", desc=True)
+        .filter("agent_data->>resource_type", "eq", resource_type)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return respuesta.data or []
+
+
+def listar_metricas_por_resource_type_y_tipo_agente(resource_type: str, provider_name: str):
+    agentes = (
+        supabase.table(TABLA_AGENTES)
+        .select("agent_id")
+        .eq("provider_name", provider_name)
+        .execute()
+    )
+    if not agentes.data:
+        return []
+
+    agent_ids = [a["agent_id"] for a in agentes.data]
+
+    respuesta = (
+        supabase.table(TABLA_METRICAS)
+        .select("*")
+        .filter("agent_data->>resource_type", "eq", resource_type)
+        .in_("agent_id", agent_ids)
+        .order("created_at", desc=True)
         .execute()
     )
     return respuesta.data or []
@@ -72,8 +83,8 @@ def listar_metricas_por_resource_type(resource_type: str):
 def listar_recursos_por_resource_type(resource_type: str):
     respuesta = (
         supabase.table(TABLA_METRICAS)
-        .select("agent_id, resource_name")
-        .eq("resource_type", resource_type)
+        .select("agent_id, agent_data")
+        .filter("agent_data->>resource_type", "eq", resource_type)
         .execute()
     )
     if not respuesta.data:
@@ -81,8 +92,8 @@ def listar_recursos_por_resource_type(resource_type: str):
     vistos = set()
     resultado = []
     for fila in respuesta.data:
-        clave = (fila["agent_id"], fila["resource_name"])
-        if clave not in vistos:
-            vistos.add(clave)
-            resultado.append(fila)
+        agent_id = fila["agent_id"]
+        if agent_id not in vistos:
+            vistos.add(agent_id)
+            resultado.append({"agent_id": agent_id})
     return resultado
