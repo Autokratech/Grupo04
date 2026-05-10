@@ -1,6 +1,4 @@
 from datetime import datetime, timezone
-import uuid
-
 from app.database_sync import supabase
 
 NOMBRE_TABLA_AUDITORIA = "audit_log"
@@ -14,12 +12,11 @@ def crear_registro_auditoria_en_bd(
     meta: dict | None = None,
 ):
     datos = {
-        "id": str(uuid.uuid4()),
-        "user_id": user_id,
-        "action": action,
-        "description": description,
-        "meta": meta or {},
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id":           user_id,
+        "action_name":       action,
+        "audit_description": description,
+        "action_metadata":   meta or {},
+        "created_at":        datetime.now(timezone.utc).isoformat(),
     }
 
     respuesta = supabase.table(NOMBRE_TABLA_AUDITORIA).insert(datos).execute()

@@ -27,6 +27,17 @@ def buscar_usuario_por_id(id_usuario: str):
 
     return respuesta.data[0]
 
+# devuelve el primer usuario que tenga ese role_id
+def buscar_usuario_por_role_id(role_id: int):
+    respuesta = (
+        supabase.table(NOMBRE_TABLA_USUARIOS)
+        .select("*")
+        .eq("role_id", role_id)
+        .limit(1)
+        .execute()
+    )
+    return respuesta.data[0] if respuesta.data else None
+
 # busca un usuario por el email
 def buscar_usuario_por_email(email: str):
     respuesta = (
