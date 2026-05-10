@@ -10,6 +10,9 @@ import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 
 class DashboardViewModel extends ChangeNotifier {
+  static const Duration _tabRefreshCooldown = Duration(seconds: 20);
+  static const Duration _globalRefreshCooldown = Duration(seconds: 20);
+
   final DashboardRepository _dashboardRepository;
   final DashboardPreferencesService _dashboardPreferencesService;
 
@@ -26,6 +29,10 @@ class DashboardViewModel extends ChangeNotifier {
   List<DashboardWidgetItem> get items => List.unmodifiable(_items);
   void _clearItems() => _items = [];
 
+  final Map<String, List<DashboardWidgetItem>> _itemsByTabId = {};
+  final Map<String, DateTime> _lastRemoteRefreshByTabId = {};
+  DateTime? _lastGlobalRemoteRefresh;
+
   int _tabItemsLoadVersion = 0;
 
   List<WidgetCatalogItem> _widgetCatalogItems = [];
@@ -38,18 +45,29 @@ class DashboardViewModel extends ChangeNotifier {
   }
 
   List<WidgetCatalogItem> get availableWidgetCatalogItems {
-    return widgetCatalogItems.where((catalogItem) {
-      return !_isCatalogItemAlreadyAdded(catalogItem);
-    }).toList();
+    return List.unmodifiable(_widgetCatalogItems);
   }
 
   bool get canAddWidget => availableWidgetCatalogItems.isNotEmpty;
 
-  bool _isCatalogItemAlreadyAdded(WidgetCatalogItem catalogItem) {
+  bool isWidgetAddOptionAlreadyAdded(WidgetAddOption option) {
+    final optionProvider = _normalizeProvider(option.providerName);
+    final optionDataType = _normalizeDataType(option.dataType);
+
     return _items.any((item) {
-      return item.id == catalogItem.id ||
-          item.id.endsWith('_${catalogItem.id}');
+      final itemProvider = _normalizeProvider(item.provider);
+      final itemDataType = _normalizeDataType(item.dataType);
+
+      return itemProvider == optionProvider && itemDataType == optionDataType;
     });
+  }
+
+  String _normalizeProvider(String? provider) {
+    return provider?.trim().toLowerCase() ?? '';
+  }
+
+  String _normalizeDataType(String? dataType) {
+    return dataType?.trim().toUpperCase() ?? '';
   }
 
   String? _errorMessage;
@@ -61,8 +79,10 @@ class DashboardViewModel extends ChangeNotifier {
 
   List<DashboardTab> _tabs = [];
   List<DashboardTab> get tabs => List.unmodifiable(_tabs);
+
   DashboardTab? _selectedTab;
   DashboardTab? get selectedTab => _selectedTab;
+
   bool get canCreateTab => _tabs.length < AppConstants.maxTabs;
 
   DashboardWidgetItem? _selectedItem;
@@ -151,6 +171,34 @@ class DashboardViewModel extends ChangeNotifier {
     return currentIds.containsAll(otherIds) && otherIds.containsAll(currentIds);
   }
 
+  bool _shouldRefreshTab(String tabId) {
+    final lastRefresh = _lastRemoteRefreshByTabId[tabId];
+
+    if (lastRefresh == null) {
+      return true;
+    }
+
+    return DateTime.now().difference(lastRefresh) >= _tabRefreshCooldown;
+  }
+
+  bool _shouldRefreshGlobally() {
+    final lastRefresh = _lastGlobalRemoteRefresh;
+
+    if (lastRefresh == null) {
+      return true;
+    }
+
+    return DateTime.now().difference(lastRefresh) >= _globalRefreshCooldown;
+  }
+
+  void _markTabAsRefreshed(String tabId) {
+    _lastRemoteRefreshByTabId[tabId] = DateTime.now();
+  }
+
+  void _markGlobalRefresh() {
+    _lastGlobalRemoteRefresh = DateTime.now();
+  }
+
   Future<void> changeTab(DashboardTab tab) async {
     final dashboard = _dashboard;
 
@@ -201,12 +249,10 @@ class DashboardViewModel extends ChangeNotifier {
         name: normalizedName,
       );
 
-      _tabs = await _dashboardRepository.getDashboardTabs(
-        dashboardId: dashboard.id,
-      );
+      _tabs = [..._tabs.where((tab) => tab.id != createdTab.id), createdTab]
+        ..sort((a, b) => a.position.compareTo(b.position));
 
-      final selectedCreatedTab = _findTabById(createdTab.id);
-      _selectedTab = selectedCreatedTab ?? createdTab;
+      _selectedTab = _findTabById(createdTab.id) ?? createdTab;
 
       await _dashboardPreferencesService.saveSelectedTabId(
         tabId: _selectedTab!.id,
@@ -214,7 +260,12 @@ class DashboardViewModel extends ChangeNotifier {
       );
 
       _clearSelectedItem();
-      await loadTabItems();
+      _clearItems();
+      _itemsByTabId[_selectedTab!.id] = const [];
+      _lastRemoteRefreshByTabId.remove(_selectedTab!.id);
+      _state = DashboardState.empty;
+
+      notifyListeners();
     } catch (_) {
       _errorMessage = 'Ha ocurrido un error al crear el dashboard';
       notifyListeners();
@@ -343,6 +394,9 @@ class DashboardViewModel extends ChangeNotifier {
         tabId: tab.id,
       );
 
+      _itemsByTabId.remove(tab.id);
+      _lastRemoteRefreshByTabId.remove(tab.id);
+
       _tabs = await _dashboardRepository.getDashboardTabs(
         dashboardId: dashboard.id,
       );
@@ -351,9 +405,11 @@ class DashboardViewModel extends ChangeNotifier {
         _selectedTab = null;
         _clearSelectedItem();
         _clearItems();
+
         await _dashboardPreferencesService.clearSelectedTabId(
           dashboardId: dashboard.id,
         );
+
         _state = DashboardState.empty;
         notifyListeners();
         return;
@@ -361,6 +417,7 @@ class DashboardViewModel extends ChangeNotifier {
 
       if (wasSelectedTab) {
         _selectedTab = _tabs.first;
+
         await _dashboardPreferencesService.saveSelectedTabId(
           tabId: _selectedTab!.id,
           dashboardId: dashboard.id,
@@ -415,14 +472,32 @@ class DashboardViewModel extends ChangeNotifier {
 
     final dashboardId = dashboard.id;
     final tabId = selectedTab.id;
+    final cachedItems = _itemsByTabId[tabId];
+
+    final shouldRefreshRemote =
+        cachedItems == null ||
+        (_shouldRefreshTab(tabId) && _shouldRefreshGlobally());
 
     _clearErrorMessage();
-    _state = DashboardState.loading;
-    notifyListeners();
+
+    if (cachedItems != null) {
+      _items = List<DashboardWidgetItem>.from(cachedItems);
+      _state = _items.isEmpty ? DashboardState.empty : DashboardState.loaded;
+      notifyListeners();
+
+      if (!shouldRefreshRemote) {
+        return;
+      }
+    } else {
+      _state = DashboardState.loading;
+      notifyListeners();
+    }
 
     try {
-      final List<DashboardWidgetItem> items = await _dashboardRepository
-          .getTabItems(dashboardId: dashboardId, tabId: tabId);
+      final remoteItems = await _dashboardRepository.getTabItems(
+        dashboardId: dashboardId,
+        tabId: tabId,
+      );
 
       if (loadVersion != _tabItemsLoadVersion) {
         return;
@@ -432,12 +507,17 @@ class DashboardViewModel extends ChangeNotifier {
         return;
       }
 
-      if (items.isEmpty) {
+      _markTabAsRefreshed(tabId);
+      _markGlobalRefresh();
+
+      _itemsByTabId[tabId] = List<DashboardWidgetItem>.from(remoteItems);
+
+      if (remoteItems.isEmpty) {
         _clearSelectedItem();
         _clearItems();
         _state = DashboardState.empty;
       } else {
-        _items = items;
+        _items = remoteItems;
         _state = DashboardState.loaded;
       }
     } catch (_) {
@@ -449,10 +529,15 @@ class DashboardViewModel extends ChangeNotifier {
         return;
       }
 
-      _clearSelectedItem();
-      _clearItems();
-      _state = DashboardState.error;
-      _errorMessage = 'Ha ocurrido un error al cargar el dashboard';
+      if (cachedItems != null) {
+        _items = List<DashboardWidgetItem>.from(cachedItems);
+        _state = _items.isEmpty ? DashboardState.empty : DashboardState.loaded;
+      } else {
+        _clearSelectedItem();
+        _clearItems();
+        _state = DashboardState.error;
+        _errorMessage = 'Ha ocurrido un error al cargar el dashboard';
+      }
     }
 
     notifyListeners();
@@ -468,10 +553,16 @@ class DashboardViewModel extends ChangeNotifier {
     if (dashboard == null || selectedTab == null) return;
 
     final catalogItemExists = _widgetCatalogItems.any(
-          (item) => item.id == catalogItem.id,
+      (item) => item.id == catalogItem.id,
     );
 
     if (!catalogItemExists) return;
+
+    if (isWidgetAddOptionAlreadyAdded(option)) {
+      _errorMessage = 'Este widget ya existe en este dashboard';
+      notifyListeners();
+      return;
+    }
 
     try {
       _clearErrorMessage();
@@ -482,6 +573,10 @@ class DashboardViewModel extends ChangeNotifier {
         catalogItem: catalogItem,
         option: option,
       );
+
+      _itemsByTabId[selectedTab.id] = List<DashboardWidgetItem>.from(_items);
+      _markTabAsRefreshed(selectedTab.id);
+      _markGlobalRefresh();
 
       _state = _items.isEmpty ? DashboardState.empty : DashboardState.loaded;
       _clearSelectedItem();
@@ -510,6 +605,8 @@ class DashboardViewModel extends ChangeNotifier {
         widgetId: widget.id,
       );
 
+      _itemsByTabId[selectedTab.id] = List<DashboardWidgetItem>.from(_items);
+
       if (_selectedItem?.id == widget.id) {
         _clearSelectedItem();
       }
@@ -535,6 +632,8 @@ class DashboardViewModel extends ChangeNotifier {
         tabId: selectedTab.id,
         widgets: reorderedItems,
       );
+
+      _itemsByTabId[selectedTab.id] = List<DashboardWidgetItem>.from(_items);
 
       notifyListeners();
     } catch (_) {

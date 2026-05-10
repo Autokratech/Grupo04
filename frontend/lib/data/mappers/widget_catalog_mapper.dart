@@ -39,13 +39,13 @@ class WidgetCatalogMapper {
   }
 
   static String _resolveMetadataLabel(WidgetCatalogItemDto dto) {
-    final function = dto.function?.trim();
+    final type = dto.type?.trim();
 
-    if (function == null || function.isEmpty) {
-      return 'Función no especificada';
+    if (type == null || type.isEmpty) {
+      return 'Tipo no especificado';
     }
 
-    return 'Función: ${_formatLabel(function)}';
+    return 'Tipo: ${_formatLabel(type)}';
   }
 
   static WidgetType _mapType(String? rawType) {

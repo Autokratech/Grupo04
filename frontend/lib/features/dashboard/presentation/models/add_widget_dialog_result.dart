@@ -5,8 +5,5 @@ class AddWidgetDialogResult {
   final WidgetCatalogItem item;
   final WidgetAddOption option;
 
-  const AddWidgetDialogResult({
-    required this.item,
-    required this.option,
-  });
+  const AddWidgetDialogResult({required this.item, required this.option});
 }

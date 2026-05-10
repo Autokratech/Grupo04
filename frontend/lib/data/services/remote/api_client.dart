@@ -76,9 +76,9 @@ class ApiClient {
   }
 
   Future<Uri> getRedirectLocation(
-      String endpoint, {
-        bool authenticated = true,
-      }) async {
+    String endpoint, {
+    bool authenticated = true,
+  }) async {
     final url = _buildUri(endpoint);
 
     final request = http.Request('GET', url)

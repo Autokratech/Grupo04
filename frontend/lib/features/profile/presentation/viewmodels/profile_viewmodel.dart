@@ -20,8 +20,8 @@ class ProfileViewModel extends ChangeNotifier {
     required AuthRepository authRepository,
     required OAuthService oauthService,
   }) : _profileRepository = profileRepository,
-        _authRepository = authRepository,
-        _oauthService = oauthService;
+       _authRepository = authRepository,
+       _oauthService = oauthService;
 
   ProfileState get state => _state;
   AppUser? get currentUser => _currentUser;

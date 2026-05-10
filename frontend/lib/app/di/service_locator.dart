@@ -58,7 +58,7 @@ Future<void> setupDependencies() async {
   );
 
   sl.registerLazySingleton<OAuthService>(
-        () => OAuthService(apiClient: sl<ApiClient>()),
+    () => OAuthService(apiClient: sl<ApiClient>()),
   );
 
   sl.registerLazySingleton<AuthRepository>(

@@ -105,26 +105,6 @@ class DashboardRepositoryImpl implements DashboardRepository {
       throw StateError('La tab creada no tiene id válido');
     }
 
-    try {
-      final refreshedTabsDto = await apiService.getDashboardTabs(
-        dashboardId: dashboardId,
-      );
-
-      final refreshedTabs = DashboardMapper.tabsToDomain(refreshedTabsDto);
-
-      if (refreshedTabs.isNotEmpty) {
-        await localDataSource.cacheTabs(
-          dashboardId: dashboardId,
-          tabs: refreshedTabs,
-        );
-
-        return refreshedTabs.firstWhere(
-          (tab) => tab.id == createdTab.id,
-          orElse: () => createdTab,
-        );
-      }
-    } catch (_) {}
-
     await _cacheCreatedRemoteTab(
       dashboardId: dashboardId,
       createdTab: createdTab,
@@ -288,9 +268,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }) async {
     if (_isLocalDashboardId(dashboardId) ||
         _isLocalTabId(dashboardId: dashboardId, tabId: tabId)) {
-      throw StateError(
-        'No se puede añadir un widget remoto en una tab local',
-      );
+      throw StateError('No se puede añadir un widget remoto en una tab local');
     }
 
     final cachedWidgets = await localDataSource.getCachedTabWidgets(
@@ -322,10 +300,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       );
     }
 
-    await localDataSource.cacheTabWidgets(
-      tabId: tabId,
-      widgets: remoteWidgets,
-    );
+    await localDataSource.cacheTabWidgets(tabId: tabId, widgets: remoteWidgets);
 
     return remoteWidgets;
   }

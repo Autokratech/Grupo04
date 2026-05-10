@@ -203,7 +203,7 @@ class DashboardCard extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            WidgetLabels.type(item.type),
+            WidgetLabels.provider(item.provider),
             style: labelStyle?.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,

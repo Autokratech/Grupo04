@@ -317,7 +317,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
             icon: Icons.code,
             title: 'GitHub',
             description:
-            'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
+                'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
             status: LinkedProviderStatus.disconnected,
             actionLabel: 'Conectar',
             onAction: _connectGithub,

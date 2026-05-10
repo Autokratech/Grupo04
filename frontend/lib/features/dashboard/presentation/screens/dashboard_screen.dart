@@ -278,16 +278,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _handleAddWidgetPressed() async {
     final result = await showDialog<AddWidgetDialogResult>(
       context: context,
-      builder: (_) =>
-          AddWidgetDialog(items: _viewModel.availableWidgetCatalogItems),
+      builder: (_) => AddWidgetDialog(
+        items: _viewModel.availableWidgetCatalogItems,
+        isOptionAlreadyAdded: _viewModel.isWidgetAddOptionAlreadyAdded,
+      ),
     );
 
     if (result == null || !mounted) return;
 
-    await _viewModel.addWidget(
-      catalogItem: result.item,
-      option: result.option,
-    );
+    await _viewModel.addWidget(catalogItem: result.item, option: result.option);
 
     if (!mounted) return;
 

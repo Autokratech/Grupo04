@@ -44,11 +44,7 @@ List<WidgetAddOption> optionsForWidgetCatalogItem(WidgetCatalogItem item) {
     ];
   }
 
-  if (_containsAny(title, [
-    'virtual machines',
-    'list resources',
-    'list cloud resources',
-  ])) {
+  if (_containsAny(title, ['virtual machines'])) {
     return const [
       WidgetAddOption(
         label: 'Azure · Virtual machines',
@@ -56,19 +52,29 @@ List<WidgetAddOption> optionsForWidgetCatalogItem(WidgetCatalogItem item) {
         dataType: 'VIRTUAL_MACHINES',
       ),
       WidgetAddOption(
+        label: 'GCP · Virtual machines',
+        providerName: 'gcp',
+        dataType: 'VIRTUAL_MACHINES',
+      ),
+    ];
+  }
+
+  if (_containsAny(title, ['key vault', 'key vaults'])) {
+    return const [
+      WidgetAddOption(
         label: 'Azure · Key Vaults',
         providerName: 'azure',
         dataType: 'KEY_VAULTS',
       ),
+    ];
+  }
+
+  if (_containsAny(title, ['resource groups'])) {
+    return const [
       WidgetAddOption(
         label: 'Azure · Resource groups',
         providerName: 'azure',
         dataType: 'RESOURCE_GROUPS',
-      ),
-      WidgetAddOption(
-        label: 'GCP · Virtual machines',
-        providerName: 'gcp',
-        dataType: 'VIRTUAL_MACHINES',
       ),
     ];
   }
@@ -83,16 +89,10 @@ List<WidgetAddOption> optionsForWidgetCatalogItem(WidgetCatalogItem item) {
           'type': 'Usage',
           'dataset': {
             'grouping': [
-              {
-                'name': 'ServiceFamily',
-                'type': 'Dimension',
-              },
+              {'name': 'ServiceFamily', 'type': 'Dimension'},
             ],
             'aggregation': {
-              'totalCost': {
-                'name': 'Cost',
-                'function': 'Sum',
-              },
+              'totalCost': {'name': 'Cost', 'function': 'Sum'},
             },
             'granularity': 'None',
           },
@@ -115,9 +115,5 @@ bool _containsAny(String value, List<String> candidates) {
 }
 
 String _normalize(String value) {
-  return value
-      .replaceAll('_', ' ')
-      .replaceAll('-', ' ')
-      .trim()
-      .toLowerCase();
+  return value.replaceAll('_', ' ').replaceAll('-', ' ').trim().toLowerCase();
 }

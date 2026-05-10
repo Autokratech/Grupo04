@@ -23,14 +23,14 @@ class DashboardWidgetMapper {
 
     return List.generate(
       items.length,
-          (index) => items[index].copyWith(position: index),
+      (index) => items[index].copyWith(position: index),
     );
   }
 
   static DashboardWidgetItem _toDomain(
-      TabWidgetDto widget,
-      TabWidgetDataDto? data,
-      ) {
+    TabWidgetDto widget,
+    TabWidgetDataDto? data,
+  ) {
     return DashboardWidgetItem(
       id: widget.tabWidgetId,
       title: _resolveTitle(widget, data),
@@ -40,6 +40,7 @@ class DashboardWidgetMapper {
       description: _resolveDescription(widget, data),
       position: widget.widgetIndex ?? 0,
       provider: _resolveProvider(widget, data),
+      dataType: _resolveDataType(widget),
     );
   }
 
@@ -107,37 +108,60 @@ class DashboardWidgetMapper {
   }
 
   static String? _resolveProvider(TabWidgetDto widget, TabWidgetDataDto? data) {
-    return _firstNonEmpty([
+    final provider = _firstNonEmpty([
       _stringOrNull(data?.providerTag),
       _stringOrNull(widget.customConfig['provider']),
       _stringOrNull(widget.customConfig['provider_tag']),
       _stringOrNull(widget.customConfig['providerName']),
       _stringOrNull(widget.customConfig['provider_name']),
-    ])?.toLowerCase();
+    ]);
+
+    if (provider != null) {
+      return provider.toLowerCase();
+    }
+
+    final dataType = widget.dataType?.toLowerCase().trim();
+    final hasAgentId = _stringOrNull(widget.customConfig['agent_id']) != null;
+
+    if (dataType == 'system_data' || hasAgentId) {
+      return 'windows';
+    }
+
+    return null;
+  }
+
+  static String? _resolveDataType(TabWidgetDto widget) {
+    final dataType = _stringOrNull(widget.dataType);
+
+    if (dataType == null) {
+      return null;
+    }
+
+    return dataType.toUpperCase();
   }
 
   static String _resolveTitle(TabWidgetDto widget, TabWidgetDataDto? data) {
     final payload = data?.data ?? const <String, dynamic>{};
 
     return _firstNonEmpty([
-      _stringOrNull(widget.customConfig['title']),
-      _stringOrNull(widget.customConfig['name']),
-      _stringOrNull(widget.customConfig['label']),
-      _stringOrNull(payload['title']),
-      _stringOrNull(payload['name']),
-      _stringOrNull(payload['label']),
-      _formatFallbackLabel(widget.widgetTitle),
-      _formatFallbackLabel(widget.dataType),
-      _formatFallbackLabel(widget.widgetType),
-      _formatFallbackLabel(data?.providerTag),
-    ]) ??
+          _stringOrNull(widget.customConfig['title']),
+          _stringOrNull(widget.customConfig['name']),
+          _stringOrNull(widget.customConfig['label']),
+          _stringOrNull(payload['title']),
+          _stringOrNull(payload['name']),
+          _stringOrNull(payload['label']),
+          _formatFallbackLabel(widget.widgetTitle),
+          _formatFallbackLabel(widget.dataType),
+          _formatFallbackLabel(widget.widgetType),
+          _formatFallbackLabel(data?.providerTag),
+        ]) ??
         'Widget';
   }
 
   static String _resolvePrimaryValue(
-      TabWidgetDto widget,
-      TabWidgetDataDto? data,
-      ) {
+    TabWidgetDto widget,
+    TabWidgetDataDto? data,
+  ) {
     final payload = data?.data ?? const <String, dynamic>{};
 
     if (_isErrorStatus(data?.status) && payload.isEmpty) {
@@ -205,9 +229,9 @@ class DashboardWidgetMapper {
   }
 
   static String? _resolveDescription(
-      TabWidgetDto widget,
-      TabWidgetDataDto? data,
-      ) {
+    TabWidgetDto widget,
+    TabWidgetDataDto? data,
+  ) {
     final payload = data?.data ?? const <String, dynamic>{};
 
     final explicitDescription = _firstNonEmpty([
@@ -281,9 +305,9 @@ class DashboardWidgetMapper {
         .split('_')
         .where((part) => part.isNotEmpty)
         .map((part) {
-      final lowerPart = part.toLowerCase();
-      return '${lowerPart[0].toUpperCase()}${lowerPart.substring(1)}';
-    })
+          final lowerPart = part.toLowerCase();
+          return '${lowerPart[0].toUpperCase()}${lowerPart.substring(1)}';
+        })
         .join(' ');
   }
 

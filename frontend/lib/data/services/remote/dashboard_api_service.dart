@@ -167,13 +167,13 @@ class DashboardApiService {
   }) async {
     final response = await apiClient
         .post(_tabWidgetsEndpoint(dashboardId: dashboardId, tabId: tabId), {
-      'tab_id': tabId,
-      'widget_id': widgetId,
-      'widget_index': widgetIndex,
-      'provider_name': providerName,
-      'custom_config': customConfig,
-      'data_type': dataType,
-    })
+          'tab_id': tabId,
+          'widget_id': widgetId,
+          'widget_index': widgetIndex,
+          'provider_name': providerName,
+          'custom_config': customConfig,
+          'data_type': dataType,
+        })
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
