@@ -69,7 +69,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final errorMessage = _viewModel.errorMessage;
             final tabs = _viewModel.tabs;
             final selectedTab = _viewModel.selectedTab;
-            final selectedItem = _viewModel.selectedItem;
+            final selectedItem = _resolveCurrentSelectedItem(
+              items: items,
+              selectedItem: _viewModel.selectedItem,
+            );
 
             final isMobileLandscape =
                 AppPlatform.isMobile &&
@@ -94,6 +97,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             else
                               const Spacer(),
                             const SizedBox(width: AppSpacing.md),
+                            _buildRefreshButton(compact: true),
+                            const SizedBox(width: AppSpacing.sm),
                             ProfileMenuButton(
                               onLoggedOut: _handleProfileLoggedOut,
                             ),
@@ -121,9 +126,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             if (selectedTab != null) ...[
                               const SizedBox(height: AppSpacing.lg),
-                              _buildTabSelector(
-                                tabs: tabs,
-                                selectedTab: selectedTab,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: _buildTabSelector(
+                                      tabs: tabs,
+                                      selectedTab: selectedTab,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  _buildRefreshButton(
+                                    compact: _isMobilePlatform,
+                                  ),
+                                ],
                               ),
                             ],
                           ],
@@ -273,6 +289,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
 
     context.go(AppRoutes.auth);
+  }
+
+  Future<void> _handleRefreshCurrentTabPressed() async {
+    await _viewModel.refreshCurrentTab();
+
+    if (!mounted) return;
+
+    _showViewModelErrorIfNeeded();
   }
 
   Future<void> _handleAddWidgetPressed() async {
@@ -444,6 +468,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _showViewModelErrorIfNeeded();
   }
 
+  Widget _buildRefreshButton({required bool compact}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final canRefresh = _viewModel.canRefreshCurrentTab;
+    final isRefreshing = _viewModel.isRefreshingCurrentTab;
+    final remainingSeconds = _viewModel.refreshCooldownRemainingSeconds;
+
+    final isDisabled = !canRefresh;
+
+    final label = remainingSeconds > 0
+        ? '${remainingSeconds}s'
+        : compact
+        ? 'Actualizar'
+        : 'Actualizar datos';
+
+    final foregroundColor = isDisabled
+        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.65)
+        : Colors.white;
+
+    final iconColor = isDisabled
+        ? colorScheme.onSurfaceVariant.withValues(alpha: 0.65)
+        : colorScheme.primary;
+
+    final backgroundColor = isDisabled
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.55)
+        : colorScheme.primary.withValues(alpha: 0.08);
+
+    final borderColor = isDisabled
+        ? colorScheme.outlineVariant.withValues(alpha: 0.55)
+        : colorScheme.primary.withValues(alpha: 0.55);
+
+    return TextButton.icon(
+      onPressed: canRefresh ? _handleRefreshCurrentTabPressed : null,
+      icon: isRefreshing
+          ? SizedBox(
+              width: compact ? 14 : 16,
+              height: compact ? 14 : 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: iconColor,
+              ),
+            )
+          : Icon(
+              Icons.refresh_rounded,
+              size: compact ? 17 : 18,
+              color: iconColor,
+            ),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: compact ? 12.5 : 14,
+          fontWeight: FontWeight.w700,
+          color: foregroundColor,
+        ),
+      ),
+      style: TextButton.styleFrom(
+        foregroundColor: foregroundColor,
+        disabledForegroundColor: foregroundColor,
+        backgroundColor: backgroundColor,
+        disabledBackgroundColor: backgroundColor,
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 12 : 18,
+          vertical: compact ? 9 : 13,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        side: BorderSide(color: borderColor, width: 1.2),
+      ),
+    );
+  }
+
   Widget _buildHeaderSurface({required Widget child}) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -579,15 +672,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : _portraitBottomSheetHeightFactor,
           child: SafeArea(
             top: false,
-            child: DetailsSidePanel(
-              item: item,
-              showCard: false,
-              onDelete: () async {
-                await _handleDeleteWidgetPressed(item);
+            child: ListenableBuilder(
+              listenable: _viewModel,
+              builder: (context, _) {
+                final currentItem =
+                    _resolveCurrentSelectedItem(
+                      items: _viewModel.items,
+                      selectedItem: item,
+                    ) ??
+                    item;
 
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
+                return DetailsSidePanel(
+                  item: currentItem,
+                  showCard: false,
+                  onDelete: () async {
+                    await _handleDeleteWidgetPressed(currentItem);
+
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                );
               },
             ),
           ),
@@ -609,6 +714,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     _viewModel.selectItem(item);
+  }
+
+  DashboardWidgetItem? _resolveCurrentSelectedItem({
+    required List<DashboardWidgetItem> items,
+    required DashboardWidgetItem? selectedItem,
+  }) {
+    if (selectedItem == null) {
+      return null;
+    }
+
+    for (final item in items) {
+      if (item.id == selectedItem.id) {
+        return item;
+      }
+    }
+
+    return null;
   }
 
   Widget _buildTabSelector({
