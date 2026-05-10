@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 
 class DashboardHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final Widget? leading;
   final bool showText;
 
   const DashboardHeader({
@@ -11,6 +13,7 @@ class DashboardHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.leading,
     this.showText = true,
   });
 
@@ -22,7 +25,11 @@ class DashboardHeader extends StatelessWidget {
 
     return Row(
       children: [
-        if (showText)
+        if (showText) ...[
+          if (leading != null) ...[
+            leading!,
+            const SizedBox(width: AppSpacing.md),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,7 +42,7 @@ class DashboardHeader extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle!,
                     style: textTheme.bodySmall?.copyWith(
@@ -45,10 +52,14 @@ class DashboardHeader extends StatelessWidget {
                 ],
               ],
             ),
-          )
-        else
+          ),
+        ] else
           const Spacer(),
-        ?trailing,
+        if (trailing != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 20, top: 8),
+            child: trailing!,
+          ),
       ],
     );
   }

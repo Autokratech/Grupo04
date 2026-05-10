@@ -4,8 +4,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DashboardDatabaseService {
-  static const String _databaseName = 'dashboard_cache_v11.db';
-  static const int _databaseVersion = 9;
+  static const String _databaseName = 'dashboard_cache_v14.db';
+  static const int _databaseVersion = 12;
 
   Database? _database;
 

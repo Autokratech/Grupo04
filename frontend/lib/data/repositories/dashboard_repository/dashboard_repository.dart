@@ -1,6 +1,7 @@
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_add_option.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
 
 abstract class DashboardRepository {
@@ -34,9 +35,13 @@ abstract class DashboardRepository {
     required String tabId,
   });
 
+  Future<List<WidgetCatalogItem>> getWidgetCatalog();
+
   Future<List<DashboardWidgetItem>> addTabWidget({
+    required String dashboardId,
     required String tabId,
     required WidgetCatalogItem catalogItem,
+    required WidgetAddOption option,
   });
 
   Future<List<DashboardWidgetItem>> deleteTabWidget({

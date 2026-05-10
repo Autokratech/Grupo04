@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
+import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/domain/models/app_user.dart';
 import 'package:frontend/domain/models/linked_provider_status.dart';
 import 'package:frontend/domain/models/user_role.dart';
@@ -23,6 +25,10 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
   late final ProfileViewModel _viewModel;
 
+  final ScrollController _profileScrollController = ScrollController(
+    keepScrollOffset: false,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -31,27 +37,44 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
   @override
   void dispose() {
+    _profileScrollController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final isMobile = AppPlatform.isMobile;
 
     return TextButton.icon(
       onPressed: _openProfileDialog,
-      style: TextButton.styleFrom(
-        backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      icon: Icon(
+        Icons.account_circle_outlined,
+        size: isMobile ? 20 : 30,
+        color: colorScheme.primary,
       ),
-      icon: const Icon(Icons.account_circle_outlined, size: 28),
-      label: Text('Perfil', style: textTheme.titleMedium),
+      label: Text(
+        'Perfil',
+        style: TextStyle(
+          fontSize: isMobile ? 13 : 15,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 12 : 18,
+          vertical: isMobile ? 9 : 13,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        side: BorderSide(
+          color: colorScheme.primary.withValues(alpha: 0.55),
+          width: 1.2,
+        ),
+      ),
     );
   }
 
@@ -70,6 +93,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
+              clipBehavior: Clip.antiAlias,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: _dialogMaxWidth,
@@ -81,15 +105,13 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.lg,
                         AppSpacing.lg + 32,
-                        AppSpacing.lg,
+                        AppSpacing.sm,
                         AppSpacing.lg,
                       ),
                       child: ListenableBuilder(
                         listenable: _viewModel,
                         builder: (context, _) {
-                          return SingleChildScrollView(
-                            child: _buildDialogContent(context),
-                          );
+                          return _buildDialogContent(context);
                         },
                       ),
                     ),
@@ -119,6 +141,22 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
 
     Navigator.of(context, rootNavigator: true).pop();
     widget.onLoggedOut();
+  }
+
+  Future<void> _connectGithub() async {
+    await _viewModel.connectGithub();
+
+    if (!mounted) return;
+
+    final errorMessage = _viewModel.errorMessage;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          errorMessage ?? 'Se ha abierto GitHub para autorizar la conexión.',
+        ),
+      ),
+    );
   }
 
   Widget _buildDialogContent(BuildContext context) {
@@ -160,10 +198,32 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAccountInfo(context, user),
+        Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.md),
+          child: _buildAccountInfo(context, user),
+        ),
         const SizedBox(height: AppSpacing.md),
-        _buildProvidersSection(context),
+        Flexible(child: _buildScrollableProvidersSection(context)),
       ],
+    );
+  }
+
+  Widget _buildScrollableProvidersSection(BuildContext context) {
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      child: Scrollbar(
+        controller: _profileScrollController,
+        thumbVisibility: false,
+        radius: const Radius.circular(999),
+        thickness: 4,
+        child: Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.md),
+          child: SingleChildScrollView(
+            controller: _profileScrollController,
+            child: _buildProvidersSection(context),
+          ),
+        ),
+      ),
     );
   }
 
@@ -175,10 +235,17 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.primary.withValues(alpha: 0.02),
+          ],
+        ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.32),
+          color: AppColors.primary.withValues(alpha: 0.22),
           width: 2,
         ),
       ),
@@ -197,14 +264,17 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
               children: [
                 Text(
                   user.email,
-                  style: textTheme.titleSmall,
+                  style: textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _roleLabel(user.role),
                   style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                    color: colorScheme.secondary,
                   ),
                 ),
                 if (!user.active) ...[
@@ -240,18 +310,17 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           const SizedBox(height: 4),
           Text(
             'Vinculaciones preparadas para futuros widgets. OAuth real pendiente de contrato backend.',
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: textTheme.bodySmall?.copyWith(color: colorScheme.secondary),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const LinkedProviderTile(
+          LinkedProviderTile(
             icon: Icons.code,
             title: 'GitHub',
             description:
                 'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
             status: LinkedProviderStatus.disconnected,
             actionLabel: 'Conectar',
+            onAction: _connectGithub,
           ),
           const SizedBox(height: AppSpacing.sm),
           const LinkedProviderTile(

@@ -4,13 +4,14 @@ import 'package:frontend/data/repositories/dashboard_repository/dashboard_reposi
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository_impl.dart';
 import 'package:frontend/data/repositories/profile_repository/profile_repository.dart';
 import 'package:frontend/data/repositories/profile_repository/profile_repository_impl.dart';
-import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
-import 'package:frontend/data/services/local/dashboard_local_data_source_factory.dart';
-import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
-import 'package:frontend/data/services/local/session_storage_service.dart';
+import 'package:frontend/data/services/local/datasources/dashboard_local_data_source.dart';
+import 'package:frontend/data/services/local/factories/dashboard_local_data_source_factory.dart';
+import 'package:frontend/data/services/local/storage/dashboard_preferences_service.dart';
+import 'package:frontend/data/services/local/storage/session_storage_service.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 import 'package:frontend/data/services/remote/auth_api_service.dart';
 import 'package:frontend/data/services/remote/dashboard_api_service.dart';
+import 'package:frontend/data/services/remote/oauth_service.dart';
 import 'package:frontend/data/services/remote/user_api_service.dart';
 import 'package:frontend/features/profile/presentation/viewmodels/profile_viewmodel.dart';
 import 'package:get_it/get_it.dart';
@@ -56,6 +57,10 @@ Future<void> setupDependencies() async {
     () => UserApiService(apiClient: sl<ApiClient>()),
   );
 
+  sl.registerLazySingleton<OAuthService>(
+    () => OAuthService(apiClient: sl<ApiClient>()),
+  );
+
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       authApiService: sl<AuthApiService>(),
@@ -65,6 +70,12 @@ Future<void> setupDependencies() async {
 
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(userApiService: sl<UserApiService>()),
+  );
+
+  sl.registerLazySingleton<DashboardLocalDataSource>(
+    () => createDashboardLocalDataSource(
+      sharedPreferences: sl<SharedPreferences>(),
+    ),
   );
 
   sl.registerLazySingleton<DashboardRepository>(
@@ -79,12 +90,7 @@ Future<void> setupDependencies() async {
     () => ProfileViewModel(
       profileRepository: sl<ProfileRepository>(),
       authRepository: sl<AuthRepository>(),
-    ),
-  );
-
-  sl.registerLazySingleton<DashboardLocalDataSource>(
-    () => createDashboardLocalDataSource(
-      sharedPreferences: sl<SharedPreferences>(),
+      oauthService: sl<OAuthService>(),
     ),
   );
 }

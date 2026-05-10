@@ -35,4 +35,31 @@ class WidgetLabels {
         return 'Issue';
     }
   }
+
+  static String provider(String? provider) {
+    final normalizedProvider = provider?.trim().toLowerCase();
+
+    if (normalizedProvider == null || normalizedProvider.isEmpty) {
+      return 'Unknown';
+    }
+
+    switch (normalizedProvider) {
+      case 'github':
+        return 'GitHub';
+      case 'gitlab':
+        return 'GitLab';
+      case 'azure':
+        return 'Azure';
+      case 'gcp':
+        return 'Google Cloud';
+      case 'windows':
+        return 'Windows';
+      case 'linux':
+        return 'Linux';
+      case 'agent':
+        return 'Agente local';
+      default:
+        return '$provider';
+    }
+  }
 }

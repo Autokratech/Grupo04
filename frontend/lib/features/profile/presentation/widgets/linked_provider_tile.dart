@@ -30,7 +30,7 @@ class LinkedProviderTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.02),
+        color: colorScheme.primary.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: colorScheme.primary.withValues(alpha: 0.22),
@@ -44,17 +44,16 @@ class LinkedProviderTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(8),
+                  color: colorScheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.18),
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: colorScheme.onPrimaryContainer,
-                ),
+                child: Icon(icon, size: 22, color: colorScheme.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -75,11 +74,12 @@ class LinkedProviderTile extends StatelessWidget {
                         _buildStatusBadge(context),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       description,
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
+                        height: 1.35,
                       ),
                     ),
                   ],
@@ -106,11 +106,11 @@ class LinkedProviderTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: 3,
+        vertical: 4,
       ),
       decoration: BoxDecoration(
         color: _statusBackgroundColor(colorScheme),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         _statusLabel(),

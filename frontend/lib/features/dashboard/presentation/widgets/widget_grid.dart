@@ -142,6 +142,7 @@ class WidgetGrid extends StatelessWidget {
         );
 
         return SingleChildScrollView(
+          padding: const EdgeInsets.only(top: AppSpacing.lg),
           child: shouldCenterGrid
               ? Center(
                   child: SizedBox(width: gridWidth, child: grid),

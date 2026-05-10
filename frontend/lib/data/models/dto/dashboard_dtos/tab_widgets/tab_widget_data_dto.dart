@@ -4,7 +4,7 @@ class TabWidgetDataDto {
   final String? status;
   final DateTime? timestamp;
   final int? ttl;
-  final Map<String, dynamic> data;
+  final Map<String, dynamic>? data;
 
   const TabWidgetDataDto({
     required this.tabWidgetId,
@@ -51,9 +51,13 @@ int? _parseInt(dynamic value) {
   return null;
 }
 
-Map<String, dynamic> _parseMap(dynamic value) {
+Map<String, dynamic>? _parseMap(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+
   if (value is! Map) {
-    return {};
+    return null;
   }
 
   return Map<String, dynamic>.from(value);

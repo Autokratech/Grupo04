@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:frontend/data/repositories/auth_repository/auth_repository.dart';
 import 'package:frontend/data/repositories/profile_repository/profile_repository.dart';
+import 'package:frontend/data/services/remote/oauth_service.dart';
 import 'package:frontend/domain/models/app_user.dart';
 import 'package:frontend/features/profile/presentation/states/profile_state.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   final ProfileRepository _profileRepository;
   final AuthRepository _authRepository;
+  final OAuthService _oauthService;
 
   ProfileState _state = ProfileState.initial;
   AppUser? _currentUser;
@@ -16,8 +18,10 @@ class ProfileViewModel extends ChangeNotifier {
   ProfileViewModel({
     required ProfileRepository profileRepository,
     required AuthRepository authRepository,
+    required OAuthService oauthService,
   }) : _profileRepository = profileRepository,
-       _authRepository = authRepository;
+       _authRepository = authRepository,
+       _oauthService = oauthService;
 
   ProfileState get state => _state;
   AppUser? get currentUser => _currentUser;
@@ -38,6 +42,18 @@ class ProfileViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> connectGithub() async {
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _oauthService.connectGithub();
+    } catch (_) {
+      _errorMessage = 'No se ha podido iniciar la conexión con GitHub.';
+      notifyListeners();
+    }
   }
 
   Future<bool> logout() async {

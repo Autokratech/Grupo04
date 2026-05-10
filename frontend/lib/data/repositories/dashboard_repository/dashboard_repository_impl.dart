@@ -1,16 +1,17 @@
+import 'package:frontend/data/fallbacks/fallback_widget_catalog.dart';
 import 'package:frontend/data/mappers/dashboard_mapper.dart';
 import 'package:frontend/data/mappers/dashboard_widget_mapper.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
+import 'package:frontend/data/mappers/widget_catalog_mapper.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tabs/dashboard_tab_dto.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
-import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
-import 'package:frontend/data/services/local/session_storage_service.dart';
+import 'package:frontend/data/services/local/datasources/dashboard_local_data_source.dart';
+import 'package:frontend/data/services/local/storage/session_storage_service.dart';
 import 'package:frontend/data/services/remote/dashboard_api_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_add_option.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
-import 'package:frontend/domain/models/widget_status.dart';
-import 'package:frontend/domain/models/widget_type.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   final DashboardLocalDataSource localDataSource;
@@ -103,26 +104,6 @@ class DashboardRepositoryImpl implements DashboardRepository {
     if (createdTab.id.trim().isEmpty) {
       throw StateError('La tab creada no tiene id válido');
     }
-
-    try {
-      final refreshedTabsDto = await apiService.getDashboardTabs(
-        dashboardId: dashboardId,
-      );
-
-      final refreshedTabs = DashboardMapper.tabsToDomain(refreshedTabsDto);
-
-      if (refreshedTabs.isNotEmpty) {
-        await localDataSource.cacheTabs(
-          dashboardId: dashboardId,
-          tabs: refreshedTabs,
-        );
-
-        return refreshedTabs.firstWhere(
-          (tab) => tab.id == createdTab.id,
-          orElse: () => createdTab,
-        );
-      }
-    } catch (_) {}
 
     await _cacheCreatedRemoteTab(
       dashboardId: dashboardId,
@@ -220,10 +201,17 @@ class DashboardRepositoryImpl implements DashboardRepository {
     required String dashboardId,
     required String tabId,
   }) async {
-    await localDataSource.deleteLocalTab(
-      dashboardId: dashboardId,
-      tabId: tabId,
-    );
+    if (_isLocalDashboardId(dashboardId)) {
+      await localDataSource.deleteLocalTab(
+        dashboardId: dashboardId,
+        tabId: tabId,
+      );
+      return;
+    }
+
+    await apiService.deleteDashboardTab(dashboardId: dashboardId, tabId: tabId);
+
+    await _removeTabFromLocalCache(dashboardId: dashboardId, tabId: tabId);
   }
 
   @override
@@ -240,14 +228,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final responseDto = await apiService.getTabWidgets(
         dashboardId: dashboardId,
         tabId: tabId,
-        userId: _currentUserId,
       );
 
       final remoteWidgets = DashboardWidgetMapper.toDomainList(responseDto);
-
-      if (remoteWidgets.isEmpty) {
-        return _getFallbackTabItems(dashboardId: dashboardId, tabId: tabId);
-      }
 
       await localDataSource.cacheTabWidgets(
         tabId: tabId,
@@ -261,45 +244,65 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<List<WidgetCatalogItem>> getWidgetCatalog() async {
+    try {
+      final catalogDtos = await apiService.getWidgetCatalog();
+      final remoteCatalog = WidgetCatalogMapper.toDomainList(catalogDtos);
+
+      if (remoteCatalog.isNotEmpty) {
+        return remoteCatalog;
+      }
+
+      return FallbackWidgetCatalog.items;
+    } catch (_) {
+      return FallbackWidgetCatalog.items;
+    }
+  }
+
+  @override
   Future<List<DashboardWidgetItem>> addTabWidget({
+    required String dashboardId,
     required String tabId,
     required WidgetCatalogItem catalogItem,
+    required WidgetAddOption option,
   }) async {
+    if (_isLocalDashboardId(dashboardId) ||
+        _isLocalTabId(dashboardId: dashboardId, tabId: tabId)) {
+      throw StateError('No se puede añadir un widget remoto en una tab local');
+    }
+
     final cachedWidgets = await localDataSource.getCachedTabWidgets(
       tabId: tabId,
     );
 
-    final widgetId = '${tabId}_${catalogItem.id}';
+    final nextWidgetIndex = cachedWidgets.length + 1;
 
-    final alreadyExists = cachedWidgets.any((widget) => widget.id == widgetId);
+    await apiService.addDashboardTabWidget(
+      dashboardId: dashboardId,
+      tabId: tabId,
+      widgetId: catalogItem.id,
+      widgetIndex: nextWidgetIndex,
+      providerName: option.providerName,
+      dataType: option.dataType,
+      customConfig: option.customConfig,
+    );
 
-    if (alreadyExists) {
-      throw StateError('El widget ya existe en este dashboard');
+    final responseDto = await apiService.getTabWidgets(
+      dashboardId: dashboardId,
+      tabId: tabId,
+    );
+
+    final remoteWidgets = DashboardWidgetMapper.toDomainList(responseDto);
+
+    if (remoteWidgets.isEmpty) {
+      throw StateError(
+        'El widget se ha añadido, pero no se han podido recargar los widgets de la tab',
+      );
     }
 
-    final newWidget = DashboardWidgetItem(
-      id: widgetId,
-      title: catalogItem.title,
-      type: catalogItem.type,
-      status: WidgetStatus.inactive,
-      primaryValue: 'Sin datos',
-      description: catalogItem.description,
-      position: cachedWidgets.length,
-    );
+    await localDataSource.cacheTabWidgets(tabId: tabId, widgets: remoteWidgets);
 
-    final updatedWidgets = [...cachedWidgets, newWidget];
-
-    final normalizedWidgets = [
-      for (var i = 0; i < updatedWidgets.length; i++)
-        updatedWidgets[i].copyWith(position: i),
-    ];
-
-    await localDataSource.cacheTabWidgets(
-      tabId: tabId,
-      widgets: normalizedWidgets,
-    );
-
-    return normalizedWidgets;
+    return remoteWidgets;
   }
 
   @override
@@ -339,7 +342,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }) async {
     final normalizedWidgets = <DashboardWidgetItem>[];
 
-    for (int i = 0; i < widgets.length; i++) {
+    for (var i = 0; i < widgets.length; i++) {
       normalizedWidgets.add(widgets[i].copyWith(position: i));
     }
 
@@ -349,6 +352,41 @@ class DashboardRepositoryImpl implements DashboardRepository {
     );
 
     return normalizedWidgets;
+  }
+
+  Future<void> _removeTabFromLocalCache({
+    required String dashboardId,
+    required String tabId,
+  }) async {
+    final cachedTabs = await localDataSource.getCachedTabs(
+      dashboardId: dashboardId,
+    );
+
+    if (cachedTabs.length <= 1) {
+      await localDataSource.deleteLocalTab(
+        dashboardId: dashboardId,
+        tabId: tabId,
+      );
+      return;
+    }
+
+    final updatedTabs = cachedTabs.where((tab) => tab.id != tabId).toList();
+
+    if (updatedTabs.length == cachedTabs.length) {
+      return;
+    }
+
+    final normalizedTabs = [
+      for (var i = 0; i < updatedTabs.length; i++)
+        updatedTabs[i].copyWith(position: i),
+    ];
+
+    await localDataSource.cacheTabs(
+      dashboardId: dashboardId,
+      tabs: normalizedTabs,
+    );
+
+    await localDataSource.cacheTabWidgets(tabId: tabId, widgets: const []);
   }
 
   Future<Dashboard> _getFallbackDashboard(String userId) async {
@@ -432,19 +470,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       return cachedWidgets;
     }
 
-    if (tabId != _defaultTabIdForDashboard(dashboardId)) {
-      return [];
-    }
-
-    final initialWidgets = _buildInitialWidgetItems(tabId)
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    await localDataSource.cacheTabWidgets(
-      tabId: tabId,
-      widgets: initialWidgets,
-    );
-
-    return initialWidgets;
+    return [];
   }
 
   String get _currentUserId {
@@ -500,140 +526,5 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
 
     return maxIndex + 1;
-  }
-
-  // TODO: sustituir por widgets recibidos desde backend.
-  List<DashboardWidgetItem> _buildInitialWidgetItems(String tabId) {
-    return [
-      DashboardWidgetItem(
-        id: '${tabId}_active-services',
-        title: 'Servicios activos',
-        type: WidgetType.service,
-        status: WidgetStatus.ok,
-        primaryValue: '12',
-        description: 'Número total de servicios operativos en este momento.',
-        position: 0,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_open-incidents',
-        title: 'Incidencias abiertas',
-        type: WidgetType.alert,
-        status: WidgetStatus.error,
-        primaryValue: '3',
-        description: 'Incidencias actualmente pendientes de revisión o cierre.',
-        position: 1,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_sync-status',
-        title: 'Sincronización',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Operativa',
-        description:
-            'Estado actual del proceso de sincronización entre sistemas.',
-        position: 2,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_cpu-usage',
-        title: 'Uso de CPU',
-        type: WidgetType.metric,
-        status: WidgetStatus.ok,
-        primaryValue: '42%',
-        description: 'Carga media actual del procesador del agente principal.',
-        position: 3,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_memory-usage',
-        title: 'Uso de memoria',
-        type: WidgetType.metric,
-        status: WidgetStatus.ok,
-        primaryValue: '68%',
-        description:
-            'Porcentaje de memoria utilizada en el entorno monitorizado.',
-        position: 4,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_disk-space',
-        title: 'Espacio en disco',
-        type: WidgetType.metric,
-        status: WidgetStatus.error,
-        primaryValue: '91%',
-        description: 'Uso actual del almacenamiento principal.',
-        position: 5,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_deployments',
-        title: 'Despliegues recientes',
-        type: WidgetType.list,
-        status: WidgetStatus.ok,
-        primaryValue: '5',
-        description: 'Despliegues registrados durante las últimas 24 horas.',
-        position: 6,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_failed-jobs',
-        title: 'Jobs fallidos',
-        type: WidgetType.alert,
-        status: WidgetStatus.error,
-        primaryValue: '2',
-        description: 'Tareas automatizadas que han terminado con error.',
-        position: 7,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_api-latency',
-        title: 'Latencia API',
-        type: WidgetType.metric,
-        status: WidgetStatus.ok,
-        primaryValue: '128 ms',
-        description: 'Tiempo medio de respuesta de la API principal.',
-        position: 8,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_cloud-cost',
-        title: 'Coste cloud',
-        type: WidgetType.chart,
-        status: WidgetStatus.ok,
-        primaryValue: '248 €',
-        description: 'Estimación provisional del coste mensual acumulado.',
-        position: 9,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_security-alerts',
-        title: 'Alertas de seguridad',
-        type: WidgetType.alert,
-        status: WidgetStatus.inactive,
-        primaryValue: 'Sin datos',
-        description:
-            'Estado pendiente de integración con proveedor de seguridad.',
-        position: 10,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_repository-status',
-        title: 'Repositorios',
-        type: WidgetType.service,
-        status: WidgetStatus.ok,
-        primaryValue: '8',
-        description: 'Repositorios vinculados pendientes de integración real.',
-        position: 11,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_pipeline-status',
-        title: 'Pipelines',
-        type: WidgetType.list,
-        status: WidgetStatus.error,
-        primaryValue: '1 fallido',
-        description: 'Resumen provisional del estado de pipelines recientes.',
-        position: 12,
-      ),
-      DashboardWidgetItem(
-        id: '${tabId}_agent-health',
-        title: 'Estado agentes',
-        type: WidgetType.status,
-        status: WidgetStatus.ok,
-        primaryValue: 'Todos online',
-        description: 'Estado general de los agentes instalados.',
-        position: 13,
-      ),
-    ];
   }
 }

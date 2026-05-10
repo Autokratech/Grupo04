@@ -5,6 +5,7 @@ import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 import 'package:frontend/features/dashboard/presentation/utils/widget_labels.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/provider_logo.dart';
 
 class DashboardCard extends StatelessWidget {
   final DashboardWidgetItem item;
@@ -38,7 +39,7 @@ class DashboardCard extends StatelessWidget {
           color: isSelected
               ? AppColors.primary
               : statusColor.withValues(alpha: isInactive ? 0.18 : 0.10),
-          width: isSelected ? 1.5 : 2,
+          width: 2,
         ),
         boxShadow: [
           BoxShadow(
@@ -84,22 +85,25 @@ class DashboardCard extends StatelessWidget {
                         statusColor: statusColor,
                       ),
                       SizedBox(
-                        height: isCompact ? AppSpacing.sm : AppSpacing.md,
+                        height: isCompact ? AppSpacing.xs : AppSpacing.sm,
                       ),
-                      Center(
-                        child: Text(
-                          item.primaryValue,
-                          textAlign: TextAlign.center,
-                          style: valueStyle?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            height: 2.5,
-                            color: isInactive ? AppColors.textSecondary : null,
+                      Expanded(
+                        child: Align(
+                          alignment: const Alignment(0, 0),
+                          child: Text(
+                            item.primaryValue,
+                            textAlign: TextAlign.center,
+                            style: valueStyle?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: isInactive
+                                  ? AppColors.textSecondary
+                                  : null,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
                       _buildFooter(
                         isCompact: isCompact,
                         labelStyle: labelStyle,
@@ -122,6 +126,8 @@ class DashboardCard extends StatelessWidget {
   }) {
     final iconBoxSize = isCompact ? 30.0 : 34.0;
     final iconSize = isCompact ? 17.0 : 20.0;
+    final hasProvider =
+        item.provider != null && item.provider!.trim().isNotEmpty;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -151,6 +157,10 @@ class DashboardCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (hasProvider) ...[
+          SizedBox(width: isCompact ? 6 : AppSpacing.sm),
+          _buildProviderBadge(isCompact: isCompact),
+        ],
       ],
     );
   }
@@ -166,6 +176,24 @@ class DashboardCard extends StatelessWidget {
     }
   }
 
+  Widget _buildProviderBadge({required bool isCompact}) {
+    final size = isCompact ? 18.0 : 22.0;
+
+    return Container(
+      width: isCompact ? 28 : 32,
+      height: isCompact ? 28 : 32,
+      padding: EdgeInsets.all(isCompact ? 5 : 6),
+      decoration: BoxDecoration(
+        color: AppColors.textSecondary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.textSecondary.withValues(alpha: 0.10),
+        ),
+      ),
+      child: ProviderLogo(provider: item.provider, size: size),
+    );
+  }
+
   Widget _buildFooter({
     required bool isCompact,
     required TextStyle? labelStyle,
@@ -175,7 +203,7 @@ class DashboardCard extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            WidgetLabels.type(item.type),
+            WidgetLabels.provider(item.provider),
             style: labelStyle?.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,

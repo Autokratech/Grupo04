@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="270 50 160 160"
+  role="img"
+  aria-label="Autokratech A logo"
+>
+  <defs>
+    <linearGradient id="leftLegGradient" gradientUnits="userSpaceOnUse" x1="349.7585" y1="78.878" x2="284.4757" y2="239.3858">
+      <stop offset="0" stop-color="#E7586E"/>
+      <stop offset="0.2898" stop-color="#F07F6A"/>
+      <stop offset="0.5881" stop-color="#F7A168"/>
+      <stop offset="0.8356" stop-color="#FBB666"/>
+      <stop offset="1" stop-color="#FDBD65"/>
+    </linearGradient>
+
+    <linearGradient id="highlightGradient" gradientUnits="userSpaceOnUse" x1="313.4844" y1="26.4087" x2="391.8436" y2="160.973">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.8436" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="rightLegGradient" gradientUnits="userSpaceOnUse" x1="353.3651" y1="100.283" x2="407.1698" y2="230.0086">
+      <stop offset="0" stop-color="#FDBD65"/>
+      <stop offset="0.118" stop-color="#FBB666"/>
+      <stop offset="0.2956" stop-color="#F7A168"/>
+      <stop offset="0.5107" stop-color="#EF7F6B"/>
+      <stop offset="0.7532" stop-color="#E5516F"/>
+      <stop offset="0.9079" stop-color="#DE2F72"/>
+    </linearGradient>
+
+    <linearGradient id="baseGradient" gradientUnits="userSpaceOnUse" x1="379.7167" y1="176.0227" x2="400.5918" y2="226.3535">
+      <stop offset="0" stop-color="#FDBD65"/>
+      <stop offset="0.118" stop-color="#FBB666"/>
+      <stop offset="0.2956" stop-color="#F7A168"/>
+      <stop offset="0.5107" stop-color="#EF7F6B"/>
+      <stop offset="0.7532" stop-color="#E5516F"/>
+      <stop offset="0.9079" stop-color="#DE2F72"/>
+    </linearGradient>
+  </defs>
+
+  <polygon
+    fill="url(#leftLegGradient)"
+    points="348.604,128.634 334.963,91.73 283.184,195.644 315.156,195.644"
+  />
+
+  <polygon
+    opacity="0.9"
+    fill="url(#highlightGradient)"
+    points="413.289,196.495 350.296,60.975 341.227,78.991 395.846,196.495 413.271,196.495"
+  />
+
+  <polygon
+    fill="url(#rightLegGradient)"
+    points="400.793,168.54 350.604,60.565 332.604,96.321 368.09,168.54"
+  />
+
+  <polygon
+    fill="url(#baseGradient)"
+    points="352.299,171.54 364.091,196.085 381.625,196.085 413.578,196.085 413.597,196.085 402.188,171.54"
+  />
+</svg>

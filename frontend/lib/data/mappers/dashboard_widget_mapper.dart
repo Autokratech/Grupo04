@@ -1,6 +1,6 @@
-import 'package:frontend/data/models/dto/dashboard_dtos/tab_widget_data_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/tab_widget_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets_response_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets/tab_widget_data_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets/tab_widget_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets/tab_widgets_response_dto.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
@@ -39,6 +39,8 @@ class DashboardWidgetMapper {
       primaryValue: _resolvePrimaryValue(widget, data),
       description: _resolveDescription(widget, data),
       position: widget.widgetIndex ?? 0,
+      provider: _resolveProvider(widget, data),
+      dataType: _resolveDataType(widget),
     );
   }
 
@@ -54,6 +56,7 @@ class DashboardWidgetMapper {
       case 'text_list':
       case 'pipeline_list':
       case 'list_resources':
+      case 'list_ports':
         return WidgetType.list;
 
       case 'chart':
@@ -90,10 +93,12 @@ class DashboardWidgetMapper {
       case 'success':
       case 'active':
         return WidgetStatus.ok;
+
       case 'error':
       case 'failed':
       case 'failure':
         return WidgetStatus.error;
+
       case 'inactive':
       case 'disabled':
       case 'unknown':
@@ -102,16 +107,51 @@ class DashboardWidgetMapper {
     }
   }
 
+  static String? _resolveProvider(TabWidgetDto widget, TabWidgetDataDto? data) {
+    final provider = _firstNonEmpty([
+      _stringOrNull(data?.providerTag),
+      _stringOrNull(widget.customConfig['provider']),
+      _stringOrNull(widget.customConfig['provider_tag']),
+      _stringOrNull(widget.customConfig['providerName']),
+      _stringOrNull(widget.customConfig['provider_name']),
+    ]);
+
+    if (provider != null) {
+      return provider.toLowerCase();
+    }
+
+    final dataType = widget.dataType?.toLowerCase().trim();
+    final hasAgentId = _stringOrNull(widget.customConfig['agent_id']) != null;
+
+    if (dataType == 'system_data' || hasAgentId) {
+      return 'windows';
+    }
+
+    return null;
+  }
+
+  static String? _resolveDataType(TabWidgetDto widget) {
+    final dataType = _stringOrNull(widget.dataType);
+
+    if (dataType == null) {
+      return null;
+    }
+
+    return dataType.toUpperCase();
+  }
+
   static String _resolveTitle(TabWidgetDto widget, TabWidgetDataDto? data) {
+    final payload = data?.data ?? const <String, dynamic>{};
+
     return _firstNonEmpty([
           _stringOrNull(widget.customConfig['title']),
           _stringOrNull(widget.customConfig['name']),
           _stringOrNull(widget.customConfig['label']),
-          _stringOrNull(data?.data['title']),
-          _stringOrNull(data?.data['name']),
-          _stringOrNull(data?.data['label']),
-          _formatFallbackLabel(widget.dataType),
+          _stringOrNull(payload['title']),
+          _stringOrNull(payload['name']),
+          _stringOrNull(payload['label']),
           _formatFallbackLabel(widget.widgetTitle),
+          _formatFallbackLabel(widget.dataType),
           _formatFallbackLabel(widget.widgetType),
           _formatFallbackLabel(data?.providerTag),
         ]) ??
@@ -122,7 +162,11 @@ class DashboardWidgetMapper {
     TabWidgetDto widget,
     TabWidgetDataDto? data,
   ) {
-    final payload = data?.data ?? {};
+    final payload = data?.data ?? const <String, dynamic>{};
+
+    if (_isErrorStatus(data?.status) && payload.isEmpty) {
+      return 'Error';
+    }
 
     final explicitPrimaryValue = _firstNonEmpty([
       _stringOrNull(payload['primary_value']),
@@ -156,6 +200,10 @@ class DashboardWidgetMapper {
         return _formatResourceCount(widget, normalizedCount);
       }
 
+      if (_isPortsListWidget(widget)) {
+        return _formatPortCount(normalizedCount);
+      }
+
       return normalizedCount.toString();
     }
 
@@ -170,6 +218,10 @@ class DashboardWidgetMapper {
         return _formatResourceCount(widget, items.length);
       }
 
+      if (_isPortsListWidget(widget)) {
+        return _formatPortCount(items.length);
+      }
+
       return '${items.length} elementos';
     }
 
@@ -180,10 +232,12 @@ class DashboardWidgetMapper {
     TabWidgetDto widget,
     TabWidgetDataDto? data,
   ) {
+    final payload = data?.data ?? const <String, dynamic>{};
+
     final explicitDescription = _firstNonEmpty([
-      _stringOrNull(data?.data['description']),
-      _stringOrNull(data?.data['message']),
-      _stringOrNull(data?.data['summary']),
+      _stringOrNull(payload['description']),
+      _stringOrNull(payload['message']),
+      _stringOrNull(payload['summary']),
     ]);
 
     if (explicitDescription != null) {
@@ -192,6 +246,18 @@ class DashboardWidgetMapper {
 
     final provider = _formatFallbackLabel(data?.providerTag);
     final dataType = _formatFallbackLabel(widget.dataType);
+
+    if (_isErrorStatus(data?.status)) {
+      if (provider != null && dataType != null) {
+        return 'No se pudieron cargar los datos de $dataType desde $provider.';
+      }
+
+      if (provider != null) {
+        return 'No se pudieron cargar los datos desde $provider.';
+      }
+
+      return 'No se pudieron cargar los datos del widget.';
+    }
 
     if (provider != null && dataType != null) {
       return '$dataType desde $provider.';
@@ -245,8 +311,20 @@ class DashboardWidgetMapper {
         .join(' ');
   }
 
+  static bool _isErrorStatus(String? value) {
+    final normalized = value?.toLowerCase().trim();
+
+    return normalized == 'error' ||
+        normalized == 'failed' ||
+        normalized == 'failure';
+  }
+
   static bool _isResourceListWidget(TabWidgetDto widget) {
     return widget.widgetType?.toLowerCase().trim() == 'list_resources';
+  }
+
+  static bool _isPortsListWidget(TabWidgetDto widget) {
+    return widget.widgetType?.toLowerCase().trim() == 'list_ports';
   }
 
   static bool _isCostManagementWidget(TabWidgetDto widget) {
@@ -327,5 +405,9 @@ class DashboardWidgetMapper {
       default:
         return count == 1 ? '1 recurso' : '$count recursos';
     }
+  }
+
+  static String _formatPortCount(int count) {
+    return count == 1 ? '1 puerto' : '$count puertos';
   }
 }

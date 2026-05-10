@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/models/widget_catalog_item.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/add_widget_dialog.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:frontend/features/dashboard/presentation/models/add_widget_dialog_result.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dialogs/add_widget_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/app/router/app_routes.dart';
@@ -8,15 +9,15 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
-import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
+import 'package:frontend/data/services/local/storage/dashboard_preferences_service.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dialogs/create_dashboard_tab_dialog.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_tab_selector.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/delete_dashboard_tab_dialog.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dialogs/delete_dashboard_tab_dialog.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/details_side_panel.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/widget_grid.dart';
 import 'package:frontend/features/profile/presentation/widgets/profile_menu_button.dart';
@@ -33,6 +34,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const double _detailsPanelWidth = 320;
   static const double _portraitBottomSheetHeightFactor = 0.60;
   static const double _landscapeBottomSheetHeightFactor = 0.90;
+
+  static const double _footerHeight = 34;
+  static const double _footerShadowHeight = 22;
 
   final DashboardViewModel _viewModel = DashboardViewModel(
     dashboardRepository: sl<DashboardRepository>(),
@@ -57,139 +61,209 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: ListenableBuilder(
-            listenable: _viewModel,
-            builder: (context, _) {
-              final state = _viewModel.state;
-              final items = _viewModel.items;
-              final errorMessage = _viewModel.errorMessage;
-              final tabs = _viewModel.tabs;
-              final selectedTab = _viewModel.selectedTab;
-              final selectedItem = _viewModel.selectedItem;
+        child: ListenableBuilder(
+          listenable: _viewModel,
+          builder: (context, _) {
+            final state = _viewModel.state;
+            final items = _viewModel.items;
+            final errorMessage = _viewModel.errorMessage;
+            final tabs = _viewModel.tabs;
+            final selectedTab = _viewModel.selectedTab;
+            final selectedItem = _viewModel.selectedItem;
 
-              final isMobileLandscape =
-                  AppPlatform.isMobile &&
-                  MediaQuery.of(context).orientation == Orientation.landscape;
+            final isMobileLandscape =
+                AppPlatform.isMobile &&
+                MediaQuery.of(context).orientation == Orientation.landscape;
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isMobileLandscape) ...[
-                    if (selectedTab != null) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTabSelector(
-                              tabs: tabs,
-                              selectedTab: selectedTab,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          ProfileMenuButton(
-                            onLoggedOut: _handleProfileLoggedOut,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                    ],
-                  ] else ...[
-                    DashboardHeader(
-                      title: 'Autokratech',
-                      subtitle:
-                          'Centraliza métricas, alertas y conexiones en dashboards configurables.',
-                      trailing: ProfileMenuButton(
-                        onLoggedOut: _handleProfileLoggedOut,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    if (selectedTab != null) ...[
-                      _buildTabSelector(tabs: tabs, selectedTab: selectedTab),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                  ],
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWideLayout =
-                            constraints.maxWidth >= _wideLayoutBreakpoint;
+            final showFooter = !AppPlatform.isMobile;
 
-                        final mainContent = _buildDashboardContent(
-                          state,
-                          items,
-                          selectedItem,
-                          errorMessage,
-                          hasSelectedTab: selectedTab != null,
-                          canAddWidget: _viewModel.canAddWidget,
-                          onAddWidgetPressed: _handleAddWidgetPressed,
-                          onItemSelected: (item) {
-                            if (_isMobilePlatform) {
-                              _showDetailsBottomSheet(item);
-                              return;
-                            }
-
-                            _handleDesktopItemSelected(item);
-                          },
-                        );
-
-                        if (!isWideLayout) {
-                          if (_isMobilePlatform) {
-                            return mainContent;
-                          }
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: mainContent),
-
-                              if (selectedItem != null) ...[
-                                const SizedBox(height: AppSpacing.lg),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxHeight: constraints.maxHeight * 0.40,
-                                  ),
-                                  child: DetailsSidePanel(
-                                    item: selectedItem,
-                                    placement: DetailsPanelPlacement.bottom,
-                                    onClose: _viewModel.clearSelectedItem,
-                                    onDelete: () {
-                                      _handleDeleteWidgetPressed(selectedItem);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ],
-                          );
-                        }
-
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeaderSurface(
+                  child: isMobileLandscape
+                      ? Row(
                           children: [
-                            Expanded(child: mainContent),
-                            if (selectedItem != null) ...[
-                              const SizedBox(width: AppSpacing.lg),
-                              SizedBox(
-                                width: _detailsPanelWidth,
-                                child: DetailsSidePanel(
-                                  item: selectedItem,
-                                  placement: DetailsPanelPlacement.side,
-                                  onClose: _viewModel.clearSelectedItem,
-                                  onDelete: () {
-                                    _handleDeleteWidgetPressed(selectedItem);
-                                  },
+                            if (selectedTab != null)
+                              Expanded(
+                                child: _buildTabSelector(
+                                  tabs: tabs,
+                                  selectedTab: selectedTab,
                                 ),
+                              )
+                            else
+                              const Spacer(),
+                            const SizedBox(width: AppSpacing.md),
+                            ProfileMenuButton(
+                              onLoggedOut: _handleProfileLoggedOut,
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            DashboardHeader(
+                              title: 'Autokratech',
+                              subtitle: _isMobilePlatform
+                                  ? null
+                                  : 'Centraliza métricas, alertas y conexiones en dashboards configurables.',
+                              leading: SizedBox(
+                                width: _isMobilePlatform ? 34 : 50,
+                                height: _isMobilePlatform ? 34 : 50,
+                                child: SvgPicture.asset(
+                                  'assets/icons/logo/a.svg',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              trailing: ProfileMenuButton(
+                                onLoggedOut: _handleProfileLoggedOut,
+                              ),
+                            ),
+                            if (selectedTab != null) ...[
+                              const SizedBox(height: AppSpacing.lg),
+                              _buildTabSelector(
+                                tabs: tabs,
+                                selectedTab: selectedTab,
                               ),
                             ],
                           ],
-                        );
-                      },
-                    ),
+                        ),
+                ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          0,
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWideLayout =
+                                constraints.maxWidth >= _wideLayoutBreakpoint;
+
+                            final mainContent = _buildDashboardContent(
+                              state,
+                              items,
+                              selectedItem,
+                              errorMessage,
+                              hasSelectedTab: selectedTab != null,
+                              canAddWidget: _viewModel.canAddWidget,
+                              onAddWidgetPressed: _handleAddWidgetPressed,
+                              onItemSelected: (item) {
+                                if (_isMobilePlatform) {
+                                  _showDetailsBottomSheet(item);
+                                  return;
+                                }
+
+                                _handleDesktopItemSelected(item);
+                              },
+                            );
+
+                            if (!isWideLayout) {
+                              if (_isMobilePlatform) {
+                                return mainContent;
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(child: mainContent),
+                                  if (selectedItem != null) ...[
+                                    const SizedBox(height: AppSpacing.lg),
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxHeight: constraints.maxHeight * 0.40,
+                                      ),
+                                      child: DetailsSidePanel(
+                                        item: selectedItem,
+                                        placement: DetailsPanelPlacement.bottom,
+                                        onClose: _viewModel.clearSelectedItem,
+                                        onDelete: () {
+                                          _handleDeleteWidgetPressed(
+                                            selectedItem,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              );
+                            }
+
+                            final sidePanelTopOffset = AppSpacing.xs;
+                            final sidePanelBottomReservedSpace =
+                                _footerHeight + AppSpacing.sm;
+                            final sidePanelHeight =
+                                constraints.maxHeight -
+                                sidePanelTopOffset -
+                                sidePanelBottomReservedSpace;
+
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(child: mainContent),
+                                if (selectedItem != null) ...[
+                                  const SizedBox(width: AppSpacing.lg),
+                                  Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: AppSpacing.md,
+                                      ),
+                                      child: SizedBox(
+                                        width: _detailsPanelWidth,
+                                        height: sidePanelHeight,
+                                        child: DetailsSidePanel(
+                                          item: selectedItem,
+                                          placement: DetailsPanelPlacement.side,
+                                          onClose: _viewModel.clearSelectedItem,
+                                          onDelete: () {
+                                            _handleDeleteWidgetPressed(
+                                              selectedItem,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: _buildHeaderShadowOverlay(),
+                      ),
+
+                      if (showFooter) ...[
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: _footerHeight,
+                          child: _buildFooterShadowOverlay(),
+                        ),
+
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: _buildFooterBar(),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -202,15 +276,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _handleAddWidgetPressed() async {
-    final selectedCatalogItem = await showDialog<WidgetCatalogItem>(
+    final result = await showDialog<AddWidgetDialogResult>(
       context: context,
-      builder: (_) =>
-          AddWidgetDialog(items: _viewModel.availableWidgetCatalogItems),
+      builder: (_) => AddWidgetDialog(
+        items: _viewModel.availableWidgetCatalogItems,
+        isOptionAlreadyAdded: _viewModel.isWidgetAddOptionAlreadyAdded,
+      ),
     );
 
-    if (selectedCatalogItem == null || !mounted) return;
+    if (result == null || !mounted) return;
 
-    await _viewModel.addWidget(selectedCatalogItem);
+    await _viewModel.addWidget(catalogItem: result.item, option: result.option);
+
+    if (!mounted) return;
 
     _showViewModelErrorIfNeeded();
   }
@@ -364,6 +442,124 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _viewModel.reorderTabs(reorderedTabs);
 
     _showViewModelErrorIfNeeded();
+  }
+
+  Widget _buildHeaderSurface({required Widget child}) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final startColor = Color.alphaBlend(
+      AppColors.secondary.withValues(alpha: 0.12),
+      colorScheme.surface.withValues(alpha: 0.4),
+    );
+
+    final endColor = Color.alphaBlend(
+      AppColors.secondary.withValues(alpha: 0.03),
+      colorScheme.surface.withValues(alpha: 0.4),
+    );
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [startColor, endColor],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppPlatform.isMobile &&
+                      MediaQuery.of(context).orientation == Orientation.portrait
+                  ? AppSpacing.sm
+                  : AppSpacing.lg,
+              AppSpacing.md,
+            ),
+            child: child,
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 2,
+              color: AppColors.primary.withValues(alpha: 0.15),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderShadowOverlay() {
+    return IgnorePointer(
+      child: Container(
+        height: 18,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.45),
+              Colors.black.withValues(alpha: 0.15),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.40, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooterBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final year = DateTime.now().year;
+
+    return Container(
+      height: _footerHeight,
+      width: double.infinity,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            width: 2,
+            color: AppColors.primary.withValues(alpha: 0.151),
+          ),
+        ),
+      ),
+      child: Text(
+        '© $year Autokratech. Todos los derechos reservados.',
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooterShadowOverlay() {
+    return IgnorePointer(
+      child: Container(
+        height: _footerShadowHeight,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.45),
+              Colors.black.withValues(alpha: 0.15),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.40, 1.0],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _showDetailsBottomSheet(DashboardWidgetItem item) async {

@@ -5,6 +5,7 @@ import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/domain/models/widget_status.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 import 'package:frontend/features/dashboard/presentation/utils/widget_labels.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/provider_logo.dart';
 
 enum DetailsPanelPlacement { side, bottom }
 
@@ -80,8 +81,8 @@ class DetailsSidePanel extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
-          color: AppColors.primary.withValues(alpha: 0.50),
-          width: 2,
+          color: AppColors.primary.withValues(alpha: 0.15),
+          width: 2.5,
         ),
       ),
       child: content,
@@ -95,20 +96,7 @@ class DetailsSidePanel extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.primary),
-          ),
-          child: Icon(
-            _iconForType(item.type),
-            color: colorScheme.onPrimary,
-            size: 24,
-          ),
-        ),
+        _buildHeaderLeading(colorScheme: colorScheme),
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
@@ -166,6 +154,30 @@ class DetailsSidePanel extends StatelessWidget {
     );
   }
 
+  Widget _buildHeaderLeading({required ColorScheme colorScheme}) {
+    final provider = item.provider?.trim();
+
+    if (provider != null && provider.isNotEmpty) {
+      return SizedBox(
+        width: 46,
+        height: 46,
+        child: Center(child: ProviderLogo(provider: provider, size: 36)),
+      );
+    }
+
+    return SizedBox(
+      width: 46,
+      height: 46,
+      child: Center(
+        child: Icon(
+          _iconForType(item.type),
+          color: AppColors.primary,
+          size: 34,
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeaderStatusBadge({
     required ColorScheme colorScheme,
     required TextTheme textTheme,
@@ -213,7 +225,7 @@ class DetailsSidePanel extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary.withValues(alpha: 0.12),
-            AppColors.primary.withValues(alpha: 0.04),
+            AppColors.primary.withValues(alpha: 0.02),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
