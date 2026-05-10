@@ -192,6 +192,14 @@ class DashboardWidgetMapper {
       return unit == null ? value.toString() : '${value.toString()}$unit';
     }
 
+    if (_isSystemDataWidget(widget)) {
+      final systemValue = _resolveSystemDataPrimaryValue(payload);
+
+      if (systemValue != null) {
+        return systemValue;
+      }
+    }
+
     final count = _parseNumber(payload['count']);
     if (count != null) {
       final normalizedCount = count.toInt();
@@ -317,6 +325,62 @@ class DashboardWidgetMapper {
     return normalized == 'error' ||
         normalized == 'failed' ||
         normalized == 'failure';
+  }
+
+  static bool _isSystemDataWidget(TabWidgetDto widget) {
+    final widgetType = widget.widgetType?.toLowerCase().trim();
+    final dataType = widget.dataType?.toLowerCase().trim();
+
+    return widgetType == 'system_data' || dataType == 'system_data';
+  }
+
+  static String? _resolveSystemDataPrimaryValue(Map<String, dynamic> payload) {
+    final firstItem = _firstMapFromItems(payload['items']);
+
+    final agentData =
+        _mapOrNull(firstItem?['agent_data']) ??
+        _mapOrNull(payload['agent_data']);
+
+    final systemData =
+        _mapOrNull(agentData?['system_data']) ??
+        _mapOrNull(firstItem?['system_data']) ??
+        _mapOrNull(payload['system_data']);
+
+    final machineName = _firstNonEmpty([
+      _stringOrNull(firstItem?['machine_name']),
+      _stringOrNull(firstItem?['hostname']),
+      _stringOrNull(agentData?['machine_name']),
+      _stringOrNull(agentData?['hostname']),
+      _stringOrNull(systemData?['machine_name']),
+      _stringOrNull(systemData?['hostname']),
+    ]);
+
+    if (machineName != null) {
+      return machineName;
+    }
+
+    final system = _stringOrNull(systemData?['system']);
+    final release = _stringOrNull(systemData?['release']);
+
+    if (system != null && release != null) {
+      return '$system $release';
+    }
+
+    final platform = _stringOrNull(systemData?['platform']);
+
+    if (platform != null) {
+      return platform;
+    }
+
+    return 'Agente activo';
+  }
+
+  static Map<String, dynamic>? _mapOrNull(dynamic value) {
+    if (value is! Map) {
+      return null;
+    }
+
+    return Map<String, dynamic>.from(value);
   }
 
   static bool _isResourceListWidget(TabWidgetDto widget) {

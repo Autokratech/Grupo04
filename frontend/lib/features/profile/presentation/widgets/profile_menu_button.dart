@@ -159,6 +159,14 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     );
   }
 
+  void _showConnectionPending(String providerName) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('La conexión con $providerName aún no está disponible.'),
+      ),
+    );
+  }
+
   Widget _buildDialogContent(BuildContext context) {
     switch (_viewModel.state) {
       case ProfileState.initial:
@@ -309,36 +317,81 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           Text('Conexiones', style: textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(
-            'Vinculaciones preparadas para futuros widgets. OAuth real pendiente de contrato backend.',
+            'Conexiones configuradas para la demo de proveedores y agentes.',
             style: textTheme.bodySmall?.copyWith(color: colorScheme.secondary),
           ),
           const SizedBox(height: AppSpacing.lg),
-          LinkedProviderTile(
+
+          const LinkedProviderTile(
             icon: Icons.code,
+            provider: 'github',
             title: 'GitHub',
             description:
-                'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
-            status: LinkedProviderStatus.disconnected,
-            actionLabel: 'Conectar',
-            onAction: _connectGithub,
+                'Cuenta conectada para mostrar repositorios, issues y pull requests.',
+            status: LinkedProviderStatus.connected,
           ),
           const SizedBox(height: AppSpacing.sm),
+
           const LinkedProviderTile(
             icon: Icons.account_tree_outlined,
+            provider: 'gitlab',
             title: 'GitLab',
             description:
-                'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
-            status: LinkedProviderStatus.disconnected,
-            actionLabel: 'Conectar',
+                'Cuenta conectada para mostrar proyectos, issues y merge requests.',
+            status: LinkedProviderStatus.connected,
           ),
           const SizedBox(height: AppSpacing.sm),
+
+          const LinkedProviderTile(
+            icon: Icons.cloud_outlined,
+            provider: 'gcp',
+            title: 'Google Cloud',
+            description:
+                'Proveedor conectado para mostrar recursos e infraestructura cloud.',
+            status: LinkedProviderStatus.connected,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          const LinkedProviderTile(
+            icon: Icons.cloud_queue_rounded,
+            provider: 'azure',
+            title: 'Azure',
+            description:
+                'Proveedor conectado para mostrar costes, máquinas virtuales y recursos.',
+            status: LinkedProviderStatus.connected,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          LinkedProviderTile(
+            icon: Icons.cloud_outlined,
+            provider: 'aws',
+            title: 'AWS',
+            description:
+                'Proveedor preparado para futuras integraciones cloud.',
+            status: LinkedProviderStatus.disconnected,
+            actionLabel: 'Conectar',
+            onAction: () => _showConnectionPending('AWS'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          LinkedProviderTile(
+            icon: Icons.account_tree_outlined,
+            provider: 'bitbucket',
+            title: 'Bitbucket',
+            description:
+                'Proveedor preparado para futuras integraciones de repositorios.',
+            status: LinkedProviderStatus.disconnected,
+            actionLabel: 'Conectar',
+            onAction: () => _showConnectionPending('Bitbucket'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
           const LinkedProviderTile(
             icon: Icons.memory_outlined,
             title: 'Agentes',
             description:
-                'Registra un agente para recibir métricas de sistema e infraestructura.',
+                'La gestión de agentes queda deshabilitada para esta demo.',
             status: LinkedProviderStatus.unavailable,
-            actionLabel: 'Gestionar',
           ),
         ],
       ),
