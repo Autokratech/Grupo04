@@ -29,4 +29,3 @@ class AWSProvider():
     async def normalize_response(provider_response):
         pass
 
-    #TODO: Idea. Añadir métodos que permitan obtener métricas combinadas, más complejas

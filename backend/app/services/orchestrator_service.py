@@ -44,19 +44,15 @@ class OrchestratorService:
         print(f"data source params is {type(data_request_params)}")
         #TODO: Mejoras, si mismo provider reutilizar token de caché
 
-        # Step 5 -- Se envían los datos a la factory of factories para que devuelva la instancia concreta a utilizar 
         aggregated_response = [] 
-        async with asyncio.TaskGroup() as tg:
-            for request in data_request_params.providers:
-                provider_instance = await self.factory.create_provider_instance(user_id, request.provider_name)
-                # Step 6 -- Se pasan los parámetros concretos a la instancia creada en el paso anterior
-                # Nota --> Aquí habrá que ver cuánto se puede generalizar la abstracción de dichos datos
-                # En este punto la obtención de la métrica y la normalización del resultado del provider pasará a ser tarea interna del provider
-                tg.create_task(self.fetch_tab_widget_data(provider_instance,
-                                                          request,
-                                                          aggregated_response ))
+        # Step 5 -- Se envían los datos a la factory of factories para que devuelva la instancia concreta a utilizar 
+        # Step 6 -- Se pasan los parámetros concretos a la instancia creada en el paso anterior
+        # En este punto la obtención de la métrica y la normalización del resultado del provider pasará a ser tarea interna del provider
+        tasks = [self.fetch_tab_widget_data(user_id, request, aggregated_response)
+                for request in data_request_params.providers]
+        
+        await asyncio.gather(*tasks, return_exceptions=True)
         # TODO: Añadir timeout y derivar la consulta al caché, y en caso de que tampoco haya datos, enviar "None" / "No data available", o {} al front
-        # TODO: Revisar gestión de excepciones. Ahora mismo si una tarea falla, caen todas ~ investigar si nos conviene más usar gather
 
         widgets_data_params = TabWidgetDataList(tab_widgets_data=aggregated_response)
 
@@ -82,8 +78,9 @@ class OrchestratorService:
 
 
     # -- Método para obtener las métricas del provider deseado
-    async def fetch_tab_widget_data(self, provider_instance, request : ProviderData, aggregated_response : list):
+    async def fetch_tab_widget_data(self, user_id, request : ProviderData, aggregated_response : list):
         try:
+            provider_instance = await self.factory.create_provider_instance(user_id, request.provider_name)
             provider_response = await provider_instance.fetch_provider_data(request.data_type, request.custom_config)
             standarized_response = await self.standarize_response(request, Data(**provider_response))
 

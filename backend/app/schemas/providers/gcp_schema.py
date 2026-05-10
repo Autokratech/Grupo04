@@ -50,7 +50,9 @@ class ComputeInstance(BaseModel):
             vm_data["os_type"] = "windows"
 
         vm_data["os_distro"] = vm_distro
-        vm_data["os_version"] = re.findall(r'\d+', vm_distro)[0]  #Warning! Devuelve una lista, a pesar de que sólo haya un resultado.
+
+        version_matches = re.findall(r'\d+', vm_distro) #Warning! Devuelve una lista, a pesar de que sólo haya un resultado.
+        vm_data["os_version"] = version_matches[0] if version_matches else None
 
         status = vm_data.get("status")
         vm_data["power_status"] = "on" if status in {"RUNNING", "PROVISIONING"} else "off"

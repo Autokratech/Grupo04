@@ -64,7 +64,7 @@ class GCPProvider():
             response.raise_for_status()    
             return ProjectList(**response.json())
         except Exception as e:
-            print(f"execption: {e}")
+            print(f"Exception: {e}")
 
 
     async def get_provider_endpoint(self, data_type, project_id):
@@ -72,7 +72,6 @@ class GCPProvider():
         if response.data is not None:
             endpoint_path = EndpointPath(**response.data[0])
             full_endpoint = self.PROVIDER_PROTOCOL + self.PROVIDER_API_HOST[data_type] + project_id + endpoint_path.endpoint_path
-            print(f"full endpoint is ... {full_endpoint}")
             return full_endpoint
         else:
             return None
@@ -85,4 +84,3 @@ class GCPProvider():
         except KeyError:
             raise KeyError("El tipo de datos especificado no está disponible para Google Cloud.")
         return data_schema(**provider_response) 
-        
