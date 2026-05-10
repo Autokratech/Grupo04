@@ -7,6 +7,7 @@ class TabWidgetDto {
   final int? widgetIndex;
   final String? dataType;
   final Map<String, dynamic> customConfig;
+  final String? timeframe;
   final List<WidgetFieldDto> widgetFields;
 
   const TabWidgetDto({
@@ -16,6 +17,7 @@ class TabWidgetDto {
     required this.widgetIndex,
     required this.dataType,
     required this.customConfig,
+    required this.timeframe,
     required this.widgetFields,
   });
 
@@ -27,6 +29,7 @@ class TabWidgetDto {
       widgetIndex: _parseInt(map['widget_index']),
       dataType: map['data_type']?.toString(),
       customConfig: _parseMap(map['custom_config']),
+      timeframe: map['timeframe']?.toString(),
       widgetFields: _parseList(map['widget_fields'], WidgetFieldDto.fromMap),
     );
   }
@@ -57,9 +60,9 @@ Map<String, dynamic> _parseMap(dynamic value) {
 }
 
 List<T> _parseList<T>(
-  dynamic value,
-  T Function(Map<String, dynamic> map) fromMap,
-) {
+    dynamic value,
+    T Function(Map<String, dynamic> map) fromMap,
+    ) {
   if (value is! List) {
     return [];
   }

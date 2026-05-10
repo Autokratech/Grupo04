@@ -28,9 +28,12 @@ class DashboardWidgetMapper {
   }
 
   static DashboardWidgetItem _toDomain(
-    TabWidgetDto widget,
-    TabWidgetDataDto? data,
-  ) {
+      TabWidgetDto widget,
+      TabWidgetDataDto? data,
+      ) {
+    final rawData = data?.data;
+    final customConfig = _resolveCustomConfig(widget);
+
     return DashboardWidgetItem(
       id: widget.tabWidgetId,
       title: _resolveTitle(widget, data),
@@ -41,6 +44,11 @@ class DashboardWidgetMapper {
       position: widget.widgetIndex ?? 0,
       provider: _resolveProvider(widget, data),
       dataType: _resolveDataType(widget),
+      updatedAt: data?.timestamp,
+      ttl: data?.ttl,
+      count: _resolveCount(rawData),
+      rawData: rawData,
+      customConfig: customConfig.isEmpty ? null : customConfig,
     );
   }
 
@@ -56,6 +64,7 @@ class DashboardWidgetMapper {
       case 'text_list':
       case 'pipeline_list':
       case 'list_resources':
+      case 'list_endpoints':
       case 'list_ports':
         return WidgetType.list;
 
@@ -76,10 +85,13 @@ class DashboardWidgetMapper {
         return WidgetType.pipeline;
 
       case 'issue':
+      case 'issue_tracking':
       case 'merge_request':
+      case 'merge_request_tracker':
         return WidgetType.issue;
 
       case 'status':
+      case 'system_data':
         return WidgetType.status;
 
       default:
@@ -300,6 +312,38 @@ class DashboardWidgetMapper {
     }
 
     return text;
+  }
+
+  static int? _resolveCount(Map<String, dynamic>? payload) {
+    if (payload == null) {
+      return null;
+    }
+
+    final count = _parseNumber(payload['count']);
+
+    if (count != null) {
+      return count.toInt();
+    }
+
+    final items = payload['items'];
+
+    if (items is List) {
+      return items.length;
+    }
+
+    return null;
+  }
+
+  static Map<String, dynamic> _resolveCustomConfig(TabWidgetDto widget) {
+    final config = Map<String, dynamic>.from(widget.customConfig);
+
+    final timeframe = _stringOrNull(widget.timeframe);
+
+    if (timeframe != null) {
+      config['timeframe'] = timeframe;
+    }
+
+    return config;
   }
 
   static String? _formatFallbackLabel(String? value) {

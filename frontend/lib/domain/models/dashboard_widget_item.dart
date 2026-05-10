@@ -11,6 +11,11 @@ class DashboardWidgetItem {
   final int position;
   final String? provider;
   final String? dataType;
+  final DateTime? updatedAt;
+  final int? ttl;
+  final int? count;
+  final Map<String, dynamic>? rawData;
+  final Map<String, dynamic>? customConfig;
 
   const DashboardWidgetItem({
     required this.id,
@@ -22,6 +27,11 @@ class DashboardWidgetItem {
     required this.position,
     this.provider,
     this.dataType,
+    this.updatedAt,
+    this.ttl,
+    this.count,
+    this.rawData,
+    this.customConfig,
   });
 
   DashboardWidgetItem copyWith({
@@ -34,6 +44,11 @@ class DashboardWidgetItem {
     int? position,
     String? provider,
     String? dataType,
+    DateTime? updatedAt,
+    int? ttl,
+    int? count,
+    Map<String, dynamic>? rawData,
+    Map<String, dynamic>? customConfig,
   }) {
     return DashboardWidgetItem(
       id: id ?? this.id,
@@ -45,6 +60,11 @@ class DashboardWidgetItem {
       position: position ?? this.position,
       provider: provider ?? this.provider,
       dataType: dataType ?? this.dataType,
+      updatedAt: updatedAt ?? this.updatedAt,
+      ttl: ttl ?? this.ttl,
+      count: count ?? this.count,
+      rawData: rawData ?? this.rawData,
+      customConfig: customConfig ?? this.customConfig,
     );
   }
 }

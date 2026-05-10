@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
@@ -10,8 +12,9 @@ import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 
 class DashboardViewModel extends ChangeNotifier {
-  static const Duration _tabRefreshCooldown = Duration(seconds: 32);
-  static const Duration _globalRefreshCooldown = Duration(seconds: 32);
+  static const Duration _tabRefreshCooldown = Duration(seconds: 30);
+  static const Duration _globalRefreshCooldown = Duration(seconds: 30);
+  static const Duration _manualRefreshCooldown = Duration(seconds: 30);
 
   final DashboardRepository _dashboardRepository;
   final DashboardPreferencesService _dashboardPreferencesService;
@@ -21,6 +24,12 @@ class DashboardViewModel extends ChangeNotifier {
     required DashboardPreferencesService dashboardPreferencesService,
   }) : _dashboardRepository = dashboardRepository,
        _dashboardPreferencesService = dashboardPreferencesService;
+
+  @override
+  void dispose() {
+    _manualRefreshCooldownTimer?.cancel();
+    super.dispose();
+  }
 
   DashboardState _state = DashboardState.initial;
   DashboardState get state => _state;
@@ -32,6 +41,42 @@ class DashboardViewModel extends ChangeNotifier {
   final Map<String, List<DashboardWidgetItem>> _itemsByTabId = {};
   final Map<String, DateTime> _lastRemoteRefreshByTabId = {};
   DateTime? _lastGlobalRemoteRefresh;
+
+  bool _isRefreshingCurrentTab = false;
+  bool get isRefreshingCurrentTab => _isRefreshingCurrentTab;
+
+  DateTime? _manualRefreshAvailableAt;
+  Timer? _manualRefreshCooldownTimer;
+
+  bool get canRefreshCurrentTab {
+    if (_selectedTab == null || _isRefreshingCurrentTab) {
+      return false;
+    }
+
+    final availableAt = _manualRefreshAvailableAt;
+
+    if (availableAt == null) {
+      return true;
+    }
+
+    return !DateTime.now().isBefore(availableAt);
+  }
+
+  int get refreshCooldownRemainingSeconds {
+    final availableAt = _manualRefreshAvailableAt;
+
+    if (availableAt == null) {
+      return 0;
+    }
+
+    final remaining = availableAt.difference(DateTime.now());
+
+    if (remaining.isNegative) {
+      return 0;
+    }
+
+    return remaining.inSeconds + 1;
+  }
 
   int _tabItemsLoadVersion = 0;
 
@@ -456,7 +501,7 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadTabItems() async {
+  Future<void> loadTabItems({bool forceRemote = false}) async {
     final dashboard = _dashboard;
     final selectedTab = _selectedTab;
     final loadVersion = ++_tabItemsLoadVersion;
@@ -475,6 +520,7 @@ class DashboardViewModel extends ChangeNotifier {
     final cachedItems = _itemsByTabId[tabId];
 
     final shouldRefreshRemote =
+        forceRemote ||
         cachedItems == null ||
         (_shouldRefreshTab(tabId) && _shouldRefreshGlobally());
 
@@ -532,6 +578,10 @@ class DashboardViewModel extends ChangeNotifier {
       if (cachedItems != null) {
         _items = List<DashboardWidgetItem>.from(cachedItems);
         _state = _items.isEmpty ? DashboardState.empty : DashboardState.loaded;
+
+        if (forceRemote) {
+          _errorMessage = 'No se han podido actualizar los datos';
+        }
       } else {
         _clearSelectedItem();
         _clearItems();
@@ -541,6 +591,54 @@ class DashboardViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> refreshCurrentTab() async {
+    if (_isRefreshingCurrentTab) {
+      return;
+    }
+
+    if (!canRefreshCurrentTab) {
+      final remainingSeconds = refreshCooldownRemainingSeconds;
+
+      _errorMessage = remainingSeconds > 0
+          ? 'Espera $remainingSeconds segundos antes de volver a actualizar'
+          : 'Espera unos segundos antes de volver a actualizar';
+
+      notifyListeners();
+      return;
+    }
+
+    _isRefreshingCurrentTab = true;
+    _manualRefreshAvailableAt = DateTime.now().add(_manualRefreshCooldown);
+    _scheduleManualRefreshCooldownNotification();
+    _clearErrorMessage();
+    notifyListeners();
+
+    try {
+      await loadTabItems(forceRemote: true);
+    } finally {
+      _isRefreshingCurrentTab = false;
+      notifyListeners();
+    }
+  }
+
+  void _scheduleManualRefreshCooldownNotification() {
+    _manualRefreshCooldownTimer?.cancel();
+
+    _manualRefreshCooldownTimer = Timer.periodic(
+      const Duration(seconds: 1),
+          (timer) {
+        final availableAt = _manualRefreshAvailableAt;
+
+        if (availableAt == null || !DateTime.now().isBefore(availableAt)) {
+          _manualRefreshAvailableAt = null;
+          timer.cancel();
+        }
+
+        notifyListeners();
+      },
+    );
   }
 
   Future<void> addWidget({
