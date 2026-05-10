@@ -1,5 +1,4 @@
 from fastapi import HTTPException
-from app.core.config import SYSTEM_USER_ID
 from app.core.config import DEFAULT_ROLE_NAME_FOR_REGISTER
 from app.core.security import comprobar_password, crear_token_jwt, generar_hash_password
 from app.repositories import permissions_repository, roles_repository, users_repository
@@ -71,9 +70,9 @@ def servicio_login_usuario(datos_login: DatosLogin):
 
     usuario = users_repository.buscar_usuario_por_email(datos_login.email)
     if not usuario:
+        usuario_sistema = users_repository.buscar_usuario_por_role_id(5)
         registrar_evento_auditoria(
-             # UUID del sistema
-            user_id= SYSTEM_USER_ID,
+            user_id=usuario_sistema["id"] if usuario_sistema else None,
             action="auth.login.error",
             description="login con usuario inexistente",
             meta={
