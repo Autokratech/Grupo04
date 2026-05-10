@@ -17,6 +17,19 @@ class ProviderAssets {
       case 'google cloud':
         return '$_basePath/gcp.svg';
 
+      case 'aws':
+      case 'amazon':
+      case 'amazon_web_services':
+      case 'amazon-web-services':
+      case 'amazon web services':
+        return '$_basePath/aws.svg';
+
+      case 'bitbucket':
+      case 'bit_bucket':
+      case 'bit-bucket':
+      case 'bit bucket':
+        return '$_basePath/bitbucket.svg';
+
       case 'github':
       case 'git_hub':
       case 'git-hub':

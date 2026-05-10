@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/domain/models/linked_provider_status.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/provider_logo.dart';
 
 class LinkedProviderTile extends StatelessWidget {
   final IconData icon;
+  final String? provider;
   final String title;
   final String description;
   final LinkedProviderStatus status;
@@ -13,6 +15,7 @@ class LinkedProviderTile extends StatelessWidget {
   const LinkedProviderTile({
     super.key,
     required this.icon,
+    this.provider,
     required this.title,
     required this.description,
     required this.status,
@@ -43,18 +46,7 @@ class LinkedProviderTile extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: colorScheme.primary.withValues(alpha: 0.18),
-                  ),
-                ),
-                child: Icon(icon, size: 22, color: colorScheme.primary),
-              ),
+              _buildLeadingIcon(context),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
@@ -99,6 +91,30 @@ class LinkedProviderTile extends StatelessWidget {
     );
   }
 
+  Widget _buildLeadingIcon(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasProviderLogo = provider != null && provider!.trim().isNotEmpty;
+
+    if (hasProviderLogo) {
+      return SizedBox(
+        width: 38,
+        height: 38,
+        child: Center(child: ProviderLogo(provider: provider, size: 30)),
+      );
+    }
+
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.18)),
+      ),
+      child: Icon(icon, size: 22, color: colorScheme.primary),
+    );
+  }
+
   Widget _buildStatusBadge(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -126,7 +142,7 @@ class LinkedProviderTile extends StatelessWidget {
     return switch (status) {
       LinkedProviderStatus.connected => 'Conectado',
       LinkedProviderStatus.disconnected => 'No conectado',
-      LinkedProviderStatus.unavailable => 'No disponible',
+      LinkedProviderStatus.unavailable => 'Deshabilitado',
       LinkedProviderStatus.error => 'Error',
     };
   }
@@ -135,7 +151,7 @@ class LinkedProviderTile extends StatelessWidget {
     return switch (status) {
       LinkedProviderStatus.connected => colorScheme.onPrimaryContainer,
       LinkedProviderStatus.disconnected => colorScheme.onSecondaryContainer,
-      LinkedProviderStatus.unavailable => colorScheme.onTertiaryContainer,
+      LinkedProviderStatus.unavailable => colorScheme.onSurfaceVariant,
       LinkedProviderStatus.error => colorScheme.onErrorContainer,
     };
   }
@@ -144,7 +160,8 @@ class LinkedProviderTile extends StatelessWidget {
     return switch (status) {
       LinkedProviderStatus.connected => colorScheme.primaryContainer,
       LinkedProviderStatus.disconnected => colorScheme.secondaryContainer,
-      LinkedProviderStatus.unavailable => colorScheme.tertiaryContainer,
+      LinkedProviderStatus.unavailable =>
+        colorScheme.surfaceContainerHighest.withValues(alpha: 0.85),
       LinkedProviderStatus.error => colorScheme.errorContainer,
     };
   }
