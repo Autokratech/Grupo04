@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/utils/validators.dart';
 
 class AuthForm extends StatefulWidget {
   final TextEditingController emailController;
@@ -33,7 +34,6 @@ class AuthForm extends StatefulWidget {
 
 class _AuthFormState extends State<AuthForm> {
   final _formKey = GlobalKey<FormState>();
-  final RegExp _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
@@ -81,19 +81,7 @@ class _AuthFormState extends State<AuthForm> {
         icon: Icons.mail_outline_rounded,
       ),
       onChanged: (_) => widget.onInputChanged?.call(),
-      validator: (value) {
-        final email = value?.trim() ?? '';
-
-        if (email.isEmpty) {
-          return 'Introduce un email';
-        }
-
-        if (!_emailRegex.hasMatch(email)) {
-          return 'Introduce un email válido';
-        }
-
-        return null;
-      },
+      validator: Validators.email,
     );
   }
 
@@ -128,15 +116,7 @@ class _AuthFormState extends State<AuthForm> {
       onFieldSubmitted: (_) {
         if (!widget.isRegisterMode) _handleSubmit();
       },
-      validator: (value) {
-        final password = value?.trim() ?? '';
-
-        if (password.isEmpty) {
-          return 'Introduce una contraseña';
-        }
-
-        return null;
-      },
+      validator: Validators.password,
     );
   }
 
@@ -168,18 +148,10 @@ class _AuthFormState extends State<AuthForm> {
       onChanged: (_) => widget.onInputChanged?.call(),
       onFieldSubmitted: (_) => _handleSubmit(),
       validator: (value) {
-        final password = widget.passwordController.text.trim();
-        final repeatPassword = value?.trim() ?? '';
-
-        if (repeatPassword.isEmpty) {
-          return 'Debes repetir la contraseña';
-        }
-
-        if (repeatPassword != password) {
-          return 'Las contraseñas no coinciden';
-        }
-
-        return null;
+        return Validators.repeatPassword(
+          value,
+          password: widget.passwordController.text,
+        );
       },
     );
   }
