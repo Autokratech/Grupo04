@@ -10,8 +10,8 @@ import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 
 class DashboardViewModel extends ChangeNotifier {
-  static const Duration _tabRefreshCooldown = Duration(seconds: 20);
-  static const Duration _globalRefreshCooldown = Duration(seconds: 20);
+  static const Duration _tabRefreshCooldown = Duration(seconds: 32);
+  static const Duration _globalRefreshCooldown = Duration(seconds: 32);
 
   final DashboardRepository _dashboardRepository;
   final DashboardPreferencesService _dashboardPreferencesService;

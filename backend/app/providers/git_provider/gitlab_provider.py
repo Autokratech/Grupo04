@@ -54,4 +54,3 @@ class GitlabProvider():
         response_items = [data_schema(**item) for item in provider_response]
         return GitlabResponse(count=len(response_items), items=response_items).model_dump()
 
-    #TODO: Idea. Añadir métodos que permitan obtener métricas combinadas, más complejas

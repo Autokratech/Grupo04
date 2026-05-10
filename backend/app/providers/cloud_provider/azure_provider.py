@@ -128,4 +128,3 @@ class AzureProvider():
             azure_vm.power_state = None
         return azure_vm
 
-#TODO: Gestionar los 404 cuando no encuentra el recurso (porque no existe, etc)

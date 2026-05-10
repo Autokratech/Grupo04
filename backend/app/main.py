@@ -154,7 +154,7 @@ async def root():
 <body>
     <div class="card">
         <div class="logo-container">
-            <img src="/static/logo.png" alt="Autokratech" class="logo">
+            <img src="/static/logo.svg" alt="Autokratech" class="logo">
         </div>
         
         <div class="status-badge">

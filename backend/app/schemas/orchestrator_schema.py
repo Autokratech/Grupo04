@@ -53,7 +53,6 @@ class ProviderRequestList(BaseModel):
 
 
 class AddTabWidget(BaseModel):
-    tab_id: UUID
     widget_id: UUID
     widget_index: int | None = None
     provider_name: str
