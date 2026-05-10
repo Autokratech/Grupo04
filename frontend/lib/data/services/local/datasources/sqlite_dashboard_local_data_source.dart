@@ -1,6 +1,6 @@
 import 'package:frontend/core/constants/app_constants.dart';
-import 'package:frontend/data/services/local/dashboard_database_service.dart';
-import 'package:frontend/data/services/local/dashboard_local_data_source.dart';
+import 'package:frontend/data/services/local/database/dashboard_database_service.dart';
+import 'package:frontend/data/services/local/datasources/dashboard_local_data_source.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';

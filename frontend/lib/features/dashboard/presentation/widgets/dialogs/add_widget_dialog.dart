@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/domain/models/widget_add_option.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/domain/models/widget_type.dart';
+import 'package:frontend/features/dashboard/presentation/models/add_widget_dialog_result.dart';
+import 'package:frontend/features/dashboard/presentation/utils/widget_add_options.dart';
 import 'package:frontend/features/dashboard/presentation/utils/widget_labels.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/provider_logo.dart';
 
@@ -131,7 +134,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Selecciona un widget disponible para añadirlo al dashboard actual.',
+                  'Selecciona un widget disponible y una configuración válida.',
                   style: textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     height: 1.35,
@@ -168,8 +171,13 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
             itemBuilder: (context, index) {
               return _WidgetOptionTile(
                 item: widget.items[index],
-                onAddPressed: (item) {
-                  Navigator.of(context).pop(item);
+                onAddPressed: (item, option) {
+                  Navigator.of(context).pop(
+                    AddWidgetDialogResult(
+                      item: item,
+                      option: option,
+                    ),
+                  );
                 },
               );
             },
@@ -180,14 +188,34 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
   }
 }
 
-class _WidgetOptionTile extends StatelessWidget {
+class _WidgetOptionTile extends StatefulWidget {
   final WidgetCatalogItem item;
-  final ValueChanged<WidgetCatalogItem> onAddPressed;
+  final void Function(WidgetCatalogItem item, WidgetAddOption option)
+  onAddPressed;
 
   const _WidgetOptionTile({
     required this.item,
     required this.onAddPressed,
   });
+
+  @override
+  State<_WidgetOptionTile> createState() => _WidgetOptionTileState();
+}
+
+class _WidgetOptionTileState extends State<_WidgetOptionTile> {
+  late final List<WidgetAddOption> _options;
+  WidgetAddOption? _selectedOption;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _options = optionsForWidgetCatalogItem(widget.item);
+
+    if (_options.isNotEmpty) {
+      _selectedOption = _options.first;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +259,8 @@ class _WidgetOptionTile extends StatelessWidget {
   Widget _buildMainContent(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final hasProvider = item.provider != null && item.provider!.trim().isNotEmpty;
+    final hasProvider =
+        widget.item.provider != null && widget.item.provider!.trim().isNotEmpty;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,9 +277,9 @@ class _WidgetOptionTile extends StatelessWidget {
             ),
           ),
           child: hasProvider
-              ? ProviderLogo(provider: item.provider, size: 22)
+              ? ProviderLogo(provider: widget.item.provider, size: 22)
               : Icon(
-            _iconForType(item.type),
+            _iconForType(widget.item.type),
             color: colorScheme.primary,
             size: 22,
           ),
@@ -261,7 +290,7 @@ class _WidgetOptionTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                item.title,
+                widget.item.title,
                 style: textTheme.titleSmall?.copyWith(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.w800,
@@ -274,7 +303,7 @@ class _WidgetOptionTile extends StatelessWidget {
               _buildTypeBadge(context),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                item.description,
+                widget.item.description,
                 style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   height: 1.35,
@@ -282,16 +311,65 @@ class _WidgetOptionTile extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                item.metadataLabel,
+                widget.item.metadataLabel,
                 style: textTheme.labelSmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              _buildOptionSelector(context),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOptionSelector(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (_options.isEmpty) {
+      return Text(
+        'Configuración no disponible todavía.',
+        style: textTheme.labelSmall?.copyWith(
+          color: colorScheme.error,
+          fontWeight: FontWeight.w700,
+        ),
+      );
+    }
+
+    if (_options.length == 1) {
+      return Text(
+        _options.first.label,
+        style: textTheme.labelSmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<WidgetAddOption>(
+      initialValue: _selectedOption,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Configuración',
+        isDense: true,
+      ),
+      items: _options.map((option) {
+        return DropdownMenuItem<WidgetAddOption>(
+          value: option,
+          child: Text(option.label),
+        );
+      }).toList(),
+      onChanged: (option) {
+        if (option == null) return;
+
+        setState(() {
+          _selectedOption = option;
+        });
+      },
     );
   }
 
@@ -306,12 +384,10 @@ class _WidgetOptionTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.22),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
       ),
       child: Text(
-        WidgetLabels.type(item.type),
+        WidgetLabels.type(widget.item.type),
         style: textTheme.labelSmall?.copyWith(
           color: AppColors.primary,
           fontWeight: FontWeight.w800,
@@ -322,9 +398,13 @@ class _WidgetOptionTile extends StatelessWidget {
   }
 
   Widget _buildAddButton() {
+    final selectedOption = _selectedOption;
+
     return FilledButton.tonalIcon(
-      onPressed: () {
-        onAddPressed(item);
+      onPressed: selectedOption == null
+          ? null
+          : () {
+        widget.onAddPressed(widget.item, selectedOption);
       },
       icon: const Icon(Icons.add, size: 18),
       label: const Text('Añadir'),
@@ -333,9 +413,7 @@ class _WidgetOptionTile extends StatelessWidget {
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

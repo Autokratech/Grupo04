@@ -6,11 +6,7 @@ class ProviderLogo extends StatelessWidget {
   final String? provider;
   final double size;
 
-  const ProviderLogo({
-    super.key,
-    required this.provider,
-    this.size = 22,
-  });
+  const ProviderLogo({super.key, required this.provider, this.size = 22});
 
   @override
   Widget build(BuildContext context) {

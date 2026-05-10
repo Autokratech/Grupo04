@@ -9,7 +9,6 @@ import 'package:frontend/features/auth/presentation/states/auth_mode.dart';
 import 'package:frontend/features/auth/presentation/states/auth_state.dart';
 import 'package:frontend/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:frontend/features/auth/presentation/widgets/auth_form.dart';
-import 'package:frontend/shared/widgets/app_logo_box.dart';
 import 'package:go_router/go_router.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -29,7 +28,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _repeatPasswordController =
-  TextEditingController();
+      TextEditingController();
 
   AuthMode _authMode = AuthMode.login;
 

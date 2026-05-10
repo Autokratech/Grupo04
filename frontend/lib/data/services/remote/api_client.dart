@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:frontend/data/services/local/session_storage_service.dart';
+import 'package:frontend/data/services/local/storage/session_storage_service.dart';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
@@ -14,7 +14,7 @@ class ApiClient {
   });
 
   Future<http.Response> get(String endpoint, {bool authenticated = true}) {
-    final url = Uri.parse('$baseUrl$endpoint');
+    final url = _buildUri(endpoint);
 
     return client.get(
       url,
@@ -27,7 +27,7 @@ class ApiClient {
     Map<String, dynamic>? body, {
     bool authenticated = true,
   }) {
-    final url = Uri.parse('$baseUrl$endpoint');
+    final url = _buildUri(endpoint);
 
     return client.post(
       url,
@@ -41,7 +41,7 @@ class ApiClient {
     Map<String, dynamic>? body, {
     bool authenticated = true,
   }) {
-    final url = Uri.parse('$baseUrl$endpoint');
+    final url = _buildUri(endpoint);
 
     return client.put(
       url,
@@ -50,11 +50,8 @@ class ApiClient {
     );
   }
 
-  Future<http.Response> delete(
-      String endpoint, {
-        bool authenticated = true,
-      }) {
-    final url = Uri.parse('$baseUrl$endpoint');
+  Future<http.Response> delete(String endpoint, {bool authenticated = true}) {
+    final url = _buildUri(endpoint);
 
     return client.delete(
       url,
@@ -66,7 +63,7 @@ class ApiClient {
     String endpoint, {
     bool authenticated = true,
   }) {
-    final url = Uri.parse('$baseUrl$endpoint');
+    final url = _buildUri(endpoint);
 
     final request = http.Request('GET', url);
 
@@ -76,6 +73,37 @@ class ApiClient {
     request.headers.remove('Content-Type');
 
     return client.send(request);
+  }
+
+  Future<Uri> getRedirectLocation(
+      String endpoint, {
+        bool authenticated = true,
+      }) async {
+    final url = _buildUri(endpoint);
+
+    final request = http.Request('GET', url)
+      ..followRedirects = false
+      ..headers.addAll(_buildHeaders(authenticated: authenticated));
+
+    final response = await client.send(request);
+
+    final location = response.headers['location'];
+
+    if (response.statusCode != 307 && response.statusCode != 302) {
+      throw Exception(
+        'Expected redirect response but got status code ${response.statusCode}',
+      );
+    }
+
+    if (location == null || location.trim().isEmpty) {
+      throw Exception('Redirect response does not contain Location header');
+    }
+
+    return Uri.parse(location);
+  }
+
+  Uri _buildUri(String endpoint) {
+    return Uri.parse('$baseUrl$endpoint');
   }
 
   Map<String, String> _buildHeaders({required bool authenticated}) {

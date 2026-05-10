@@ -1,4 +1,4 @@
-import 'package:frontend/data/models/dto/dashboard_dtos/widget_field_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/catalog/widget_field_dto.dart';
 
 class TabWidgetDto {
   final String tabWidgetId;
@@ -9,7 +9,7 @@ class TabWidgetDto {
   final Map<String, dynamic> customConfig;
   final List<WidgetFieldDto> widgetFields;
 
-  TabWidgetDto({
+  const TabWidgetDto({
     required this.tabWidgetId,
     required this.widgetTitle,
     required this.widgetType,

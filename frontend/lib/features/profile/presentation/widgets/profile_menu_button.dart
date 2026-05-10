@@ -69,9 +69,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           horizontal: isMobile ? 12 : 18,
           vertical: isMobile ? 9 : 13,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: BorderSide(
           color: colorScheme.primary.withValues(alpha: 0.55),
           width: 1.2,
@@ -145,6 +143,22 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
     widget.onLoggedOut();
   }
 
+  Future<void> _connectGithub() async {
+    await _viewModel.connectGithub();
+
+    if (!mounted) return;
+
+    final errorMessage = _viewModel.errorMessage;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          errorMessage ?? 'Se ha abierto GitHub para autorizar la conexión.',
+        ),
+      ),
+    );
+  }
+
   Widget _buildDialogContent(BuildContext context) {
     switch (_viewModel.state) {
       case ProfileState.initial:
@@ -189,18 +203,14 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           child: _buildAccountInfo(context, user),
         ),
         const SizedBox(height: AppSpacing.md),
-        Flexible(
-          child: _buildScrollableProvidersSection(context),
-        ),
+        Flexible(child: _buildScrollableProvidersSection(context)),
       ],
     );
   }
 
   Widget _buildScrollableProvidersSection(BuildContext context) {
     return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        scrollbars: false,
-      ),
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
       child: Scrollbar(
         controller: _profileScrollController,
         thumbVisibility: false,
@@ -300,25 +310,24 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
           const SizedBox(height: 4),
           Text(
             'Vinculaciones preparadas para futuros widgets. OAuth real pendiente de contrato backend.',
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.secondary,
-            ),
+            style: textTheme.bodySmall?.copyWith(color: colorScheme.secondary),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const LinkedProviderTile(
+          LinkedProviderTile(
             icon: Icons.code,
             title: 'GitHub',
             description:
             'Conecta tu cuenta para mostrar repositorios, issues y pipelines.',
             status: LinkedProviderStatus.disconnected,
             actionLabel: 'Conectar',
+            onAction: _connectGithub,
           ),
           const SizedBox(height: AppSpacing.sm),
           const LinkedProviderTile(
             icon: Icons.account_tree_outlined,
             title: 'GitLab',
             description:
-            'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
+                'Conecta tu cuenta para mostrar proyectos, merge requests y pipelines.',
             status: LinkedProviderStatus.disconnected,
             actionLabel: 'Conectar',
           ),
@@ -327,7 +336,7 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
             icon: Icons.memory_outlined,
             title: 'Agentes',
             description:
-            'Registra un agente para recibir métricas de sistema e infraestructura.',
+                'Registra un agente para recibir métricas de sistema e infraestructura.',
             status: LinkedProviderStatus.unavailable,
             actionLabel: 'Gestionar',
           ),
@@ -341,10 +350,10 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
       onPressed: _viewModel.isLoggingOut ? null : _logout,
       icon: _viewModel.isLoggingOut
           ? const SizedBox(
-        width: 14,
-        height: 14,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      )
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
           : const Icon(Icons.logout, size: 18),
       label: Text(_viewModel.isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'),
       style: FilledButton.styleFrom(
@@ -365,10 +374,10 @@ class _ProfileMenuButtonState extends State<ProfileMenuButton> {
         onPressed: _viewModel.isLoggingOut ? null : _logout,
         icon: _viewModel.isLoggingOut
             ? const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        )
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : const Icon(Icons.logout),
         label: Text(_viewModel.isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'),
         style: FilledButton.styleFrom(

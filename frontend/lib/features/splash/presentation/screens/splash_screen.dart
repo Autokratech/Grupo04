@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/app/router/app_routes.dart';
-import 'package:frontend/data/services/local/session_storage_service.dart';
+import 'package:frontend/data/services/local/storage/session_storage_service.dart';
 import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {

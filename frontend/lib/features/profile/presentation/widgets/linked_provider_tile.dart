@@ -53,11 +53,7 @@ class LinkedProviderTile extends StatelessWidget {
                     color: colorScheme.primary.withValues(alpha: 0.18),
                   ),
                 ),
-                child: Icon(
-                  icon,
-                  size: 22,
-                  color: colorScheme.primary,
-                ),
+                child: Icon(icon, size: 22, color: colorScheme.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(

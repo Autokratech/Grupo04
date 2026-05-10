@@ -1,4 +1,4 @@
-import 'package:frontend/data/models/dto/dashboard_dtos/widget_catalog_item_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/catalog/widget_catalog_item_dto.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/domain/models/widget_type.dart';
 
@@ -57,6 +57,7 @@ class WidgetCatalogMapper {
 
       case 'TEXT_LIST':
       case 'LIST_RESOURCES':
+      case 'LIST_PORTS':
         return WidgetType.list;
 
       case 'GAUGE':
@@ -69,6 +70,9 @@ class WidgetCatalogMapper {
       case 'MERGE_REQUEST':
       case 'ISSUE':
         return WidgetType.issue;
+
+      case 'COST_MANAGEMENT':
+        return WidgetType.metric;
 
       default:
         return WidgetType.status;

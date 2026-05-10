@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:frontend/domain/models/widget_catalog_item.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/add_widget_dialog.dart';
+import 'package:frontend/features/dashboard/presentation/models/add_widget_dialog_result.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dialogs/add_widget_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/di/service_locator.dart';
 import 'package:frontend/app/router/app_routes.dart';
@@ -9,15 +9,15 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/core/utils/app_platform.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
-import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
+import 'package:frontend/data/services/local/storage/dashboard_preferences_service.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 import 'package:frontend/features/dashboard/presentation/viewmodels/dashboard_viewmodel.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/create_dashboard_tab_dialog.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dialogs/create_dashboard_tab_dialog.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/dashboard_tab_selector.dart';
-import 'package:frontend/features/dashboard/presentation/widgets/delete_dashboard_tab_dialog.dart';
+import 'package:frontend/features/dashboard/presentation/widgets/dialogs/delete_dashboard_tab_dialog.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/details_side_panel.dart';
 import 'package:frontend/features/dashboard/presentation/widgets/widget_grid.dart';
 import 'package:frontend/features/profile/presentation/widgets/profile_menu_button.dart';
@@ -276,15 +276,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _handleAddWidgetPressed() async {
-    final selectedCatalogItem = await showDialog<WidgetCatalogItem>(
+    final result = await showDialog<AddWidgetDialogResult>(
       context: context,
       builder: (_) =>
           AddWidgetDialog(items: _viewModel.availableWidgetCatalogItems),
     );
 
-    if (selectedCatalogItem == null || !mounted) return;
+    if (result == null || !mounted) return;
 
-    await _viewModel.addWidget(selectedCatalogItem);
+    await _viewModel.addWidget(
+      catalogItem: result.item,
+      option: result.option,
+    );
+
+    if (!mounted) return;
 
     _showViewModelErrorIfNeeded();
   }
@@ -444,12 +449,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     final startColor = Color.alphaBlend(
-      AppColors.secondary.withValues(alpha: 0.08),
+      AppColors.secondary.withValues(alpha: 0.12),
       colorScheme.surface.withValues(alpha: 0.4),
     );
 
     final endColor = Color.alphaBlend(
-      AppColors.secondary.withValues(alpha: 0.01),
+      AppColors.secondary.withValues(alpha: 0.03),
       colorScheme.surface.withValues(alpha: 0.4),
     );
 
@@ -459,10 +464,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            startColor,
-            endColor,
-          ],
+          colors: [startColor, endColor],
         ),
       ),
       child: Stack(
@@ -472,7 +474,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               AppSpacing.lg,
               AppSpacing.md,
               AppPlatform.isMobile &&
-                  MediaQuery.of(context).orientation == Orientation.portrait
+                      MediaQuery.of(context).orientation == Orientation.portrait
                   ? AppSpacing.sm
                   : AppSpacing.lg,
               AppSpacing.md,

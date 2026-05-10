@@ -111,10 +111,10 @@ class _AuthFormState extends State<AuthForm> {
           onPressed: widget.isLoading
               ? null
               : () {
-            setState(() {
-              _obscurePassword = !_obscurePassword;
-            });
-          },
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
           icon: Icon(
             _obscurePassword
                 ? Icons.visibility_outlined
@@ -152,10 +152,10 @@ class _AuthFormState extends State<AuthForm> {
           onPressed: widget.isLoading
               ? null
               : () {
-            setState(() {
-              _obscureRepeatPassword = !_obscureRepeatPassword;
-            });
-          },
+                  setState(() {
+                    _obscureRepeatPassword = !_obscureRepeatPassword;
+                  });
+                },
           icon: Icon(
             _obscureRepeatPassword
                 ? Icons.visibility_outlined
@@ -199,9 +199,7 @@ class _AuthFormState extends State<AuthForm> {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.md,
       ),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
@@ -218,17 +216,11 @@ class _AuthFormState extends State<AuthForm> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.error,
-          width: 1.4,
-        ),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.4),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.error,
-          width: 1.8,
-        ),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.8),
       ),
     );
   }
@@ -247,19 +239,17 @@ class _AuthFormState extends State<AuthForm> {
         ),
         child: widget.isLoading
             ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.2,
-            color: Colors.white,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: Colors.white,
+                ),
+              )
             : Text(
-          widget.submitLabel,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+                widget.submitLabel,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
       ),
     );
   }
@@ -274,18 +264,12 @@ class _AuthFormState extends State<AuthForm> {
       decoration: BoxDecoration(
         color: colorScheme.errorContainer.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.error.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.35)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 18,
-            color: colorScheme.error,
-          ),
+          Icon(Icons.error_outline_rounded, size: 18, color: colorScheme.error),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

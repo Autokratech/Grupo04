@@ -1,10 +1,9 @@
 import 'dart:convert';
-
 import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tab_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/dashboard_tabs_response_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets_response_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/widget_catalog_item_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tabs/dashboard_tab_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tabs/dashboard_tabs_response_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets/tab_widgets_response_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/catalog/widget_catalog_item_dto.dart';
 import 'package:frontend/data/services/remote/api_client.dart';
 import 'package:http/http.dart' as http;
 
@@ -115,16 +114,9 @@ class DashboardApiService {
   Future<TabWidgetsResponseDto> getTabWidgets({
     required String dashboardId,
     required String tabId,
-    required String userId,
   }) async {
     final response = await apiClient
-        .getStream(
-          _tabWidgetsEndpoint(
-            dashboardId: dashboardId,
-            tabId: tabId,
-            userId: userId,
-          ),
-        )
+        .getStream(_tabWidgetsEndpoint(dashboardId: dashboardId, tabId: tabId))
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200) {
@@ -146,17 +138,50 @@ class DashboardApiService {
         .timeout(_requestTimeout);
 
     if (response.statusCode == 200) {
-      final responseList = _decodeList(response.body);
+      final responseMap = _decodeObject(response.body);
+      final responseList = _extractList(responseMap, 'widgets');
 
       return responseList
-          .whereType<Map<String, dynamic>>()
-          .map(WidgetCatalogItemDto.fromMap)
+          .whereType<Map>()
+          .map(
+            (item) =>
+                WidgetCatalogItemDto.fromMap(Map<String, dynamic>.from(item)),
+          )
           .where((item) => item.id.trim().isNotEmpty)
           .toList();
     }
 
     throw Exception(
       'Failed to load widget catalog: Status code ${response.statusCode}',
+    );
+  }
+
+  Future<void> addDashboardTabWidget({
+    required String dashboardId,
+    required String tabId,
+    required String widgetId,
+    required int widgetIndex,
+    required String providerName,
+    required String dataType,
+    Map<String, dynamic> customConfig = const <String, dynamic>{},
+  }) async {
+    final response = await apiClient
+        .post(_tabWidgetsEndpoint(dashboardId: dashboardId, tabId: tabId), {
+      'tab_id': tabId,
+      'widget_id': widgetId,
+      'widget_index': widgetIndex,
+      'provider_name': providerName,
+      'custom_config': customConfig,
+      'data_type': dataType,
+    })
+        .timeout(_requestTimeout);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    throw Exception(
+      'Failed to add dashboard widget: Status code ${response.statusCode}',
     );
   }
 
@@ -183,13 +208,11 @@ class DashboardApiService {
   String _tabWidgetsEndpoint({
     required String dashboardId,
     required String tabId,
-    required String userId,
   }) {
     final encodedDashboardId = Uri.encodeComponent(dashboardId);
     final encodedTabId = Uri.encodeComponent(tabId);
-    final encodedUserId = Uri.encodeQueryComponent(userId);
 
-    return '/api/dashboard/$encodedDashboardId/tabs/$encodedTabId/widgets?user_id=$encodedUserId';
+    return '/api/dashboard/$encodedDashboardId/tabs/$encodedTabId/widgets';
   }
 
   String _widgetCatalogEndpoint() {
@@ -204,16 +227,6 @@ class DashboardApiService {
     }
 
     throw Exception('Expected JSON object response');
-  }
-
-  List<dynamic> _decodeList(String body) {
-    final decoded = jsonDecode(body);
-
-    if (decoded is List<dynamic>) {
-      return decoded;
-    }
-
-    throw Exception('Expected JSON list response');
   }
 
   Map<String, dynamic> _extractTabFromCreateResponse(

@@ -7,9 +7,7 @@ abstract class DashboardLocalDataSource {
 
   Future<void> cacheDashboard(Dashboard dashboard);
 
-  Future<List<DashboardTab>> getCachedTabs({
-    required String dashboardId,
-  });
+  Future<List<DashboardTab>> getCachedTabs({required String dashboardId});
 
   Future<void> cacheTabs({
     required String dashboardId,

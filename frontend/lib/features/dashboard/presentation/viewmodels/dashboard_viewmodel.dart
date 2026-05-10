@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constants/app_constants.dart';
 import 'package:frontend/data/repositories/dashboard_repository/dashboard_repository.dart';
-import 'package:frontend/data/services/local/dashboard_preferences_service.dart';
+import 'package:frontend/data/services/local/storage/dashboard_preferences_service.dart';
 import 'package:frontend/domain/models/dashboard.dart';
 import 'package:frontend/domain/models/dashboard_tab.dart';
 import 'package:frontend/domain/models/dashboard_widget_item.dart';
+import 'package:frontend/domain/models/widget_add_option.dart';
 import 'package:frontend/domain/models/widget_catalog_item.dart';
 import 'package:frontend/features/dashboard/presentation/states/dashboard_state.dart';
 
@@ -457,13 +458,17 @@ class DashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addWidget(WidgetCatalogItem catalogItem) async {
+  Future<void> addWidget({
+    required WidgetCatalogItem catalogItem,
+    required WidgetAddOption option,
+  }) async {
+    final dashboard = _dashboard;
     final selectedTab = _selectedTab;
 
-    if (selectedTab == null) return;
+    if (dashboard == null || selectedTab == null) return;
 
     final catalogItemExists = _widgetCatalogItems.any(
-      (item) => item.id == catalogItem.id,
+          (item) => item.id == catalogItem.id,
     );
 
     if (!catalogItemExists) return;
@@ -472,11 +477,13 @@ class DashboardViewModel extends ChangeNotifier {
       _clearErrorMessage();
 
       _items = await _dashboardRepository.addTabWidget(
+        dashboardId: dashboard.id,
         tabId: selectedTab.id,
         catalogItem: catalogItem,
+        option: option,
       );
 
-      _state = DashboardState.loaded;
+      _state = _items.isEmpty ? DashboardState.empty : DashboardState.loaded;
       _clearSelectedItem();
 
       notifyListeners();

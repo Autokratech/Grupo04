@@ -1,5 +1,5 @@
-import 'package:frontend/data/models/dto/dashboard_dtos/tab_widget_data_dto.dart';
-import 'package:frontend/data/models/dto/dashboard_dtos/tab_widget_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets/tab_widget_data_dto.dart';
+import 'package:frontend/data/models/dto/dashboard_dtos/tab_widgets/tab_widget_dto.dart';
 
 class TabWidgetsResponseDto {
   final List<TabWidgetDto> tabWidgets;

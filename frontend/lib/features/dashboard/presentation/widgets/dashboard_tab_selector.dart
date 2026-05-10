@@ -312,23 +312,20 @@ class DashboardTabSelector extends StatelessWidget {
         ),
       ],
       builder: (context, controller, child) {
-        return Tooltip(
-          message: 'Opciones del dashboard',
-          child: InkResponse(
-            radius: 16,
-            onTap: () => _toggleMenu(controller),
-            hoverColor: colorScheme.primary.withValues(alpha: 0.08),
-            focusColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            splashColor: colorScheme.primary.withValues(alpha: 0.10),
-            child: SizedBox(
-              width: _actionsButtonSize,
-              height: _actionsButtonSize,
-              child: Icon(
-                Icons.more_vert_rounded,
-                size: _actionsIconSize,
-                color: colorScheme.primary,
-              ),
+        return InkResponse(
+          radius: 16,
+          onTap: () => _toggleMenu(controller),
+          hoverColor: colorScheme.primary.withValues(alpha: 0.08),
+          focusColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          splashColor: colorScheme.primary.withValues(alpha: 0.10),
+          child: SizedBox(
+            width: _actionsButtonSize,
+            height: _actionsButtonSize,
+            child: Icon(
+              Icons.more_vert_rounded,
+              size: _actionsIconSize,
+              color: colorScheme.primary,
             ),
           ),
         );
