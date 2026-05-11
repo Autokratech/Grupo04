@@ -40,10 +40,6 @@ class OrchestratorService:
             "data" : widgets_skeleton_params.model_dump()
         }
 
-        
-        print(f"data source params is {type(data_request_params)}")
-        #TODO: Mejoras, si mismo provider reutilizar token de caché
-
         aggregated_response = [] 
         # Step 5 -- Se envían los datos a la factory of factories para que devuelva la instancia concreta a utilizar 
         # Step 6 -- Se pasan los parámetros concretos a la instancia creada en el paso anterior
