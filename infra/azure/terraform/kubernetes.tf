@@ -1,4 +1,4 @@
-#-- Definición de los namespaces de iDIPyL9K9FXc8ievR5vRmXsgT1
+#-- Definición de los namespaces de Kubernetes
 
 resource "kubernetes_namespace_v1" "autokratech" {
   metadata {
