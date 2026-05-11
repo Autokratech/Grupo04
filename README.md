@@ -22,5 +22,4 @@ Asimismo, Autokratech implementa de manera nativa un sistema de observabilidad, 
 El usuario target hacia el que se plantea la aplicación se proyecta como un perfil generalista o especialista dentro de los roles TI habituales *(desarrollador, ingeniero de sistemas, analista de calidad, devops, ciberseguridad, etc)*, pudiendo englobar, asimismo, a estudiantes de informática o entusiastas autodidactas que dispongan de múltiples sistemas o fuentes de servicio que deseen centralizar y monitorizar, si bien estos últimos no formarían parte del grupo destinatario principal para el cual se diseña ad hoc la herramienta. En esta primera release, se plantea la publicación de Autokratech únicamente en español, con idea de ampliar el registro de idiomas disponibles en un posible futuro.  
 
 
-<img src="docs/images/logo_lasalle.png" alt="Logo_Lasalle" width="200"># test
-# test
+<img src="docs/images/logo_lasalle.png" alt="Logo_Lasalle" width="200">
