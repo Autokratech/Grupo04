@@ -1,0 +1,112 @@
+# Default values for mychart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: autokratechRegistry.azurecr.io/autokratech-backend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+env:
+  SUPABASE_URL: https://cxaopxmnfrymrexsbtjw.supabase.co/
+  SUPABASE_KEY: sb_secret_nkKSjGebB92o-vK9VapShg_UDarNJxT
+  REDIS_URL: autokratech-cache.redis.cache.windows.net
+  REDIS_PORT: 6379
+  REDIS_ACCESS_KEY: 3d0uDcAZhx5qfBcsQnKvh2vrbN0bgCkGpAzCaBU45y0=
+  GITLAB_OAUTH_AUTHORIZE_URL: https://gitlab.com/oauth/authorize
+  GITLAB_OAUTH_TOKEN_URL: https://gitlab.com/oauth/token
+  GITLAB_OAUTH_CLIENT_ID: c837a7611fe91bbc0e8bd7fa74b00f1c16eae9832878fa938d30ea62b8168053
+  GITLAB_OAUTH_REDIRECT_URL: http://127.0.0.1:8001/oauth/gitlab/callback
+  GITLAB_OAUTH_CLIENT_SECRET: gloas-dfff9da6cbe29c1aa924955a8fff829cc3db952dbbaaf3b4dc36fe4471388d26
+  GITLAB_OAUTH_REFRESH_URL: https://gitlab.com/oauth/token
+  GITLAB_OAUTH_SCOPES: "read_user api"
+  GITHUB_OAUTH_AUTHORIZE_URL: https://github.com/login/oauth/authorize
+  GITHUB_OAUTH_TOKEN_URL: https://github.com/login/oauth/access_token
+  GITHUB_OAUTH_CLIENT_ID: Ov23liM60WKxT6kNCpL0
+  GITHUB_OAUTH_REDIRECT_URL: http://127.0.0.1:8001/oauth/github/callback
+  GITHUB_OAUTH_CLIENT_SECRET: 8e34fbc746684c1d57468b853b9ac88867bb3731
+  GITHUB_OAUTH_SCOPES: "read:user repo"
+  BITBUCKET_OAUTH_AUTHORIZE_URL: https://bitbucket.org/site/oauth2/authorize
+  BITBUCKET_OAUTH_TOKEN_URL: https://bitbucket.org/site/oauth2/access_token
+  BITBUCKET_OAUTH_CLIENT_ID: FxhdXAH6XRjGxVAaJY
+  BITBUCKET_OAUTH_REDIRECT_URL: http://127.0.0.1:8001/oauth/bitbucket/callback
+  BITBUCKET_OAUTH_CLIENT_SECRET: 25EjyZXj9P93jWJCFAHJD8XVPvPQrJWR
+  BITBUCKET_OAUTH_SCOPES: "repository project"
+  GCP_OAUTH_AUTHORIZE_URL: https://accounts.google.com/o/oauth2/v2/auth
+  GCP_OAUTH_TOKEN_URL: https://oauth2.googleapis.com/token
+  GCP_OAUTH_CLIENT_ID: 495246853923-elufajqpti22cq4c4gbnhvfihreiftdp.apps.googleusercontent.com
+  GCP_OAUTH_REDIRECT_URL: http://127.0.0.1:8001/oauth/gcp/callback
+  GCP_OAUTH_CLIENT_SECRET: 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
+  GCP_OAUTH_SCOPES: "https://www.googleapis.com/auth/cloud-platform"
+  AZURE_OAUTH_AUTHORIZE_URL: https://login.microsoftonline.com/ba0e2544-48a4-4015-8fd2-73da5d682c98/oauth2/v2.0/authorize   
+  AZURE_OAUTH_TOKEN_URL: https://login.microsoftonline.com/ba0e2544-48a4-4015-8fd2-73da5d682c98/oauth2/v2.0/token          
+  AZURE_OAUTH_CLIENT_ID: 54a08c5e-2ecb-40fb-ae4e-87437cb4a992
+  AZURE_OAUTH_REDIRECT_URL: http://localhost:8001/oauth/azure/callback
+  AZURE_OAUTH_CLIENT_SECRET: VSc8Q~fkBUkv2LK12PBV~kUiEiZf4h3Ic3ZxbakG
+  AZURE_OAUTH_REFRESH_URL: https://login.microsoftonline.com/ba0e2544-48a4-4015-8fd2-73da5d682c98/oauth2/v2.0/token
+  AZURE_OAUTH_SCOPES: "openid email profile offline_access https://management.azure.com/.default"
+  KMS_TENANT_ID: ba0e2544-48a4-4015-8fd2-73da5d682c98
+  KMS_CLIENT_ID: 54a08c5e-2ecb-40fb-ae4e-87437cb4a992
+  KMS_CLIENT_SECRET: VSc8Q~fkBUkv2LK12PBV~kUiEiZf4h3Ic3ZxbakG
+  KMS_INSTANCE_ENDPOINT: https://akv-autokratech-prueba.vault.azure.net/
+  OAUTH_PROVIDERS_KEK_NAME: OAUTH-KEK-KEY
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "autokratech-backend-sa"
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 443
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: autokratech.ddns.net
+      paths: 
+        - /
+
+  tls:
+    - secretName: autokratech-backend-tls
+      hosts:
+        - autokratech.ddns.net
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

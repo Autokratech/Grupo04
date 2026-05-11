@@ -1,0 +1,9 @@
+# ---- Backend containerignore ----
+# -- Common --
+.env
+
+# -- Virtual environment --
+venv/
+
+# -- Python --
+__pycache__/

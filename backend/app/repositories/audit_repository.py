@@ -1,0 +1,27 @@
+from datetime import datetime, timezone
+from app.database_sync import supabase
+
+NOMBRE_TABLA_AUDITORIA = "audit_log"
+
+
+# Inserta un registro de auditoria adaptado a la tabla real del proyecto.
+def crear_registro_auditoria_en_bd(
+    user_id: str | None,
+    action: str,
+    description: str | None = None,
+    meta: dict | None = None,
+):
+    datos = {
+        "user_id":           user_id,
+        "action_name":       action,
+        "audit_description": description,
+        "action_metadata":   meta or {},
+        "created_at":        datetime.now(timezone.utc).isoformat(),
+    }
+
+    respuesta = supabase.table(NOMBRE_TABLA_AUDITORIA).insert(datos).execute()
+
+    if not respuesta.data:
+        return None
+
+    return respuesta.data[0]
